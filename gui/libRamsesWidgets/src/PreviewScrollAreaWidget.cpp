@@ -22,7 +22,7 @@ PreviewScrollAreaWidget::PreviewScrollAreaWidget(const QSize& sceneSize, QWidget
 	: QAbstractScrollArea{parent}, sceneSize_{sceneSize} {
 	connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &PreviewScrollAreaWidget::updateViewport);
 	connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &PreviewScrollAreaWidget::updateViewport);
-	forceUpdate_ = false;
+//	forceUpdate_ = false;
 	s_scaleValue = 1.0f;
 }
 
@@ -211,7 +211,7 @@ QSize PreviewScrollAreaWidget::scaledSize() const noexcept {
 
 void PreviewScrollAreaWidget::setViewport(const QSize& sceneSize) {
 	QSize size = sceneSize.boundedTo({4096, 4096}).expandedTo({1, 1});
-	if (sceneSize_ != size || forceUpdate_) {
+    if (sceneSize_ != size || forceUpdate_) {
 		sceneSize_ = size;
 		updateViewport();
 	}

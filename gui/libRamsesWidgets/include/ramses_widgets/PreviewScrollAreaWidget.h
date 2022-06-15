@@ -80,7 +80,7 @@ private:
 	QPoint mousePivot_{0, 0};
 	QPoint viewportPosition_{0, 0};
 	QSize sceneSize_;
-	bool forceUpdate_;
+    bool forceUpdate_;
 	float s_scaleValue;
 };
 

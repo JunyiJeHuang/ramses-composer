@@ -14,8 +14,8 @@ PreviewBackgroundScene::PreviewBackgroundScene(
 	: scene_{ ramsesScene(sceneId, &client)}, 
     sceneBackend_(sceneBackend),
 	camera_{ ramsesPerspectiveCamera(scene_.get()) }, 
-	renderGroup_{std::shared_ptr<ramses::RenderGroup>(scene_.get()->createRenderGroup(), raco::ramses_base::createRamsesObjectDeleter<ramses::RenderGroup>(scene_.get()))},
-	renderPass_{scene_->createRenderPass(), raco::ramses_base::createRamsesObjectDeleter<ramses::RenderPass>(scene_.get())} {
+    renderGroup_{std::shared_ptr<ramses::RenderGroup>(scene_.get()->createRenderGroup(), raco::ramses_base::createRamsesObjectDeleter<ramses::RenderGroup>(scene_.get()))},
+    renderPass_{scene_->createRenderPass(), raco::ramses_base::createRamsesObjectDeleter<ramses::RenderPass>(scene_.get())} {
 
     lineMaxValue_ = 500.0f;
     scaleValue_ = 1.0f;
@@ -88,6 +88,8 @@ PreviewBackgroundScene::PreviewBackgroundScene(
     ramses::EffectDescription effectDesc;
     effectDesc.setVertexShader(grid_vert);
     effectDesc.setFragmentShader(grid_frag);
+//    effectDesc.setVertexShaderFromFile("grid_vert.glsl");
+//    effectDesc.setFragmentShaderFromFile("grid_frag.glsl");
     effectDesc.setUniformSemantic("ViewProjectionMatrix", ramses::EEffectUniformSemantic::ModelViewProjectionMatrix);
     effectDesc.setUniformSemantic("ProjectionMatrix", ramses::EEffectUniformSemantic::ProjectionMatrix);
     effectDesc.setUniformSemantic("ViewMatrix", ramses::EEffectUniformSemantic::ViewMatrix);
@@ -121,7 +123,6 @@ PreviewBackgroundScene::PreviewBackgroundScene(
  
     // distribute the scene to RAMSES
     scene_->publish();
-
 }
 
 ramses::sceneId_t PreviewBackgroundScene::getSceneId() const {
@@ -195,7 +196,7 @@ void PreviewBackgroundScene::update(bool z_up, float scaleValue) {
     gridSize_data[1] = 1000.0f;
     gridSize_data[2] = 1000.0f;
     ramses::UniformInput gridSizeInput;
-	(*appearance_)->getEffect().findUniformInput("gridSize", gridSizeInput);
+    (*appearance_)->getEffect().findUniformInput("gridSize", gridSizeInput);
     (*appearance_)->setInputValueVector3f(gridSizeInput, gridSize_data[0], gridSize_data[1], gridSize_data[2]);
 
     ramses::UniformInput lineKernelInput;
@@ -203,6 +204,7 @@ void PreviewBackgroundScene::update(bool z_up, float scaleValue) {
     (*appearance_)->setInputValueFloat(lineKernelInput, 0.5f);
 
     ramses::UniformInput gridFlagInput;
+
 	(*appearance_)->getEffect().findUniformInput("gridFlag", gridFlagInput);
     if (zUp_) {
         (*appearance_)->setInputValueInt32(gridFlagInput,  (PLANE_XY | SHOW_AXIS_X | SHOW_AXIS_Y | SHOW_GRID));

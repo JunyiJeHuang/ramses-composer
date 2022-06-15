@@ -159,7 +159,13 @@ void PropertySubtreeView::slotInsertKeyFrame() {
         QString propertyPath = QString::fromStdString(valueHandle.getPropertyPath());
         if (valueHandle.parent() != NULL) {
             raco::core::ValueHandle parentHandle = valueHandle.parent();
-			QString property = QString::fromStdString(parentHandle.getPropName()) + "." + QString::fromStdString(valueHandle.getPropName());
+
+            QString property;
+            property = QString::fromStdString(parentHandle.getPropName()) + "." + QString::fromStdString(valueHandle.getPropName());
+            if (QString::fromStdString(valueHandle.getPropertyPath()).contains("material")) {
+                property = QString::fromStdString(valueHandle.getPropertyPath());
+                property = property.section(".", 1);
+            }
 
             // 判断是否已激活动画
             std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
@@ -191,6 +197,13 @@ void PropertySubtreeView::slotInsertKeyFrame() {
 void PropertySubtreeView::slotCopyProperty() {
     raco::core::ValueHandle valueHandle = item_->valueHandle();
     if (valueHandle.isProperty()) {
+        QString property = QString::fromStdString(valueHandle.getPropertyPath());
+        if (property.contains("material")) {
+            property = property.section(".", 1);
+            QClipboard* clip = QApplication::clipboard();
+            clip->setText(property);
+            return;
+        }
         std::string str = valueHandle.getPropName();
         if (valueHandle.parent() != NULL) {
             valueHandle = valueHandle.parent();

@@ -306,6 +306,26 @@ void NodeLogic::slotUpdateKeyFrame(int keyFrame) {
     preOrderReverse(&NodeDataManager::GetInstance().root(), keyFrame, curAnimation_.toStdString());
 }
 
+//void NodeLogic::slotUpdateKeyFrame(int keyFrame) {
+//    QMutexLocker locker(&handleMapMutex_);
+//    for (const auto &it : nodeObjectIDHandleReMap_) {
+//        std::string objectId = it.first;
+//        std::map<std::string, std::string> bindingDataMap;
+//        NodeData* nodeData = NodeDataManager::GetInstance().searchNodeByID(objectId);
+//        if (nodeData) {
+//            nodeData->NodeExtendRef().curveBindingRef().getPropCurve(curAnimation_.toStdString(), bindingDataMap);
+//        }
+//        for (const auto &bindingIt : bindingDataMap) {
+//            if (CurveManager::GetInstance().getCurve(bindingIt.second)) {
+//                double value{0};
+//                if (CurveManager::GetInstance().getCurveValue(bindingIt.second, keyFrame, value)) {
+//                    setProperty(it.second, bindingIt.first, value);
+//                }
+//            }
+//        }
+//    }
+//}
+
 void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
 }

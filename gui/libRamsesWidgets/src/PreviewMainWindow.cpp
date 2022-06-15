@@ -184,8 +184,15 @@ PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ram
 			};
 		});
 		ui_->toolBar->insertWidget(ui_->actionPreviewMode, previewModeButton);
-	}
-
+    }
+    {
+        upLabel_ = new QLabel(this);
+        upLabel_ ->setStyleSheet("color:yellow;");
+        QWidget *spacer = new QWidget(this);
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        ui_->toolBar->addWidget(spacer);
+        ui_->toolBar->addWidget(upLabel_);
+    }
 }
 
 PreviewMainWindow::~PreviewMainWindow() {
@@ -226,7 +233,7 @@ void PreviewMainWindow::sceneScaleUpdate(bool zup, float scaleValue, bool scaleU
 }
 
 void PreviewMainWindow::setAxesIconLabel(QLabel * axesIcon) {
-	axesIcon_ = axesIcon;
+    axesIcon_ = axesIcon;
 }
 
 void PreviewMainWindow::setViewport(const QSize& sceneSize) {
@@ -241,14 +248,16 @@ void PreviewMainWindow::setAxesIcon(const bool& z_up) {
 	if (sceneSize_.height() != 0 && sceneSize_.width() != 0) {
 		previewWidget_->setMask({0, 0, 1, 1});
 		previewWidget_->update();
-		axesIcon_->clear();
-		if (z_up) {
-			QPixmap pix = QPixmap(":zUp");
-			axesIcon_->setPixmap(pix);
-		} else {
-			QPixmap pix = QPixmap(":yUp");
-			axesIcon_->setPixmap(pix);
-		}
+        axesIcon_->clear();
+        if (z_up) {
+            QPixmap pix = QPixmap(":zUp");
+            axesIcon_->setPixmap(pix);
+            upLabel_->setText("+Z_UP");
+        } else {
+            QPixmap pix = QPixmap(":yUp");
+            axesIcon_->setPixmap(pix);
+            upLabel_->setText("+Y_UP");
+        }
 		scrollAreaWidget_->setForceUpdateFlag(true);
 	}
 }
@@ -267,9 +276,9 @@ void PreviewMainWindow::setAxes(const bool& z_up) {
 	if (zUp_ == z_up) {
 		if (updateAxesIconLabel_) {
 			updateAxesIconLabel_ = false;
-			scrollAreaWidget_->setForceUpdateFlag(false);
+            scrollAreaWidget_->setForceUpdateFlag(false);
 		}
-		return;
+        return;
 	}
 
 	setAxesIcon(z_up);
@@ -310,12 +319,13 @@ void PreviewMainWindow::setAxes(const bool& z_up) {
 }
 
 void PreviewMainWindow::commit() {
-	const QSize areaSize = scrollAreaWidget_->viewport()->size();
-	if (sceneSize_ != areaSize) {
-		sceneSize_ = areaSize;
-		QRect scrollRect = QRect(scrollAreaWidget_->pos(), scrollAreaWidget_->size());
-		axesIcon_->setGeometry(scrollRect.width() - 130, scrollRect.y() + 20, 100, 100);
-	}
+    const QSize areaSize = scrollAreaWidget_->viewport()->size();
+    if (sceneSize_ != areaSize) {
+        sceneSize_ = areaSize;
+        QRect scrollRect = QRect(scrollAreaWidget_->pos(), scrollAreaWidget_->size());
+        setAxesIcon(zUp_);
+        axesIcon_->setGeometry(scrollRect.width() - 100, scrollRect.y(), 100, 100);
+    }
 	previewWidget_->commit();
 }
 

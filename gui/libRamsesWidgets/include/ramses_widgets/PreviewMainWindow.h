@@ -15,7 +15,9 @@
 #include "core/CommandInterface.h"
 #include "user_types/PerspectiveCamera.h"
 #include "ramses_base/RamsesHandles.h"
+#include "style/Icons.h"
 #include <QLabel>
+#include <QPushButton>
 #include <QMainWindow>
 #include <QToolButton>
 #include <memory>
@@ -87,6 +89,7 @@ private:
 	float scaleValue_;
 	int mode_;
 	bool haveInited_;
+    QLabel *upLabel_{nullptr};
 };
 
 }  // namespace raco::ramses_widgets

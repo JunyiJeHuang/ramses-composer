@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QToolBar>
 #include <QLineEdit>
+#include <QTime>
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>

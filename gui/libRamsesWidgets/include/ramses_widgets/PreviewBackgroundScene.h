@@ -7,6 +7,7 @@
 #include "ramses_widgets/RendererBackend.h"
 #include "ramses_adaptor/SceneBackend.h"
 #include <QtGlobal>
+#include <QDebug>
 
 namespace raco::ramses_widgets {
 

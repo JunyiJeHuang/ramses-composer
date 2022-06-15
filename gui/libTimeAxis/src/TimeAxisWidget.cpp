@@ -218,6 +218,11 @@ void TimeAxisWidget::timerEvent(QTimerEvent *event) {
         button_->move((double)intervalLength_ / (double)numTextInterval_ * (double)curFrame_ - viewportOffset_.x() - button_->width()/2, 0);
         update();
         Q_EMIT signalProxy::GetInstance().sigUpdateKeyFram_From_AnimationLogic(curFrame_);
+
+        QTime time = QDateTime::currentDateTime().time();
+        int msec = time.msec();
+        QString strTime = time.toString("hh:mm:ss") + ":" + QString::number(msec);
+        qDebug() << "time" << strTime;
         return;
     }
 
@@ -304,6 +309,11 @@ void TimeAxisWidget::startAnimation() {
         curLoop_ = 0;
         int timer = animationDataManager::GetInstance().getActiveAnimationData().GetUpdateInterval() * animationDataManager::GetInstance().getActiveAnimationData().GetPlaySpeed();
         timerId_ = startTimer(timer);
+
+        QTime time = QDateTime::currentDateTime().time();
+        int msec = time.msec();
+        QString strTime = time.toString("hh:mm:ss") + ":" + QString::number(msec);
+        qDebug() << "time" << strTime;
         return;
     }
     stopAnimation();
@@ -410,10 +420,10 @@ void TimeAxisWidget::drawKeyFrame(QPainter &painter) {
        for (const int& keyFrame : keyFrameList) {
            int leftPos = n * keyFrame - curX;
            if (leftPos > 0) {
-               if (keyFrameMgr_->getClickedFrame() == keyFrame) {
-                   brush.setColor(QColor(217, 125, 13, 255));
-                   painter.setBrush(brush);
-               }
+//               if (keyFrameMgr_->getClickedFrame() == keyFrame) {
+//                   brush.setColor(QColor(217, 125, 13, 255));
+//                   painter.setBrush(brush);
+//               }
                painter.drawEllipse(leftPos - 5,20,10,10);
                brush.setColor(QColor(245, 250, 250, 255));
                painter.setBrush(brush);

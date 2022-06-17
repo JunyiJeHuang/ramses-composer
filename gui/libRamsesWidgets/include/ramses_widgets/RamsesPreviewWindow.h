@@ -14,6 +14,7 @@
 #include "RendererBackend.h"
 #include "ramses_adaptor/SceneBackend.h"
 #include <QSize>
+#include <QLabel>
 #include <QColor>
 #include <memory>
 #include <ramses-framework-api/RamsesFrameworkTypes.h>
@@ -66,7 +67,7 @@ public:
 	State& nextState();
 	void commit();
 	void setEnableDisplayGrid(bool enable);
-	void sceneUpdate(bool z_up, float scaleValue);
+    void sceneUpdate(bool z_up, float scaleValue);
 
 private:
 	void* windowHandle_;
@@ -79,6 +80,8 @@ private:
 
 	State current_{};
 	State next_{};
+    QLabel *axesIcon_{nullptr};
+    bool updateAxesIconLabel_{false};
 };
 
 }  // namespace raco::ramses_widgets

@@ -126,7 +126,7 @@ void PreviewContentWidget::commit() {
 	auto& nextState = ramsesPreview_->nextState();
 	if (nextState != currentState && nextState.sceneId == currentState.sceneId) {
 		ramsesPreview_->commit();
-	}
+    }
 }
 
 void PreviewContentWidget::mouseMoveEvent(QMouseEvent* event) {

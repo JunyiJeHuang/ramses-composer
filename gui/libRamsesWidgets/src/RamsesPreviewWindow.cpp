@@ -228,7 +228,7 @@ void RamsesPreviewWindow::setEnableDisplayGrid(bool enable) {
 }
 
 void RamsesPreviewWindow::sceneUpdate(bool z_up, float scaleValue) {
-	backgroundScene_->sceneUpdate(z_up, scaleValue);
+    backgroundScene_->sceneUpdate(z_up, scaleValue);
 }
 
 }  // namespace raco::ramses_widgets

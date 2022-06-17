@@ -167,10 +167,9 @@ void PropertySubtreeView::slotInsertKeyFrame() {
                 property = property.section(".", 1);
             }
 
-            // 判断是否已激活动画
+            // is have active animation
             std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
             if (sampleProperty == std::string()) {
-                // TODO ZZ
                 return;
             }
             QString curve = QString::fromStdString(sampleProperty) + "_" + propertyPath;

@@ -32,7 +32,7 @@ public:
 	void setFilteringMode(PreviewFilteringMode mode);
 	void setEnableDisplayGrid(bool enable);
 	void sceneUpdate(bool z_up, float scaleValue);
-	void commit();
+    void commit();
 
 public Q_SLOTS:
 	void setViewportRect(

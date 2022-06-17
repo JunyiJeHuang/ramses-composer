@@ -22,6 +22,11 @@ add_subdirectory(OpenCTM-1.0.3/)
 set_target_properties(openctm PROPERTIES FOLDER third_party/openctm POSITION_INDEPENDENT_CODE ON)
 set_target_properties(lzma PROPERTIES FOLDER third_party/openctm POSITION_INDEPENDENT_CODE ON)
 
+# protobuf
+add_subdirectory(protobuf)
+set_target_properties(libprotobuf-lite PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
+set_target_properties(libprotobuf PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
+set_target_properties(libprotoc PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
 
 ## TINYGLTF
 set(TINYGLTF_USE_CPP14 ON CACHE BOOL "" FORCE)

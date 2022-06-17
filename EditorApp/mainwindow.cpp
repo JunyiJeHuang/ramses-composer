@@ -156,7 +156,8 @@ ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* do
 	});
 	QLabel* axesIcon_ = new QLabel(previewWidget);
     axesIcon_->setScaledContents(true);
-    axesIcon_->setStyleSheet("background:transparent");
+    axesIcon_->setAttribute(Qt::WA_TranslucentBackground);
+//    axesIcon_->setStyleSheet("background:transparent");
 //    axesIcon_->setStyleSheet("rgba:#00000000");
 	previewWidget->setAxesIconLabel(axesIcon_);
 	mainWindow->setNewPreviewMenuEntryEnabled(false);
@@ -434,14 +435,9 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		dialog->resize(500, 500);
 		dialog->exec();
 	});
-	// Node logic
-	nodeLogic_ = new raco::node_logic::NodeLogic(racoApplication_->activeRaCoProject().commandInterface(), this);
 
-    // Curve logic
-    curveLogic_ = new CurveLogic(this);
-
-	// Material logic
-	materialLogic_ = new raco::material_logic::MateralLogic(this);
+    // init logic
+    initLogic();
 
 	// View actions
 	QObject::connect(ui->actionNewPreview, &QAction::triggered, [this]() { createAndAddPreview(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, *rendererBackend_, racoApplication_); });
@@ -644,7 +640,18 @@ MainWindow::~MainWindow() {
 	// before the file change monitors and mesh caches get destroyed
 	racoApplication_->resetSceneBackend();
 	killTimer(renderTimerId_);
-	delete ui;
+    delete ui;
+}
+
+void MainWindow::initLogic() {
+    // Node logic
+    nodeLogic_ = new raco::node_logic::NodeLogic(racoApplication_->activeRaCoProject().commandInterface(), this);
+
+    // Curve logic
+    curveLogic_ = new CurveLogic(this);
+
+    // Material logic
+    materialLogic_ = new raco::material_logic::MateralLogic(this);
 }
 
 void MainWindow::updateApplicationTitle() {

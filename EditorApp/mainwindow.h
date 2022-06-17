@@ -66,6 +66,7 @@ public:
 		QWidget* parent = nullptr);
 	~MainWindow();
 
+    void initLogic();
 	void setNewPreviewMenuEntryEnabled(bool enabled);
 	void updateApplicationTitle();
 	void updateSavedLayoutMenu();

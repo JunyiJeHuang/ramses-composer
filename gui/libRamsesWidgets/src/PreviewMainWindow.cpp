@@ -199,8 +199,15 @@ PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ram
 			};
 		});
 		ui_->toolBar->insertWidget(ui_->actionPreviewMode, previewModeButton);
-	}
-
+    }
+    {
+        upLabel_ = new QLabel(this);
+        upLabel_ ->setStyleSheet("color:yellow;");
+        QWidget *spacer = new QWidget(this);
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        ui_->toolBar->addWidget(spacer);
+        ui_->toolBar->addWidget(upLabel_);
+    }
 }
 
 PreviewMainWindow::~PreviewMainWindow() {
@@ -267,14 +274,16 @@ void PreviewMainWindow::setAxesIcon(const bool& z_up) {
 	if (sceneSize_.height() != 0 && sceneSize_.width() != 0) {
 		previewWidget_->setMask({0, 0, 1, 1});
 		previewWidget_->update();
-		axesIcon_->clear();
-		if (z_up) {
-			QPixmap pix = QPixmap(":zUp");
-			axesIcon_->setPixmap(pix);
-		} else {
-			QPixmap pix = QPixmap(":yUp");
-			axesIcon_->setPixmap(pix);
-		}
+        axesIcon_->clear();
+        if (z_up) {
+            QPixmap pix = QPixmap(":zUp");
+            axesIcon_->setPixmap(pix);
+            upLabel_->setText("+Z_UP");
+        } else {
+            QPixmap pix = QPixmap(":yUp");
+            axesIcon_->setPixmap(pix);
+            upLabel_->setText("+Y_UP");
+        }
 		scrollAreaWidget_->setForceUpdateFlag(true);
 	}
 }

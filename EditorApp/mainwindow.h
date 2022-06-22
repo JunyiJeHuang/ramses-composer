@@ -19,6 +19,7 @@
 #include "curve/CurveNameWidget.h"
 #include "material_logic/materalLogic.h"
 #include "data_Convert/ProgramManager.h"
+#include "curve/CurveLogic.h"
 
 #include <QListWidget>
 #include <QMainWindow>
@@ -69,6 +70,7 @@ public:
 		QWidget* parent = nullptr);
 	~MainWindow();
 
+    void initLogic();
 	void setNewPreviewMenuEntryEnabled(bool enabled);
 	void updateApplicationTitle();
 	void updateSavedLayoutMenu();
@@ -131,6 +133,7 @@ private:
 	std::map<QString, qint64> pythonScriptCache_;
 	std::map<QString, qint64> pythonScriptArgumentCache_;
 	raco::node_logic::NodeLogic* nodeLogic_{nullptr};
+    CurveLogic *curveLogic_{nullptr};
 	CurveNameWidget* curveNameWidget_{nullptr};
 	raco::material_logic::MateralLogic* materialLogic_{nullptr};
 

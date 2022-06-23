@@ -25,6 +25,7 @@
 #include "MeshData/MeshDataManager.h"
 #include "openctm.h"
 #include "openctmpp.h"
+#include "data_Convert/OutputPtx.h"
 
 using namespace raco::guiData;
 namespace raco::dataConvert {
@@ -41,7 +42,8 @@ class ProgramManager : public QObject {
 public:
     void setRelativePath(QString path);
     bool writeCTMFile();
-    bool writeProgram2Json(QString filePath);
+	bool writeProgram(QString filePath);
+	bool writeProgram2Json(QString filePath);
     bool readProgramFromJson(QString filePath);
 
 Q_SIGNALS:
@@ -51,6 +53,7 @@ private:
     QString file_;
     QString relativePath_;
     QMap<QString, QJsonArray> aryMap_;
+    OutputPtx outputPtx_;
 };
 }
 

@@ -243,6 +243,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 				: raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_TYPE,
 			Qt::SortOrder::AscendingOrder);
 	QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
+    QObject::connect(mainWindow, &MainWindow::updateMeshData, newTreeView, &raco::object_tree::view::ObjectTreeView::updateMeshData);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setResourceHandles, mainWindow, &MainWindow::setResourceHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::updateNodeHandles, mainWindow, &MainWindow::updateNodeHandles);
 
@@ -855,10 +856,13 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 		auto newPath = QFileDialog::getSaveFileName(this, dialogCaption, QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
 		if (newPath.isEmpty()) {
 			return false;
-		}
-		Q_EMIT getResourceHandles();
+        }
+
+        Q_EMIT getResourceHandles();
+        Q_EMIT updateMeshData();
 		if (!newPath.endsWith(".rca")) newPath += ".rca";
 		std::string errorMsg;
+<<<<<<< HEAD
 		if (newID) {
 			if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
 				openProject(QString::fromStdString(racoApplication_->activeProjectPath()), -1, true);
@@ -876,6 +880,16 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 				updateApplicationTitle();
 				QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
 			}
+=======
+		if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
+			recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
+
+			updateActiveProjectConnection();
+            updateApplicationTitle();
+            programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
+			programManager_.writeProgram2Json(newPath);
+			return true;
+>>>>>>> a2e89e5 (add mesh logic)
 		} else {
 			if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
 				updateActiveProjectConnection();

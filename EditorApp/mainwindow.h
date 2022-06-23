@@ -108,6 +108,9 @@ protected Q_SLOTS:
 	void updateProjectSavedConnection();
 
 Q_SIGNALS:
+    void getResourceHandles();
+    void updateMeshData();
+
 	void viewportChanged(const QSize& sceneSize);
 	void objectFocusRequestedForPropertyBrowser(const QString& objectID);
 	void objectFocusRequestedForTreeDock(const QString& objectID);

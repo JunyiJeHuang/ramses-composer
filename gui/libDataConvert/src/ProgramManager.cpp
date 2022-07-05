@@ -874,7 +874,8 @@ bool ProgramManager::writeProgram(QString filePath) {
 		qDebug() << "Write Ptx file ERROR!";
 		result = false;
     }
-
+    // 3. Output Asset file
+	outputPtw_.WriteAsset(filePath.toStdString());
     // 4. Output ctm file
     writeCTMFile();
 

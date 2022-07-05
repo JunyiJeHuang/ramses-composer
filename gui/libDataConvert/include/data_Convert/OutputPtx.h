@@ -59,6 +59,26 @@ Q_SIGNALS:
 private:
 	bool isOutputError_{false};
 };
+
+class OutputPtw{
+public:
+	std::string ConvertAnimationInfo(HmiWidget::TWidget* widget);
+	void ConvertCurveInfo(HmiWidget::TWidget* widget, std::string animation_interal);
+	void ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData& node);
+	void WriteAsset(std::string filePath);
+
+private:
+	void ModifyTranslation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform);
+	void CreateTranslation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform, raco::guiData::NodeData node);
+
+	void ModifyScale(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform);
+	void CreateScale(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform, raco::guiData::NodeData node);
+
+	void ModifyRotation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform);
+	void CreateRotation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform, raco::guiData::NodeData node);
+
+	void AddUniform(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeParam* nodeParam);
+};
 }
 
 #endif // OUTPUTPTX_H

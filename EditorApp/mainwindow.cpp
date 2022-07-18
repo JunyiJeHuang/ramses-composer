@@ -500,8 +500,14 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		ui->actionSaveAs->setShortcut(QKeySequence::SaveAs);
 		ui->actionSaveAs->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionSaveAs, &QAction::triggered, this, &MainWindow::saveAsActiveProject);
+<<<<<<< HEAD
 		
 		QObject::connect(ui->actionSaveAsWithNewID, &QAction::triggered, this, &MainWindow::saveAsActiveProjectWithNewID);
+=======
+
+		ui->actionExportBMWAssets->setShortcutContext(Qt::ApplicationShortcut);
+		QObject::connect(ui->actionExportBMWAssets, &QAction::triggered, this, &MainWindow::exportBMWAssets);
+>>>>>>> 716c9dc (fix: Fixed some bugs in uniform, added option to export BMW Assets)
 	}
 
 	QObject::connect(ui->actionOpen, &QAction::triggered, [this]() {
@@ -851,7 +857,36 @@ bool MainWindow::saveActiveProject() {
 	return false;
 }
 
+<<<<<<< HEAD
 bool MainWindow::saveAsActiveProject(bool newID) {
+=======
+bool MainWindow::exportBMWAssets() {
+	if (racoApplication_->canSaveActiveProject()) {
+		QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+		bool setProjectName = racoApplication_->activeProjectPath().empty();
+
+		auto newPath = QFileDialog::getSaveFileName(this, "Export BMW Assets", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*)");
+		if (newPath.isEmpty()) {
+			return false;
+		}
+
+		Q_EMIT getResourceHandles();
+		Q_EMIT updateMeshData();
+		recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
+		updateActiveProjectConnection();
+		updateApplicationTitle();
+		programManager_.setOpenedProjectPath(openedProjectPath);
+		programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
+		programManager_.writeBMWAssets(newPath);
+		return true;
+	} else {
+		QMessageBox::warning(this, "Save Error", fmt::format("Can not save project: externally referenced projects not clean.").c_str(), QMessageBox::Ok);
+	}
+	return false;
+}
+
+bool MainWindow::saveAsActiveProject() {
+>>>>>>> 716c9dc (fix: Fixed some bugs in uniform, added option to export BMW Assets)
 	if (racoApplication_->canSaveActiveProject()) {
 <<<<<<< HEAD
 <<<<<<< HEAD

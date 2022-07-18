@@ -40,11 +40,12 @@ enum EDATAYPE {
 class ProgramManager : public QObject {
     Q_OBJECT
 public:
+	bool writeProgram(QString filePath);
+	bool writeBMWAssets(QString filePath);
+	bool writeProgram2Json(QString filePath);
     void setRelativePath(QString path);
 	void setOpenedProjectPath(QString path);
-    bool writeCTMFile();
-	bool writeProgram(QString filePath);
-	bool writeProgram2Json(QString filePath);
+	bool writeCTMFile(std::string filePathStr);
     bool readProgramFromJson(QString filePath);
 
 Q_SIGNALS:

@@ -44,6 +44,7 @@
     <addaction name="menuUpgrade"/>
     <addaction name="separator"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportBMWAssets"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -285,6 +286,14 @@
   <action name="actionNewTimeAxisView">
    <property name="text">
     <string>New Time Axis View</string>
+   </property>
+  </action>
+  <action name="actionExportBMWAssets">
+   <property name="text">
+    <string>Export BMW Assets</string>
+   </property>
+   <property name="toolTip">
+    <string>BMW Asset</string>
    </property>
   </action>
  </widget>

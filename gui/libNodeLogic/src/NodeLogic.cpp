@@ -151,16 +151,6 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 				scal.y = tempHandle.get("y").asDouble();
 				scal.z = tempHandle.get("z").asDouble();
 				node->insertSystemData("scale", scal);
-			}else if (QString::fromStdString(tempHandle.getPropName()).compare("mesh") == 0) {
-				if (tempHandle.type() == core::PrimitiveType::Ref) {
-					raco::core::ValueHandle meshHandle = tempHandle.asRef();
-					if (meshHandle) {
-						std::string str = meshHandle[0].asString();
-						node->setMeshID(str);
-						qDebug() << QString::fromStdString(str);
-						str = meshHandle[0].getPropertyPath();
-					}
-				}
 			}
             initBasicProperty(valueHandle[i], node);
 		}
@@ -231,6 +221,12 @@ void NodeLogic::setUniformProperty(raco::core::ValueHandle valueHandle, NodeData
 				}
 				break;
 			}
+			// case libNodeLogic::Vec2f:  // PrimitiveType属性值更新
+			// case PrimitiveType::Vec3f:
+			// case PrimitiveType::Vec4f:
+			// case PrimitiveType::Vec2i:
+			// case PrimitiveType::Vec3i:
+			// case PrimitiveType::Vec4i:
 			case PrimitiveType::Ref:
 			case PrimitiveType::Table:
 			default: {
@@ -303,7 +299,7 @@ void NodeLogic::setPropertyByCurveBinding(const std::string &objecID, const std:
         for (const auto &bindingIt : map) {
             if (CurveManager::GetInstance().getCurve(bindingIt.second)) {
                 double value{0};
-                if (CurveManager::GetInstance().getCurveValue(bindingIt.second, keyFrame, value)) {
+                if (CurveManager::GetInstance().getCurveValue(bindingIt.second, keyFrame, EInterPolationType::LINER, value)) {
                     setProperty(iter->second, bindingIt.first, value);
                 }
             }

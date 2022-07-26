@@ -63,6 +63,7 @@ PUBLIC
 	raco::PropertyBrowser
 	raco::CommonWidgets
 	raco::GUIPythonAPI
+	raco::CommonEditors
 	raco::Style
 	raco::Utils
 	raco::Core 

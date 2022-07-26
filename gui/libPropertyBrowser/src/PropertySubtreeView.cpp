@@ -187,6 +187,7 @@ void PropertySubtreeView::generateItemTooltip(PropertyBrowserItem* item, bool co
 }
 
 std::vector<Uniform> PropertySubtreeView::Item2Uniform(PropertyBrowserItem* item) {
+    raco::core::ValueHandle handle = item->valueHandle();
 	std::vector<Uniform> uniforms;
 	MaterialData materialData;
 	raco::material_logic::MateralLogic materialLogic;

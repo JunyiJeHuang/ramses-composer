@@ -647,7 +647,6 @@ void ObjectTreeViewDefaultModel::moveScenegraphChildren(const std::vector<SEdito
 
 void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex) {
 	auto absPath = filePath.toStdString();
-
 	auto selectedObject = indexToSEditorObject(selectedIndex);
 
 	// create dummy cache entry to prevent "cache corpses" if the mesh file is otherwise not accessed by any Mesh

@@ -106,6 +106,7 @@ protected Q_SLOTS:
 	bool saveAsActiveProject(bool newID = false);
 	bool saveAsActiveProjectWithNewID();
 	bool exportBMWAssets();
+	bool importBMWAssets();
 	void importScene();
 	void resetDockManager();
 	void updateActiveProjectConnection();

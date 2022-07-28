@@ -31,7 +31,6 @@ public:
 	void initNodeMaterialProperty(core::ValueHandle valueHandle, NodeMaterial &nodeMaterial);
 	void AnalyzingNodeMaterial();
 	void setOneTexture(core::ValueHandle valueHandle, TextureData &textureData);
-
 	void AnalyzingTexture();
     void initMaterialProperty(core::ValueHandle valueHandle, MaterialData &materialData, Shader &shader);
     void setOptionsProperty(core::ValueHandle valueHandle, MaterialData &materialData);

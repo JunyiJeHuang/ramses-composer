@@ -237,6 +237,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	dockModel->buildObjectTree();
 	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel);
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if (sortFilterModel && sortFilterModel->sortingEnabled()) {
 		newTreeView->sortByColumn(
 			title == MainWindow::DockWidgetTypes::RESOURCES
@@ -248,6 +249,10 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
 	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
 >>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
+=======
+	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
+	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
+>>>>>>> 087cb43 (fix: Modify the texture attribute information in the export ptx.)
     QObject::connect(mainWindow, &MainWindow::updateMeshData, newTreeView, &raco::object_tree::view::ObjectTreeView::updateMeshData);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setMaterialResHandles, mainWindow, &MainWindow::setMaterialResHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setTextureResHandles, mainWindow, &MainWindow::setTextureResHandles);
@@ -1134,6 +1139,7 @@ void MainWindow::updateActiveProjectConnection() {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 void MainWindow::updateProjectSavedConnection() {
 	QObject::disconnect(projectSavedConnection_);
 	projectSavedConnection_ = QObject::connect(&racoApplication_->activeRaCoProject(), &raco::application::RaCoProject::projectSuccessfullySaved, [this]() {
@@ -1154,6 +1160,9 @@ void MainWindow::setResourceHandles(const std::map<std::string, ValueHandle> &ma
 =======
 void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
 >>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
+=======
+void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
+>>>>>>> 087cb43 (fix: Modify the texture attribute information in the export ptx.)
     if (materialLogic_) {
 		materialLogic_->setMaterialResourcesHandleReMap(mMap);
         materialLogic_->Analyzing();

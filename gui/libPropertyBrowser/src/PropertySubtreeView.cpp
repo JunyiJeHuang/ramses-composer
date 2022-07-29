@@ -574,7 +574,7 @@ void PropertySubtreeView::updateChildrenContainer() {
 				if (child->parentItem()->parentItem() && child->parentItem()->displayName() == "uniforms") {
 					for (auto& it : showedUniforChildren_) {
 						if (child->displayName() == it->displayName()) {
-							auto* subtree = new PropertySubtreeView{model_, child, childrenContainer_};
+							auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
 							childrenContainer_->addWidget(subtree);
 							break;
 						}
@@ -582,7 +582,7 @@ void PropertySubtreeView::updateChildrenContainer() {
 				} else {
 					auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
 					childrenContainer_->addWidget(subtree);
-				//}
+				}
 			}
 
 			QObject::connect(item_, &PropertyBrowserItem::childrenChanged, childrenContainer_, [this](const QList<PropertyBrowserItem*> items) {
@@ -597,7 +597,7 @@ void PropertySubtreeView::updateChildrenContainer() {
 				}
 				for (auto& child : items) {
 					if (child->parentItem()->displayName() != "uniforms") {
-						auto* subtree = new PropertySubtreeView{model_, child, childrenContainer_};
+						auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
 						childrenContainer_->addWidget(subtree);
 				}
 				recalculateTabOrder();

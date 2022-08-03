@@ -17,16 +17,9 @@ void NodeLogic::setCommandInterface(core::CommandInterface *commandInterface) {
     commandInterface_ = commandInterface;
 }
 
-	//PropName "objectID"    PropName "objectName"    PropName "children"   PropName "tags"
-	//PropName "visible"     PropName "translation"   PropName "rotation"   PropName "scale"
-	//PropName "mesh"	     PropName "materials"     PropName "instanceCount"
-
-
 void NodeLogic::Analyzing(NodeData *pNode) {
 	if (!pNode )
 		return;
-	qDebug() << "Name :" << QString::fromStdString(pNode->getName()) << " ID :" << QString::fromStdString(pNode->objectID()) << "  ";
-	
     handleMapMutex_.lock();
 	if (pNode->objectID() != "" && pNode->objectID() != "objectID") {
 		auto it = nodeObjectIDHandleReMap_.find(pNode->objectID());
@@ -119,14 +112,12 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 	QString strObjId, strPropName;
 
 	for (int i{0}; i < valueHandle.size(); i++) {
-		if (!valueHandle[i].isObject()) {	//不是节点就解析 
-
-			raco::core::ValueHandle tempHandle = valueHandle[i];   // 取出里面的所有属性，进行遍历
+		if (!valueHandle[i].isObject()) {
+			raco::core::ValueHandle tempHandle = valueHandle[i];
 			QString str = QString::fromStdString(tempHandle.getPropName());
 			if (QString::fromStdString(tempHandle.getPropName()).compare("objectID") == 0) {
 				strObjId = QString::fromStdString(tempHandle.asString());
 				strPropName = QString::fromStdString(tempHandle.getPropertyPath());
-				qDebug() << i << " strObjId: " << strObjId << "  objName: " << strPropName;
 			}
 
 			if (QString::fromStdString(tempHandle.getPropName()).compare("translation") == 0) {
@@ -155,6 +146,7 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
     }
 }
 
+<<<<<<< HEAD
 void NodeLogic::setUniformProperty(raco::core::ValueHandle valueHandle, NodeData *node,bool bVec ) {
 	using PrimitiveType = core::PrimitiveType;
 	for (int i{0}; i < valueHandle.size(); i++) {
@@ -264,6 +256,8 @@ void NodeLogic::setMaterial(raco::core::ValueHandle valueHandle, NodeData *node)
 	}
 }
 
+=======
+>>>>>>> d41580e (fix: Add the logic of node parsing private material information and)
 void NodeLogic::slotUpdateActiveAnimation(QString animation) {
     curAnimation_ = animation;
 }

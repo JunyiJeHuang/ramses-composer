@@ -147,6 +147,7 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 void NodeLogic::setUniformProperty(raco::core::ValueHandle valueHandle, NodeData *node,bool bVec ) {
 	using PrimitiveType = core::PrimitiveType;
 	for (int i{0}; i < valueHandle.size(); i++) {
@@ -258,6 +259,8 @@ void NodeLogic::setMaterial(raco::core::ValueHandle valueHandle, NodeData *node)
 
 =======
 >>>>>>> d41580e (fix: Add the logic of node parsing private material information and)
+=======
+>>>>>>> ca864b9 (handle visual curve merge)
 void NodeLogic::slotUpdateActiveAnimation(QString animation) {
     curAnimation_ = animation;
 }

@@ -36,8 +36,14 @@ void NodeLogic::Analyzing(NodeData *pNode) {
 }
 
 bool NodeLogic::getValueHanlde(std::string property, core::ValueHandle &valueHandle) {
+
     QString qstrPropety = QString::fromStdString(property);
     QStringList list = qstrPropety.split(".");
+	if (!list.isEmpty() && list.contains("uniforms")) {
+		property = "materials.material." + property;
+		qstrPropety = QString::fromStdString(property);
+		list = qstrPropety.split(".");
+	}
 
     auto func = [&](core::ValueHandle &tempHandle, std::string tempProp)->bool {
           if (tempHandle.hasProperty(tempProp)) {
@@ -138,9 +144,15 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 				scal.x = tempHandle.get("x").asDouble();
 				scal.y = tempHandle.get("y").asDouble();
 				scal.z = tempHandle.get("z").asDouble();
+<<<<<<< HEAD
 				
 				node->insertSystemData("scale", scal);
 			}
+=======
+				node->insertSystemData("scale", scal);
+
+			}  
+>>>>>>> 0c50c3d (handle merge uniform node animation)
             initBasicProperty(valueHandle[i], node);
 		}
     }

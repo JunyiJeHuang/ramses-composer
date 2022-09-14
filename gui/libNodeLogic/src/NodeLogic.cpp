@@ -310,6 +310,14 @@ void NodeLogic::setPropertyByCurveBinding(const std::string &objecID, const std:
             }
         }
     }
+<<<<<<< HEAD
+=======
+}
+
+void NodeLogic::delNodeBindingByCurveName(std::string curveName) {
+	NodeDataManager::GetInstance().delCurveBindingByName(curveName);
+	Q_EMIT sig_initCurveBindingWidget__NodePro();
+>>>>>>> feb96fe (fix: Release a new version, modify the version number to 1.0.2, and Fix)
 }
 
 <<<<<<< HEAD

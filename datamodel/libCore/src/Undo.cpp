@@ -374,22 +374,22 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 	}
 
 	// Update volatile data for new or changed objects
-	for (const auto &destObj : changes.getAllChangedObjects()) {
-		destObj->onAfterDeserialization();
-	}
+    for (const auto &destObj : changes.getAllChangedObjects()) {
+        destObj->onAfterDeserialization();
+    }
 
-	// Use the change recorder in the context from here on
-	context_->uiChanges().mergeChanges(changes);
+    // Use the change recorder in the context from here on
+    context_->uiChanges().mergeChanges(changes);
 
 	// Reset model changes here to make sure the next undo stack push will see 
-	// all changes relative to the last undo stack entry
-	context_->modelChanges().reset();
+    // all changes relative to the last undo stack entry
+    context_->modelChanges().reset();
 
 	// Sync from external files for new or changed objects.
 	// Also update broken link error messages in Node::onAfterContextActivated, so we need to include
 	//   the link endpoints in the changed object set.
-	auto changedObjects = changes.getAllChangedObjects(false, false, true);
-	context_->performExternalFileReload({changedObjects.begin(), changedObjects.end()});
+    auto changedObjects = changes.getAllChangedObjects(false, false, true);
+    context_->performExternalFileReload({changedObjects.begin(), changedObjects.end()});
 
 	if (extrefDirty) {
 		LoadContext loadContext;

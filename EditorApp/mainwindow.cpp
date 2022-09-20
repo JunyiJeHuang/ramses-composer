@@ -169,6 +169,11 @@ void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::prop
 	QObject::connect(&treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectionCleared, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::clear);
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObjectAcrossAllTreeDocks);
 	QObject::connect(&programManager, &raco::dataConvert::ProgramManager::selectObject, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObject);
+<<<<<<< HEAD
+=======
+
+	// Trigger to create keyframes and curves
+>>>>>>> b51b33c (fix: Fixed export ptx information redundancy and export uniform property)
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurve, mainWindow, &MainWindow::slotCreateCurve);
     QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurveAndBinding, mainWindow, &MainWindow::slotCreateCurveAndBinding);
 

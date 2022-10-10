@@ -772,6 +772,7 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	// Don't create a new DockManager right away - making QMessageBoxes pop up messes up state restoring
 	// (see https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/315)
 	delete dockManager_;
+<<<<<<< HEAD
 	logViewModel_->clear();
 <<<<<<< HEAD
 
@@ -781,6 +782,9 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 =======
 	programManager_.readProgramFromJson(file);
 >>>>>>> 0342eca (modify uniform in mesh node)
+=======
+    logViewModel_->clear();
+>>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
 	try {
 		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
 			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
@@ -837,8 +841,12 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 
 	updateApplicationTitle();
 	updateActiveProjectConnection();
+<<<<<<< HEAD
 	updateProjectSavedConnection();
 	updateUpgradeMenu();
+=======
+    programManager_.readProgramFromJson(file);
+>>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
 
 	if (racoApplication_->activeRaCoProject().project()->settings()->enableTimerFlag_.asBool() == true) {
 		ui->menuDebug->addAction(ui->actionEnableRuntimeScriptPreview);

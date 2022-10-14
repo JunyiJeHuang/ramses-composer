@@ -1203,9 +1203,9 @@ TEST_F(UndoTest, add_remove_property_table_with_ref) {
 
 	checkUndoRedoMultiStep<2>(
 		{[this, tableHandle, refTarget]() {
-			 Table innerTable;
+             raco::data_storage::Table innerTable;
 			 innerTable.addProperty("ref", std::make_unique<Value<SEditorObject>>(refTarget));
-			 context.addProperty(tableHandle, "innerTable", std::make_unique<Value<Table>>(innerTable));
+             context.addProperty(tableHandle, "innerTable", std::make_unique<Value<raco::data_storage::Table>>(innerTable));
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
@@ -1259,13 +1259,13 @@ TEST_F(UndoTest, setTable_with_ref) {
 
 	checkUndoRedoMultiStep<2>(
 		{[this, tableHandle, refTarget]() {
-			 Table newTable;
+             raco::data_storage::Table newTable;
 			 newTable.addProperty("ref", std::make_unique<Value<SEditorObject>>(refTarget));
 			 context.set(tableHandle, newTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(tableHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},
@@ -1288,13 +1288,13 @@ TEST_F(UndoTest, setArray_with_ref) {
 
 	checkUndoRedoMultiStep<2>(
 		{[this, arrayHandle, refTarget]() {
-			 Table newTable;
+             raco::data_storage::Table newTable;
 			 newTable.addProperty("ref", std::make_unique<Value<SEditorObject>>(refTarget));
 			 context.set(arrayHandle, newTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, arrayHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(arrayHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},
@@ -1347,17 +1347,17 @@ TEST_F(UndoTest, setTable_nested_table_with_ref) {
 
 	checkUndoRedoMultiStep<2>(
 		{[this, tableHandle, refTarget]() {
-			 Table innerTable;
+             raco::data_storage::Table innerTable;
 			 innerTable.addProperty("ref", std::make_unique<Value<SEditorObject>>(refTarget));
 
-			 Table outerTable;
-			 outerTable.addProperty("inner", std::make_unique<Value<Table>>(innerTable));
+             raco::data_storage::Table outerTable;
+             outerTable.addProperty("inner", std::make_unique<Value<raco::data_storage::Table>>(innerTable));
 
 			 context.set(tableHandle, outerTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(tableHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},
@@ -1380,17 +1380,17 @@ TEST_F(UndoTest, setArray_nested_table_with_ref) {
 
 	checkUndoRedoMultiStep<2>(
 		{[this, tableHandle, refTarget]() {
-			 Table innerTable;
+             raco::data_storage::Table innerTable;
 			 innerTable.addProperty("ref", std::make_unique<Value<SEditorObject>>(refTarget));
 
-			 Table outerTable;
-			 outerTable.addProperty("inner", std::make_unique<Value<Table>>(innerTable));
+             raco::data_storage::Table outerTable;
+             outerTable.addProperty("inner", std::make_unique<Value<raco::data_storage::Table>>(innerTable));
 
 			 context.set(tableHandle, outerTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(tableHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},
@@ -1416,14 +1416,14 @@ TEST_F(UndoTest, setTable_nested_struct_with_ref) {
 			 Value<StructWithRef>* value{new Value<StructWithRef>()};
 			 (*value)->ref = refTarget;
 
-			 Table newTable;
+             raco::data_storage::Table newTable;
 			 newTable.addProperty("struct", std::unique_ptr<Value<StructWithRef>>(value));
 
 			 context.set(tableHandle, newTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(tableHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},
@@ -1449,14 +1449,14 @@ TEST_F(UndoTest, setArray_nested_struct_with_ref) {
 			 Value<StructWithRef>* value{new Value<StructWithRef>()};
 			 (*value)->ref = refTarget;
 
-			 Table newTable;
+             raco::data_storage::Table newTable;
 			 newTable.addProperty("struct", std::unique_ptr<Value<StructWithRef>>(value));
 
 			 context.set(tableHandle, newTable);
 			 this->undoStack.push("step 1");
 		 },
 			[this, tableHandle]() {
-				Table emptyTable;
+                raco::data_storage::Table emptyTable;
 				context.set(tableHandle, emptyTable);
 				this->undoStack.push("step 2");
 			}},

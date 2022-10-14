@@ -50,7 +50,7 @@ add_library(libCore
 	include/core/Queries_Tags.h src/Queries_Tags.cpp
 	include/core/SceneBackendInterface.h
 	include/core/Serialization.h src/Serialization.cpp
-    include/core/SerializationKeys.h    
+        include/core/SerializationKeys.h
 	include/core/TagDataCache.h src/TagDataCache.cpp
 	include/core/Undo.h src/Undo.cpp
 	include/core/UserObjectFactoryInterface.h

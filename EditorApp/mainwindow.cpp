@@ -784,7 +784,11 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 >>>>>>> 0342eca (modify uniform in mesh node)
 =======
     logViewModel_->clear();
+<<<<<<< HEAD
 >>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
+=======
+	programManager_.readProgramFromJson(file);
+>>>>>>> aef5216 (Fix bug about uniform)
 	try {
 		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
 			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
@@ -842,11 +846,15 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	updateApplicationTitle();
 	updateActiveProjectConnection();
 <<<<<<< HEAD
+<<<<<<< HEAD
 	updateProjectSavedConnection();
 	updateUpgradeMenu();
 =======
     programManager_.readProgramFromJson(file);
 >>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
+=======
+	programManager_.updateUIFromJson(file);
+>>>>>>> aef5216 (Fix bug about uniform)
 
 	if (racoApplication_->activeRaCoProject().project()->settings()->enableTimerFlag_.asBool() == true) {
 		ui->menuDebug->addAction(ui->actionEnableRuntimeScriptPreview);

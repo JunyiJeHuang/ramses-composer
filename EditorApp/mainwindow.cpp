@@ -843,6 +843,7 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	restoreCachedLayout();
 	configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
 
+<<<<<<< HEAD
 	updateApplicationTitle();
 	updateActiveProjectConnection();
 <<<<<<< HEAD
@@ -855,6 +856,11 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 =======
 	programManager_.updateUIFromJson(file);
 >>>>>>> aef5216 (Fix bug about uniform)
+=======
+    updateApplicationTitle();
+    updateActiveProjectConnection();
+    programManager_.updateUIFromJson(file);
+>>>>>>> 0b38cc1 (<function>([Undo/VisualCurve]): <add Undo/UndoState function and fixed the bug of a point is bezier/hermite type, next point can't show left worker point info>)
 
 	if (racoApplication_->activeRaCoProject().project()->settings()->enableTimerFlag_.asBool() == true) {
 		ui->menuDebug->addAction(ui->actionEnableRuntimeScriptPreview);

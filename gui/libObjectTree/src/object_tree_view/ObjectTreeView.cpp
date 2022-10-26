@@ -451,16 +451,16 @@ bool ObjectTreeView::getAnimationHandle(QModelIndex index, core::ValueHandle val
 }
 
 void ObjectTreeView::globalOpreations() {
-	// TBD
-    if (viewTitle_.compare("Scene Graph") != 0) {
-        return;
-    }
-    QTime dieTime = QTime::currentTime().addMSecs(5);
-    while( QTime::currentTime() < dieTime ) {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    }
-    std::map<std::string, core::ValueHandle> handleMap = updateNodeTree();
-    Q_EMIT updateNodeHandles(viewTitle_, handleMap);
+//    // TBD
+//    if (viewTitle_.compare("Scene Graph") != 0) {
+//        return;
+//    }
+//    QTime dieTime = QTime::currentTime().addMSecs(5);
+//    while( QTime::currentTime() < dieTime ) {
+//        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+//    }
+//    std::map<std::string, core::ValueHandle> handleMap = updateNodeTree();
+//    Q_EMIT updateNodeHandles(viewTitle_, handleMap);
 }
 
 void ObjectTreeView::copyObjects() {
@@ -550,6 +550,11 @@ void ObjectTreeView::fillMeshData() {
 }
 
 void ObjectTreeView::selectActiveObject() {
+    if (auto externalProjectModel = (dynamic_cast<ObjectTreeViewExternalProjectModel *>(treeModel_))) {
+        Q_EMIT externalObjectSelected();
+        return;
+    }
+
     std::string objId;
     if (raco::guiData::NodeDataManager::GetInstance().getActiveNode()) {
         objId = raco::guiData::NodeDataManager::GetInstance().getActiveNode()->objectID();

@@ -452,6 +452,7 @@ void PropertySubtreeView::delUniformButtonClicked() {
 
 void PropertySubtreeView::slotUniformNameChanged(QString s) {
 	NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+	auto root = NodeDataManager::GetInstance().root();
 	if (s == "add") {
 		return;
 	}
@@ -459,7 +460,7 @@ void PropertySubtreeView::slotUniformNameChanged(QString s) {
 		auto materialOject = item_->siblingItem("material")->valueHandle().asRef();
 		core::ValueHandle uniformsHandle = {materialOject, &user_types::Material::uniforms_};
 		Uniform un;
-		un.setName(s.toStdString());
+		
 		for (int i{0}; i < uniformsHandle.size(); i++) {
 			if (s.toStdString() == uniformsHandle[i].getPropName()) {
 				setUniformsProperty(uniformsHandle[i], un);
@@ -474,6 +475,7 @@ void PropertySubtreeView::slotUniformNameChanged(QString s) {
 }
 void PropertySubtreeView::setUniformsProperty(core::ValueHandle valueHandle, Uniform& tempUniform) {
 	using PrimitiveType = core::PrimitiveType;
+	tempUniform.setName(valueHandle.getPropName());
 	std::string property = valueHandle.getPropName();
 	switch (valueHandle.type()) {
 			case PrimitiveType::String: {

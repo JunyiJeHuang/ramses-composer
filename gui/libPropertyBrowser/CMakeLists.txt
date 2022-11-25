@@ -100,6 +100,7 @@ PUBLIC
     raco::GuiData
     raco::signal
     Qt5::Widgets
+    raco::dataConvert
 PRIVATE
     raco::Style
     lua::lua

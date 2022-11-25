@@ -23,6 +23,7 @@
 #include "MaterialData/materialManager.h"
 #include "NodeData/nodeManager.h"
 #include "material_logic/materalLogic.h"
+#include "data_Convert/ProgramDefine.h"
 
 #include "data_storage/Table.h"
 #include "data_storage/Value.h"
@@ -255,7 +256,7 @@ void PropertySubtreeView::setUniformControls(PropertyBrowserItem* item, Property
 				break;
 			}
 		}
-		if (!isShowed) {
+		if (!isShowed && child->displayName() != PTW_FRAG_SYS_OPACITY) {
 			uniformComBox_->addItem(QString::fromStdString(child->displayName()));
 		}
 	}
@@ -429,7 +430,7 @@ void PropertySubtreeView::updateUniformCombox() {
 			if (pNode->hasUniform(uniformTabe.name(i))) {
 				noShowed = true;
 			}
-			if (!noShowed) {
+			if (!noShowed && uniformTabe.name(i) != PTW_FRAG_SYS_OPACITY) {
 				uniformComBox_->addItem(QString::fromStdString(uniformTabe.name(i)));
 			}
 		}

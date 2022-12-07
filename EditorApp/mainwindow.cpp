@@ -170,8 +170,12 @@ void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::prop
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObjectAcrossAllTreeDocks);
 	QObject::connect(&programManager, &raco::dataConvert::ProgramManager::selectObject, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObject);
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
+=======
+    QObject::connect(&signalProxy::GetInstance(), &raco::signal::signalProxy::sigSwitchObjectNode, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObject);
+>>>>>>> 7166c2f (<fixed>([visualcurve.cpp]): <fixed bug of curves that are hidden are saved after opening >)
 
 	// Trigger to create keyframes and curves
 <<<<<<< HEAD
@@ -289,6 +293,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 
 	QString tempTitle(title);
 	if (tempTitle.compare(QString("Scene Graph")) == 0) {
+        newTreeView->updateMeshData();
 		nodeDataPro->setNodeNameHandleReMap(newTreeView->updateNodeTree());
 		nodeDataPro->AnalyzeHandle();
 	}

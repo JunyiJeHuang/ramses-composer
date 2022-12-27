@@ -154,8 +154,7 @@ private:
 				auto handle{castedChild->sceneObject()};
 				(*this->ramsesObject()).addChild(*handle);
 				currentRamsesChildren_.emplace_back(handle);
-
-			}
+            }
 		}
 	}
 

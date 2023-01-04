@@ -137,6 +137,7 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 			}
 			updateUniformCombox();
 		}
+        QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateMesh);
 
 		if (item->displayName() == "uniforms") {
 			setUniformControls(item, labelLayout);
@@ -204,7 +205,17 @@ void PropertySubtreeView::generateItemTooltip(PropertyBrowserItem* item, bool co
 void PropertySubtreeView::updateMaterial(raco::core::ValueHandle& v) {
 	NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
 	pNode->uniformClear();
-	updateUniformCombox();
+    updateUniformCombox();
+}
+
+void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
+    core::ValueHandle parent = v.parent();
+    if (parent.isProperty()) {
+        std::string parentProp = parent.getPropName();
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrix();
+        }
+    }
 }
 
 std::vector<Uniform> PropertySubtreeView::Item2Uniform(PropertyBrowserItem* item) {

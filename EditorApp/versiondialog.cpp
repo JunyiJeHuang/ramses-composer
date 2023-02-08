@@ -33,7 +33,7 @@ VersionDialog::VersionDialog(QWidget *parent) :
     ui(new Ui::VersionDialog)
 {
     ui->setupUi(this);
-	ui->ramsesComposerVersion->setText(QString("1.0.7.0113"));
+	ui->ramsesComposerVersion->setText(QString("1.0.8.0128"));
 	ui->ramsesComposerCommit->setText(QString("490b1f"));
 	ui->ramsesVersion->setText(QString::fromStdString(raco::ramses_base::getRamsesVersionString()));
 	ui->ramsesBuiltVersion->setText(QString(RAMSES_VERSION));

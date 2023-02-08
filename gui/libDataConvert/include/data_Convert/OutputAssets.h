@@ -105,7 +105,7 @@ private:
 	void CreateRotation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform, raco::guiData::NodeData node);
 
 	void switchMultAnimsOneCurve(HmiWidget::TWidget* widget);
-	void ConvertAnimationInfo(HmiWidget::TWidget* widget);
+	void selfTriggerDomain(HmiWidget::TWidget* widget);
 	void ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData& node);
 	void ConvertCurveInfo(HmiWidget::TWidget* widget, std::string animation_interal);
 	void modifyOnePointCurve(Point* point, TCurveDefinition* curveDefinition, std::string curveName);
@@ -158,6 +158,8 @@ private:
 	void triggerTest();
 
 	void addEx2Ellie(HmiWidget::TWidget* widget);
+
+	void externalTriggerDomain(HmiWidget::TWidget* widget);
 
 private:
 	std::map<std::string, std::vector<std::string>> nodeIDUniformsName_;

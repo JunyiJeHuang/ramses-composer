@@ -9,8 +9,6 @@
 #include <QMessageBox>
 #include <cmath>
 
-
-
 namespace raco::dataConvert {
 using namespace raco::style;
 
@@ -1426,7 +1424,7 @@ void OutputPtw::switchMultAnimsOneCurve(HmiWidget::TWidget* widget) {
 	}
 }
 
-void OutputPtw::ConvertAnimationInfo(HmiWidget::TWidget* widget) {
+void OutputPtw::selfTriggerDomain(HmiWidget::TWidget* widget) {
 	auto animationList = raco::guiData::animationDataManager::GetInstance().getAnitnList();
 	if (0 == animationList.size()) {
 		messageBoxError("", 5);
@@ -1502,6 +1500,33 @@ void OutputPtw::triggerByInternalModel(HmiWidget::TWidget* widget) {
 
 	assetsFun_.addTrigger(widget);
 	assetsFun_.addPlayDomain(widget);
+}
+
+
+void OutputPtw::externalTriggerDomain(HmiWidget::TWidget* widget) {
+	auto animationList = raco::guiData::animationDataManager::GetInstance().getAnitnList();
+	if (0 == animationList.size()) {
+		messageBoxError("", 5);
+	}
+	// multi-animation only
+	if (isSingleAnimation_) {
+		return;
+	}
+
+	for (auto animation : animationList) {
+		std::string animation_interal = animation.first + PTW_SUF_CURVE_INETERAL;
+		std::vector<TDataBinding> Operands;
+		HmiWidget::TInternalModelParameter* internalModelMul = widget->add_internalmodelvalue();
+		TDataBinding Operand1;
+		Operand1.set_allocated_provider(assetsFun_.ProviderNumeric(float(animation.second.GetEndTime() - animation.second.GetStartTime())));
+		Operands.push_back(Operand1);
+		TDataBinding Operand2;
+		Operand2.set_allocated_key(assetsFun_.Key(animation.first));
+		Operand2.set_allocated_provider(assetsFun_.ProviderSrc(TEProviderSource_ExtModelValue));
+		Operands.push_back(Operand2);
+		assetsFun_.operatorOperands(internalModelMul, animation_interal, TEDataType_Float, Operands, TEOperatorType_Mul);
+	}
+	switchMultAnimsOneCurve(widget);
 }
 
 void OutputPtw::triggerByExternalModel(HmiWidget::TWidget* widget) {
@@ -1598,14 +1623,16 @@ void OutputPtw::addPoint2Curve(Point* pointData, TCurveDefinition* curveDefiniti
 		outgoingInterpolation->set_interpolation(TCurvePointInterpolationType_Linear);
 		point->set_allocated_outgoinginterpolation(outgoingInterpolation);
 	} else if (pointData->getInterPolationType() == raco::guiData::LINER && PrePoint.getInterPolationType() == raco::guiData::HERMIT_SPLINE) {
+		float domainLeft;
+		double valueLeft;
 		TCurvePointInterpolation* incommingInterpolation = new TCurvePointInterpolation;
 		incommingInterpolation->set_interpolation(TCurvePointInterpolationType_Hermite);
-		float domainL = pointData->getKeyFrame() - pointData->getLeftKeyFrame();
+		domainLeft = pointData->getKeyFrame() - pointData->getLeftKeyFrame();
 		TMultidimensionalPoint* lefttangentVector = new TMultidimensionalPoint;
-		lefttangentVector->set_domain(domainL);
+		lefttangentVector->set_domain(domainLeft);
 		TNumericValue* leftValue = new TNumericValue;
-		double valueTest = std::any_cast<double>(pointData->getLeftData()) - std::any_cast<double>(pointData->getDataValue());
-		leftValue->set_float_(std::any_cast<double>(valueTest));
+		valueLeft = std::any_cast<double>(pointData->getLeftData()) - std::any_cast<double>(pointData->getDataValue());
+		leftValue->set_float_(std::any_cast<double>(valueLeft));
 		lefttangentVector->set_allocated_value(leftValue);
 		incommingInterpolation->set_allocated_tangentvector(lefttangentVector);
 		point->set_allocated_incomminginterpolation(incommingInterpolation);
@@ -1616,7 +1643,6 @@ void OutputPtw::addPoint2Curve(Point* pointData, TCurveDefinition* curveDefiniti
 	} else if (pointData->getInterPolationType() == raco::guiData::HERMIT_SPLINE) {	 // HERMIT_SPLINE
 		float domainL;
 		double valueL;
-
 		TCurvePointInterpolation* incommingInterpolation = new TCurvePointInterpolation;
 		incommingInterpolation->set_interpolation(TCurvePointInterpolationType_Hermite);
 		domainL = pointData->getKeyFrame() - pointData->getLeftKeyFrame();
@@ -1629,19 +1655,16 @@ void OutputPtw::addPoint2Curve(Point* pointData, TCurveDefinition* curveDefiniti
 		incommingInterpolation->set_allocated_tangentvector(lefttangentVector);
 		point->set_allocated_incomminginterpolation(incommingInterpolation);
 
-		///////////////////////
 		float domainR;
-		double rightTest;
-
+		double valueR;
 		TCurvePointInterpolation* outgoingInterpolation = new TCurvePointInterpolation;
 		outgoingInterpolation->set_interpolation(TCurvePointInterpolationType_Hermite);
 		TMultidimensionalPoint* RighttangentVector = new TMultidimensionalPoint;
-
 		domainR = pointData->getRightKeyFrame() - pointData->getKeyFrame();
 		RighttangentVector->set_domain(domainR);
 		TNumericValue* RightValue = new TNumericValue;
-		rightTest = std::any_cast<double>(pointData->getRightData()) - std::any_cast<double>(pointData->getDataValue());
-		RightValue->set_float_(rightTest);
+		valueR = std::any_cast<double>(pointData->getRightData()) - std::any_cast<double>(pointData->getDataValue());
+		RightValue->set_float_(valueR);
 		RighttangentVector->set_allocated_value(RightValue);
 		outgoingInterpolation->set_allocated_tangentvector(RighttangentVector);
 		point->set_allocated_outgoinginterpolation(outgoingInterpolation);
@@ -1682,7 +1705,6 @@ void OutputPtw::ConvertCurveInfo(HmiWidget::TWidget* widget, std::string animati
 		curve->set_allocated_curvedefinition(curveDefinition);
 	}
 }
-
 
 bool hasUColorUniform(std::string id) {
 	auto it = NodeIDUColorNums_.find(id);
@@ -1925,10 +1947,12 @@ void OutputPtw::WriteAsset(std::string filePath) {
 	if (addTrigger_) {
 		changeExNamePrefixAddI();
 		triggerByInternalModel(widget);
-		ConvertAnimationInfo(widget);
+		selfTriggerDomain(widget);
 	}
 	else {
+		changeExNamePrefixInit();
 		triggerByExternalModel(widget);
+		externalTriggerDomain(widget);
 	}
 	switchAnimations(widget);
 	externalScaleData(widget);

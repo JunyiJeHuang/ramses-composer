@@ -88,11 +88,12 @@ struct SKeyPoint {
     QPointF rightPoint;
     int handleType_{HANDLE_TYPE::HANDLE_ALIGNED};
 
-    SKeyPoint(double v1 = 0, double v2 = 0, int t = 0, int key = 0) {
+    SKeyPoint(double v1 = 0, double v2 = 0, int t = 0, int key = 0, int handleType = HANDLE_TYPE::HANDLE_ALIGNED) {
         x = v1;
         y = v2;
         type = t;
         keyFrame = key;
+        handleType_ = handleType;
     }
     void setX(double v) {
         x = v;

@@ -1025,6 +1025,7 @@ void VisualCurveWidget::slotSwitchHandleType(int type) {
     } else {
         slotSwitchVector();
     }
+    update();
 }
 
 void VisualCurveWidget::initVisualCurvePos() {
@@ -1380,10 +1381,6 @@ void VisualCurveWidget::drawWorkerPoint(QPainter &painter, SKeyPoint point, QPai
     int rightY = workerPoint.second.y();
     int rightX = workerPoint.second.x();
     int leftX = workerPoint.first.x();
-
-//    if (leftY < *numHeight && rightY < *numHeight) {
-//        return;
-//    }
 
     auto drawVectorWorker = [&, this]()->void {
         MOUSE_PRESS_ACTION pressAction = VisualCurvePosManager::GetInstance().getPressAction();
@@ -2050,7 +2047,7 @@ void VisualCurveWidget::keyPointMove(QMouseEvent *event) {
     QPointF rightPoint(pressPoint.rightPoint.x() + offsetX, pressPoint.rightPoint.y() + offsetY);
 
     // fill worker point list
-    SKeyPoint newKeyPoint(globalPosX, globalPosY, pressPoint.type, keyFrame);
+    SKeyPoint newKeyPoint(globalPosX, globalPosY, pressPoint.type, keyFrame, pressPoint.handleType_);
     newKeyPoint.setLeftPoint(leftPoint);
     newKeyPoint.setRightPoint(rightPoint);
 
@@ -2710,7 +2707,7 @@ void VisualCurveWidget::multiPointMove(QMouseEvent *event) {
         pressPoint.setRightPoint(rightPoint);
 
         // fill worker point list
-        SKeyPoint newKeyPoint(event->pos().x(), event->pos().y(), pressPoint.type, keyFrame);
+        SKeyPoint newKeyPoint(event->pos().x(), event->pos().y(), pressPoint.type, keyFrame, pressPoint.handleType_);
         newKeyPoint.setLeftPoint(leftPoint);
         newKeyPoint.setRightPoint(rightPoint);
 

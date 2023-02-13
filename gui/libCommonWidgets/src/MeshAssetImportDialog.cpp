@@ -101,7 +101,7 @@ MeshAssetImportDialog::MeshAssetImportDialog(raco::core::MeshScenegraph& sceneGr
     animationModeButtonLayout_->addWidget(new QLabel("Animation Mode:"));
     animationModeButtonLayout_->addStretch();
     animationModeButtonLayout_->addWidget(animationKeyFrameButton_);
-    animationModeButtonLayout_->addWidget(new QLabel("Animation Key"));
+    animationModeButtonLayout_->addWidget(new QLabel("Animation Editor"));
     animationModeButtonLayout_->addStretch();
     animationModeButtonLayout_->addWidget(animationNodeButton_);
     animationModeButtonLayout_->addWidget(new QLabel("Animation Node"));

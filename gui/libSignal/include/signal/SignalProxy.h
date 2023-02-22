@@ -85,6 +85,8 @@ Q_SIGNALS:
     //
     void sigUpdateMeshModelMatrix(const std::string &objectID);
     //
+    void sigSetVisibleMeshNode(const bool &visible, const std::string &objectID);
+    //
     void sigSwitchHandleType(const int &type);
 };
 

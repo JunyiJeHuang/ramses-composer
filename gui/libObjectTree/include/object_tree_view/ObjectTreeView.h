@@ -42,6 +42,7 @@ public:
 	void getOnehandle(QModelIndex index, NodeData *parent, raco::guiData::NodeDataManager &nodeDataManager, std::map<std::string, core::ValueHandle> &NodeNameHandleReMap);
     void getOneMeshHandle(QModelIndex index, QMatrix4x4 matrix = QMatrix4x4());
     void getOneMeshModelMatrix(QModelIndex index, QMatrix4x4 matrix = QMatrix4x4());
+    void removeOneMeshModelMatrix(QModelIndex index);
     bool getOneMeshData(ValueHandle valueHandle, raco::guiData::MeshData &meshData);
     bool getOneMaterialHandle(ValueHandle &valueHandle);
     void getOneMaterials(QModelIndex index, std::map<std::string, core::ValueHandle> &materialHandleMap);
@@ -98,6 +99,7 @@ public Q_SLOTS:
     void fillMeshData();
     void selectActiveObject();
     void updateMeshModelMatrix(const std::string &objectID);
+    void updateMeshNodeVisible(const bool &visible, const std::string &objectID);
     // void deleteAnimationHandle(std::string id);
 	void importBMWAssets(NodeData *nodeData, const std::vector<MaterialData>& maetrials);
     void deleteAnimationHandle(std::set<std::string> ids);
@@ -110,7 +112,7 @@ protected:
 	raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *proxyModel_;
 	QString viewTitle_;
 	std::unordered_set<std::string> expandedItemIDs_;
-	std::unordered_set<std::string> selectedItemIDs_;
+    std::unordered_set<std::string> selectedItemIDs_;
 
 	virtual QMenu* createCustomContextMenu(const QPoint &p);
 

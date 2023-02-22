@@ -213,7 +213,15 @@ void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
     if (parent.isProperty()) {
         std::string parentProp = parent.getPropName();
         if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
+			qDebug() << QString::fromStdString(v.rootObject()->objectID());
             Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrix(v.rootObject()->objectID());
+        }
+    }
+    if (v.isProperty()) {
+        std::string prop = v.getPropName();
+        if (prop == "visible") {
+			qDebug() << QString::fromStdString(v.rootObject()->objectID());
+            Q_EMIT signalProxy::GetInstance().sigSetVisibleMeshNode(v.asBool(), v.rootObject()->objectID());
         }
     }
 }

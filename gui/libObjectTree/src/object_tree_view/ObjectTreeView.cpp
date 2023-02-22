@@ -101,6 +101,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintAfterUndoOpreation, this, &ObjectTreeView::selectActiveObject);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshModelMatrix, this, &ObjectTreeView::updateMeshModelMatrix);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigSetVisibleMeshNode, this, &ObjectTreeView::updateMeshNodeVisible);
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
@@ -391,6 +392,30 @@ void ObjectTreeView::getOneMeshModelMatrix(QModelIndex index, QMatrix4x4 matrix)
         for (int i{0}; i < model()->rowCount(index); i++) {
             QModelIndex tempIndex = model()->index(i, 0, index);
             getOneMeshModelMatrix(tempIndex, matrix);
+        }
+    }
+}
+
+void ObjectTreeView::removeOneMeshModelMatrix(QModelIndex index) {
+    if (!model()->hasChildren(index)) {
+        core::ValueHandle tempHandle = indexToSEditorObject(index);
+
+        raco::guiData::MeshData mesh;
+        std::string objectID = tempHandle[0].asString();
+        if (MeshDataManager::GetInstance().hasMeshData(objectID)) {
+            MeshDataManager::GetInstance().setMeshModelMatrix(objectID, QMatrix4x4());
+        }
+    } else {
+        core::ValueHandle tempHandle = indexToSEditorObject(index);
+
+        std::string objectID = tempHandle[0].asString();
+        if (MeshDataManager::GetInstance().hasMeshData(objectID)) {
+            MeshDataManager::GetInstance().setMeshModelMatrix(objectID, QMatrix4x4());
+        }
+
+        for (int i{0}; i < model()->rowCount(index); i++) {
+            QModelIndex tempIndex = model()->index(i, 0, index);
+            removeOneMeshModelMatrix(tempIndex);
         }
     }
 }
@@ -736,6 +761,20 @@ void ObjectTreeView::updateMeshModelMatrix(const std::string &objectID) {
     QMatrix4x4 matrix;
     for (QMatrix4x4 temp : qAsConst(matrixs)) {
         matrix = matrix * temp;
+    }
+    getOneMeshModelMatrix(index, matrix);
+}
+
+void ObjectTreeView::updateMeshNodeVisible(const bool &visible, const std::string &objectID) {
+    if (viewTitle_.compare(QString("Scene Graph")) != 0) {
+        return;
+    }
+
+    if (!visible) {
+        QModelIndex index = indexFromTreeNodeID(objectID);
+        removeOneMeshModelMatrix(index);
+    } else {
+        updateMeshModelMatrix(objectID);
     }
 }
 

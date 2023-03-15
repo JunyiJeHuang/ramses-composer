@@ -859,6 +859,27 @@ int attriIndex(std::vector<Attribute> attrs, std::string aName) {
 
 namespace raco::dataConvert {
 
+bool ProgramManager::writeProgram(QString filePath) {
+	bool result = true;
+    // 1. Output Json file
+	if (!writeProgram2Json(filePath)) {
+		qDebug() << "Write Json file ERROR!";
+		result = false;
+    }
+	// 2. Output Ptx file
+//	if (!outputPtx_.writeProgram2Ptx(filePath)) {
+//		qDebug() << "Write Ptx file ERROR!";
+//		result = false;
+//    }
+    // 3. Output Asset file
+//    writeAsset(filePath.toStdString());
+
+    // 4. Output ctm file
+    writeCTMFile();
+
+	return result;
+}
+
 void ProgramManager::setRelativePath(QString path) {
     relativePath_ = path;
 }

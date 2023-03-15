@@ -650,12 +650,19 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
 
 	auto selectedObject = indexToSEditorObject(selectedIndex);
 
+<<<<<<< HEAD
 	// create dummy cache entry to prevent "cache corpses" if the mesh file is otherwise not accessed by any Mesh
 	auto dummyCacheEntry = commandInterface_->meshCache()->registerFileChangedHandler(absPath, {nullptr, nullptr, []() {}});
 	if (auto sceneGraphPtr = commandInterface_->meshCache()->getMeshScenegraph(absPath)) {
 		MeshScenegraph sceneGraph{*sceneGraphPtr};
 		auto importStatus = raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr).exec();
 		if (importStatus == QDialog::Accepted) {
+=======
+    if (auto sceneGraph = commandInterface_->meshCache()->getMeshScenegraph(meshDesc)) {
+		auto importDialog = new raco::common_widgets::MeshAssetImportDialog(*sceneGraph, nullptr);
+		auto importStatus = importDialog->exec();
+		if (importStatus == QDialog::Accepted && selectedObject != nullptr) {
+>>>>>>> 120172d (0713 merge source code)
 			bool projectZup = project()->settings()->axes_.asBool();
 			ValueHandle translation_y{selectedObject, &user_types::Node::translation_, &core::Vec3f::y};
 			ValueHandle translation_z{selectedObject, &user_types::Node::translation_, &core::Vec3f::z};
@@ -777,6 +784,7 @@ std::vector<std::string> raco::object_tree::model::ObjectTreeViewDefaultModel::t
 	}
 }
 
+<<<<<<< HEAD
 std::set<std::string> ObjectTreeViewDefaultModel::externalProjectPathsAtIndices(const QModelIndexList& indices) {
 	std::set<std::string> projectPaths;
 	for (const auto& index : indices) {
@@ -822,3 +830,6 @@ bool ObjectTreeViewDefaultModel::setData(const QModelIndex& index, const QVarian
 }
 
 }  // namespace raco::object_tree::model
+=======
+}  // namespace raco::object_tree::model
+>>>>>>> 120172d (0713 merge source code)

@@ -790,6 +790,8 @@ void MainWindow::initLogic() {
 
     // Material logic
     materialLogic_ = new raco::material_logic::MateralLogic(this);
+
+    gltfAnimationMgr_ = new GltfAnimationManager(racoApplication_->activeRaCoProject().commandInterface(), this);
 }
 
 void MainWindow::updateApplicationTitle() {
@@ -975,6 +977,7 @@ QString MainWindow::getActiveProjectFolder() {
 void MainWindow::restoreCachedLayout() {
 	auto cachedLayoutInfo = dockManager_->getCachedLayoutInfo();
     nodeLogic_->setCommandInterface(racoApplication_->activeRaCoProject().commandInterface());
+    gltfAnimationMgr_->commandInterface(racoApplication_->activeRaCoProject().commandInterface());
 
 	if (cachedLayoutInfo.empty()) {
         createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, curveLogic_, programManager_);

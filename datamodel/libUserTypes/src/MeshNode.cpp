@@ -18,7 +18,7 @@
 #include "core/Errors.h"
 #include "core/Project.h"
 #include "user_types/UserObjectFactory.h"
-
+#include "NodeData/nodeManager.h"
 #include <memory>
 
 namespace raco::user_types {
@@ -134,6 +134,7 @@ PropertyInterface MeshNode::makeInterfaceFromProperty(std::string_view name, con
 
 void MeshNode::updateUniformContainer(BaseContext& context, const std::string& materialName, const Table* src, ValueHandle& destUniforms) {
 	raco::core::PropertyInterfaceList uniformDescription;
+	auto pNode = guiData::NodeDataManager::GetInstance().searchNodeByID(objectID());
 	if (src) {
 		for (size_t i = 0; i < src->size(); i++) {
 			uniformDescription.emplace_back(makeInterfaceFromProperty(src->name(i), src->get(i)));

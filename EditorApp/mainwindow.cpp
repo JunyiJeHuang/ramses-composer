@@ -172,8 +172,13 @@ void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::prop
 <<<<<<< HEAD
 =======
 
+
 	// Trigger to create keyframes and curves
+<<<<<<< HEAD
 >>>>>>> b51b33c (fix: Fixed export ptx information redundancy and export uniform property)
+=======
+
+>>>>>>> 0342eca (modify uniform in mesh node)
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurve, mainWindow, &MainWindow::slotCreateCurve);
     QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurveAndBinding, mainWindow, &MainWindow::slotCreateCurveAndBinding);
 
@@ -768,10 +773,14 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	// (see https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/315)
 	delete dockManager_;
 	logViewModel_->clear();
+<<<<<<< HEAD
 
 
 	killTimer(renderTimerId_);
 
+=======
+	programManager_.readProgramFromJson(file);
+>>>>>>> 0342eca (modify uniform in mesh node)
 	try {
 		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
 			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
@@ -838,8 +847,6 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 		ui->menuDebug->removeAction(ui->actionEnableRuntimeScriptPreview);
 		racoApplication_->activeRaCoProject().project()->settings()->runTimer_ = false;
 	}
-
-    programManager_.readProgramFromJson(file);
 }
 
 MainWindow::~MainWindow() {

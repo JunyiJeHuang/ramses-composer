@@ -361,6 +361,44 @@ inline void setUniformRecursive(core::Errors* errors, SceneAdaptor* sceneAdaptor
 	}
 }
 
+void setMeshNodeUniform(const core::ValueHandle& uniformsHandle, raco::ramses_base::RamsesAppearance& appearance, std::vector<raco::ramses_base::RamsesTextureSampler>& newSamplers, SceneAdaptor* sceneAdaptor, core::Errors* errors) {
+	setUniform(appearance->get(), uniformsHandle);
+	if (uniformsHandle.type() == core::PrimitiveType::Ref) {
+		auto anno = uniformsHandle.query<user_types::EngineTypeAnnotation>();
+		auto engineType = anno->type();
+
+		raco::ramses_base::RamsesTextureSampler sampler = nullptr;
+		if (engineType == raco::core::EnginePrimitive::TextureSampler2D) {
+			if (auto texture = uniformsHandle.asTypedRef<user_types::Texture>()) {
+				if (auto adaptor = sceneAdaptor->lookup<TextureSamplerAdaptor>(texture)) {
+					sampler = adaptor->getRamsesObjectPointer();
+				}
+			} else if (auto buffer = uniformsHandle.asTypedRef<user_types::RenderBuffer>()) {
+				if (auto adaptor = sceneAdaptor->lookup<RenderBufferAdaptor>(buffer)) {
+					sampler = adaptor->getRamsesObjectPointer();
+				}
+			} else {
+				errors->addError(raco::core::ErrorCategory::GENERAL, raco::core::ErrorLevel::ERROR, uniformsHandle, "Texture or RenderBuffer needed for this uniform.");
+			}
+		} else if (engineType == raco::core::EnginePrimitive::TextureSamplerCube) {
+			if (auto texture = uniformsHandle.asTypedRef<user_types::CubeMap>()) {
+				if (auto adaptor = sceneAdaptor->lookup<CubeMapAdaptor>(texture)) {
+					sampler = adaptor->getRamsesObjectPointer();
+				}
+			} else {
+				errors->addError(raco::core::ErrorCategory::GENERAL, raco::core::ErrorLevel::ERROR, uniformsHandle, "CubeMap needed for this uniform.");
+			}
+		}
+
+		if (sampler) {
+			ramses::UniformInput input;
+			(*appearance)->getEffect().findUniformInput(uniformsHandle.getPropName().c_str(), input);
+			(*appearance)->setInputTexture(input, *sampler);
+			newSamplers.emplace_back(sampler);
+		}
+	}
+}
+
 void updateAppearance(core::Errors* errors, SceneAdaptor* sceneAdaptor, raco::ramses_base::RamsesAppearance appearance, const core::ValueHandle& optionsHandle, const core::ValueHandle& uniformsHandle) {
 	auto colorOp = static_cast<user_types::EBlendOperation>(optionsHandle.get("blendOperationColor").as<int>());
 	auto alphaOp = static_cast<user_types::EBlendOperation>(optionsHandle.get("blendOperationAlpha").as<int>());
@@ -391,6 +429,27 @@ void updateAppearance(core::Errors* errors, SceneAdaptor* sceneAdaptor, raco::ra
 		setUniformRecursive(errors, sceneAdaptor, appearance->get(), uniformsHandle, uniformsHandle[i], newSamplers, newSamplersMS, newSamplersExternal);
 	}
 	appearance->replaceTrackedSamplers(newSamplers, newSamplersMS, newSamplersExternal);
+}
+void updateMeshNodeAppearance(core::Errors* errors, SceneAdaptor* sceneAdaptor, raco::ramses_base::RamsesAppearance appearance, const core::ValueHandle& optionsHandle, const core::ValueHandle& uniformsHandle, const core::ValueHandle& MUniformsHandle) {
+	setDepthWrite(appearance->get(), optionsHandle.get("depthwrite"));
+	setDepthFunction(appearance->get(), optionsHandle.get("depthFunction"));
+	setBlendMode(appearance->get(), optionsHandle);
+	setBlendColor(appearance->get(), optionsHandle.get("blendColor"));
+	setCullMode(appearance->get(), optionsHandle.get("cullmode"));
+
+	std::vector<raco::ramses_base::RamsesTextureSampler> newSamplers;
+	core::ValueHandle tmpUniformsHandle;
+	for (size_t i{0}; i < MUniformsHandle.size(); i++) {
+		tmpUniformsHandle = MUniformsHandle[i];
+		for (size_t j{0}; j < uniformsHandle.size(); j++) {
+			if (MUniformsHandle[i].getPropName() == uniformsHandle[j].getPropName()) {
+				tmpUniformsHandle = uniformsHandle[j];
+				break;
+			}
+		}
+		setMeshNodeUniform(tmpUniformsHandle, appearance, newSamplers, sceneAdaptor, errors);
+	}
+	appearance->replaceTrackedSamplers(newSamplers);
 }
 
 };	// namespace raco::ramses_adaptor

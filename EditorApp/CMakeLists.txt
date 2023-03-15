@@ -73,6 +73,7 @@ PUBLIC
         raco::signal
 		raco::TimeAxis
 		raco::material_logic
+		raco::dataConvert
 	Qt5::Widgets
 	qtadvanceddocking
 	raco::PythonAPI

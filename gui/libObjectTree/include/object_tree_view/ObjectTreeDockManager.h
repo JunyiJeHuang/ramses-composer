@@ -34,6 +34,8 @@ Q_SIGNALS:
 	void treeDockListChanged();
 	void newObjectTreeItemsSelected(const std::set<raco::core::ValueHandle> &objects);
 	void selectionCleared();
+	// void createKeyFrame(std::set<raco::core::ValueHandle> handles);
+    void selectObject(const QString& objectId);
 
 public Q_SLOTS:
 	void eraseTreeDock(ObjectTreeDock* dockToErase);

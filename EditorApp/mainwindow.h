@@ -18,6 +18,7 @@
 #include "node_logic/NodeLogic.h"
 #include "curve/CurveNameWidget.h"
 #include "material_logic/materalLogic.h"
+#include "data_Convert/ProgramManager.h"
 
 #include <QListWidget>
 #include <QMainWindow>
@@ -119,6 +120,7 @@ private:
 	raco::application::RaCoApplication* racoApplication_;
 	raco::object_tree::view::ObjectTreeDockManager treeDockManager_;
 	raco::common_widgets::TimingsModel timingsModel_{this};
+    raco::dataConvert::ProgramManager programManager_;
 	QMetaObject::Connection activeProjectFileConnection_;
 	QMetaObject::Connection projectSavedConnection_;
 	raco::common_widgets::LogViewModel* logViewModel_;

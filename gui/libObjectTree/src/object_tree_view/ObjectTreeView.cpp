@@ -83,7 +83,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 
 		auto selectedObjects = indicesToSEditorObjects(selectedItemList.indexes());		
 		for (const auto &selObj : selectedObjects) {
-			selectedItemIDs_.emplace(selObj->objectID());
+            selectedItemIDs_.emplace(selObj->objectID());
 		}
 
 		auto deselectedObjects = indicesToSEditorObjects(deselectedItemList.indexes());		
@@ -97,6 +97,8 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 	connect(treeModel_, &ObjectTreeViewDefaultModel::modelReset, this, &ObjectTreeView::restoreItemExpansionStates);
 	connect(treeModel_, &ObjectTreeViewDefaultModel::modelReset, this, &ObjectTreeView::restoreItemSelectionStates);
     connect(treeModel_, &raco::object_tree::model::ObjectTreeViewDefaultModel::editNodeOpreations, this, &ObjectTreeView::globalOpreations);
+
+    connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintAfterUndoOpreation, this, &ObjectTreeView::selectActiveObject);
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
@@ -545,6 +547,33 @@ void ObjectTreeView::fillMeshData() {
         return;
     }
     updateMeshData();
+}
+
+void ObjectTreeView::selectActiveObject() {
+    std::string objId;
+    if (raco::guiData::NodeDataManager::GetInstance().getActiveNode()) {
+        objId = raco::guiData::NodeDataManager::GetInstance().getActiveNode()->objectID();
+    } else {
+        objId = raco::guiData::NodeDataManager::GetInstance().root().objectID();
+    }
+
+    if (objId.empty()) {
+        return;
+    }
+    auto objectIndex = indexFromTreeNodeID(objId);
+    resetSelection();
+    selectionModel()->blockSignals(true);
+    selectionModel()->select(objectIndex, SELECTION_MODE);
+    selectionModel()->blockSignals(false);
+
+    scrollTo(objectIndex);
+    selectedItemIDs_.emplace(objId);
+
+    std::set<ValueHandle> handles = getSelectedHandles();
+    if (!handles.empty()) {
+        auto handle = *handles.begin();
+        Q_EMIT signalProxy::GetInstance().sigRepaintPropertyBrowserAfterUndo(handle);
+    }
 }
 
 void ObjectTreeView::deleteAnimationHandle(std::set<std::string> ids) {

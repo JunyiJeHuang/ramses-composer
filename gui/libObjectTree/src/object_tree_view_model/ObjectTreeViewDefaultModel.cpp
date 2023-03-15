@@ -505,6 +505,8 @@ SEditorObject ObjectTreeViewDefaultModel::createNewObject(const std::string& typ
 	auto name = project()->findAvailableUniqueName(nodes.begin(), nodes.end(), nullptr, nodeName.empty() ? raco::components::Naming::format(typeName) : nodeName);
 	auto newObj = commandInterface_->createObject(typeName, name, parent.isValid() ? parentObj : nullptr);
 
+    Q_EMIT editNodeOpreations();
+
 	return newObj;
 }
 
@@ -588,7 +590,9 @@ bool ObjectTreeViewDefaultModel::canDuplicateAtIndices(const QModelIndexList& in
 }
 
 size_t ObjectTreeViewDefaultModel::deleteObjectsAtIndices(const QModelIndexList& indices) {
-	return commandInterface_->deleteObjects(indicesToSEditorObjects(indices));
+    size_t t = commandInterface_->deleteObjects(indicesToSEditorObjects(indices));
+    Q_EMIT editNodeOpreations();
+    return t;
 }
 
 bool ObjectTreeViewDefaultModel::canDeleteUnusedResources() const {
@@ -618,6 +622,7 @@ bool ObjectTreeViewDefaultModel::pasteObjectAtIndex(const QModelIndex& index, bo
 			*outError = error.what();
 		}
 	}
+	Q_EMIT editNodeOpreations();
 	return success;
 }
 
@@ -632,10 +637,12 @@ void ObjectTreeViewDefaultModel::cutObjectsAtIndices(const QModelIndexList& indi
 	if (!text.empty()) {
 		RaCoClipboard::set(text);
 	}
+    Q_EMIT editNodeOpreations();
 }
 
 void ObjectTreeViewDefaultModel::moveScenegraphChildren(const std::vector<SEditorObject>& objects, SEditorObject parent, int row) {
 	commandInterface_->moveScenegraphChildren(objects, parent, parent ? row : -1);
+    Q_EMIT editNodeOpreations();
 }
 
 void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex) {
@@ -655,6 +662,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
 		auto meshError = commandInterface_->meshCache()->getMeshError(absPath);
 		Q_EMIT meshImportFailed(absPath, meshError);
 	}
+    Q_EMIT editNodeOpreations();
 }
 
 int ObjectTreeViewDefaultModel::rowCount(const QModelIndex& parent) const {

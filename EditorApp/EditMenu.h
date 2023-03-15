@@ -26,8 +26,10 @@ class EditMenu final : public QObject {
 public:
 	explicit EditMenu(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager, QMenu* menu);
 
-	static void globalUndoCallback(raco::application::RaCoApplication* racoApplication);
-	static void globalRedoCallback(raco::application::RaCoApplication* racoApplication);
+    static void globalUndoCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager);
+    static void globalRedoCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager);
+	static void globalCopyCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager);
+	static void globalPasteCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager);
 
 private:
 	raco::components::Subscription sub_;

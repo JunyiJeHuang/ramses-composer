@@ -92,6 +92,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 
 	connect(treeModel_, &ObjectTreeViewDefaultModel::modelReset, this, &ObjectTreeView::restoreItemExpansionStates);
 	connect(treeModel_, &ObjectTreeViewDefaultModel::modelReset, this, &ObjectTreeView::restoreItemSelectionStates);
+    connect(treeModel_, &raco::object_tree::model::ObjectTreeViewDefaultModel::editNodeOpreations, this, &ObjectTreeView::globalOpreations);
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
@@ -247,6 +248,16 @@ std::map<std::string, core::ValueHandle> ObjectTreeView::updateResource() {
 	return ResHandleReMap;
 }
 
+void ObjectTreeView::globalOpreations() {
+	// TBD
+    QTime dieTime = QTime::currentTime().addMSecs(5);
+    while( QTime::currentTime() < dieTime ) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+    std::map<std::string, core::ValueHandle> handleMap = updateNodeTree();
+    Q_EMIT updateNodeHandles(viewTitle_, handleMap);
+}
+
 void ObjectTreeView::copyObjects() {
 	auto selectedIndices = getSelectedIndices(true);
 	if (!selectedIndices.empty()) {
@@ -308,6 +319,13 @@ void ObjectTreeView::expandAllParentsOfObject(const QString &objectID) {
 	if (objectIndex.isValid()) {
 		expandAllParentsOfObject(objectIndex);
 	}
+}
+
+void ObjectTreeView::getResourceHandles() {
+    if (viewTitle_ == QString("Resources")) {
+        std::map<std::string, core::ValueHandle> handleMap = updateResource();
+        Q_EMIT setResourceHandles(handleMap);
+    }
 }
 
 void ObjectTreeView::expanded(const QModelIndex &index) {

@@ -81,7 +81,8 @@ public Q_SLOTS:
 	void focusToObject(const QString& objectID);
 	void slotCreateCurveAndBinding(QString property, QString curve, QVariant value);
 	void slotCreateCurve(QString property, QString curve, QVariant value);
-
+    void setResourceHandles(const std::map<std::string, raco::core::ValueHandle> &map);
+    void updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map);
 protected:
 	void timerEvent(QTimerEvent* event) override;
 	void closeEvent(QCloseEvent* event) override;
@@ -108,7 +109,7 @@ Q_SIGNALS:
 	void viewportChanged(const QSize& sceneSize);
 	void objectFocusRequestedForPropertyBrowser(const QString& objectID);
 	void objectFocusRequestedForTreeDock(const QString& objectID);
-
+    void getResourceHandles();
 private:
 	Ui::MainWindow* ui;
 	OpenRecentMenu* recentFileMenu_;

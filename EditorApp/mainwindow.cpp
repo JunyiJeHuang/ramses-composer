@@ -234,14 +234,14 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 			 	? raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_NAME
 				: raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_TYPE,
 			Qt::SortOrder::AscendingOrder);
+	QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
+	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setResourceHandles, mainWindow, &MainWindow::setResourceHandles);
+	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::updateNodeHandles, mainWindow, &MainWindow::updateNodeHandles);
 
 	QString tempTitle(title);
-	if (tempTitle == QString("Scene Graph")) {
+	if (tempTitle.compare(QString("Scene Graph")) == 0) {
 		nodeDataPro->setNodeNameHandleReMap(newTreeView->updateNodeTree());
 		nodeDataPro->AnalyzeHandle();
-    } else if (tempTitle == QString("Resources")) {
-        materialLogic->setResourcesHandleReMap(newTreeView->updateResource());
-        materialLogic->Analyzing();
 	}
 	if (sortFilterModel) {
 		newTreeView->setSortingEnabled(true);
@@ -462,7 +462,7 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 	updateUpgradeMenu();
 
 	dockManager_ = createDockManager(this);
-	setWindowIcon(QIcon(":applicationLogo"));
+    setWindowIcon(raco::style::Icons::instance().appLogo);
 
 	logViewModel_ = new raco::common_widgets::LogViewModel(this);
 
@@ -473,11 +473,11 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 	{
 		auto undoShortcut = new QShortcut(QKeySequence::Undo, this, nullptr, nullptr, Qt::ApplicationShortcut);
 		QObject::connect(undoShortcut, &QShortcut::activated, this, [this]() {
-			EditMenu::globalUndoCallback(racoApplication_);
+			EditMenu::globalUndoCallback(racoApplication_, &treeDockManager_);
 		});
 		auto redoShortcut = new QShortcut(QKeySequence::Redo, this, nullptr, nullptr, Qt::ApplicationShortcut);
 		QObject::connect(redoShortcut, &QShortcut::activated, this, [this]() {
-			EditMenu::globalRedoCallback(racoApplication_);
+			EditMenu::globalRedoCallback(racoApplication_, &treeDockManager_);
 		});
 
 		ui->actionSave->setShortcut(QKeySequence::Save);
@@ -675,6 +675,7 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 			LOG_WARNING(raco::log_system::COMMON, "Saving layout failed: {}", raco::core::PathManager::recentFilesStorePath().string());
 		}
 	}
+    Q_EMIT signalProxy::GetInstance().sigResetAllData_From_MainWindow();
 
 	// Delete all ui widgets (and their listeners) before changing the project
 	// Don't create a new DockManager right away - making QMessageBoxes pop up messes up state restoring
@@ -829,6 +830,7 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 		if (newPath.isEmpty()) {
 			return false;
 		}
+		Q_EMIT getResourceHandles();
 		if (!newPath.endsWith(".rca")) newPath += ".rca";
 		std::string errorMsg;
 		if (newID) {
@@ -921,6 +923,8 @@ QString MainWindow::getActiveProjectFolder() {
 
 void MainWindow::restoreCachedLayout() {
 	auto cachedLayoutInfo = dockManager_->getCachedLayoutInfo();
+    nodeLogic_->setCommandInterface(racoApplication_->activeRaCoProject().commandInterface());
+
 	if (cachedLayoutInfo.empty()) {
 		createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, programManager_);
 
@@ -1023,6 +1027,20 @@ void MainWindow::focusToObject(const QString& objectID) {
 	} else {
 		Q_EMIT objectFocusRequestedForPropertyBrowser(objectID);
 	}
+}
+
+void MainWindow::setResourceHandles(const std::map<std::string, ValueHandle> &map) {
+    if (materialLogic_) {
+        materialLogic_->setResourcesHandleReMap(map);
+        materialLogic_->Analyzing();
+    }
+}
+
+void MainWindow::updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map) {
+	if (title.compare(QString("Scene Graph")) == 0 && nodeLogic_) {
+		nodeLogic_->setNodeNameHandleReMap(map);
+		nodeLogic_->AnalyzeHandle();
+    }
 }
 
 void MainWindow::slotCreateCurveAndBinding(QString property, QString curve, QVariant value) {

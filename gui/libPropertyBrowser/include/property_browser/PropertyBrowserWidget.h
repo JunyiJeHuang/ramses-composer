@@ -12,10 +12,16 @@
 #include <QWidget>
 #include <QMetaObject>
 #include <unordered_set>
+#include <QMenu>
 
 #include "core/SceneBackendInterface.h"
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserLayouts.h"
+#include "property_browser/PropertyBrowserNodeWidget.h"
+#include "property_browser/PropertyBrowserMeshWidget.h"
+#include "property_browser/PropertyBrowserCustomWidget.h"
+#include "property_browser/PropertyBrowserCurveBindingWidget.h"
+#include "property_browser/PropertySubtreeView.h"
 
 class QPushButton;
 
@@ -24,6 +30,7 @@ class PropertyBrowserItem;
 class PropertyBrowserModel;
 
 class PropertyBrowserView final : public QWidget {
+    Q_OBJECT
 public:
 	explicit PropertyBrowserView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserItem* item, PropertyBrowserModel* model, QWidget* parent = nullptr);
 
@@ -33,10 +40,13 @@ private:
 	QPoint verticalPivot_{0, 0};
 	QWidget* verticalPivotWidget_{nullptr};
 	std::string currentObjectID_;
+
 	raco::core::SceneBackendInterface* sceneBackend_;
+    PropertySubtreeView* propertySubTreeView_{nullptr};
 };
 
 class PropertyBrowserWidget final : public QWidget {
+    Q_OBJECT
 public:
 	explicit PropertyBrowserWidget(
 		raco::components::SDataChangeDispatcher dispatcher,
@@ -45,17 +55,24 @@ public:
 		QWidget* parent = nullptr);
 
 	PropertyBrowserModel* model() const;
+    void initPropertyBrowserWidget();
 
 public Q_SLOTS:
 	void setValueHandleFromObjectId(const QString& objectID);
 	void setValueHandle(raco::core::ValueHandle valueHandle);
 	void setValueHandles(const std::set<raco::core::ValueHandle>& valueHandles);
 	void clear();
-	void setLockable(bool lockable);
+    void setLockable(bool lockable);
 
+    void slotInsertCurveBinding(QString property, QString curve);
+    void slotTreeMenu(const QPoint& pos);
+    void slotRefreshPropertyBrowser();
+    void slotResetPropertyBrowser();
 private:
 	void setLocked(bool locked);
 	void clearValueHandle(bool restorable);
+    void switchNode(std::string objectID);
+
 
 	raco::components::SDataChangeDispatcher dispatcher_;
 	raco::core::CommandInterface* commandInterface_;
@@ -68,6 +85,14 @@ private:
 	bool locked_;
 	PropertyBrowserModel* model_;
 	QPushButton* lockButton_;
+	PropertyBrowserItem* item_{nullptr};
+    PropertyBrowserNodeWidget* systemNodeWidget_{nullptr};
+    PropertyBrowserNodeWidget* meshNodeWidget_{nullptr};
+    PropertyBrowserNodeWidget* customNodeWidget_{nullptr};
+    PropertyBrowserNodeWidget* curveBindingNodeWidget_{nullptr};
+    PropertyBrowserMeshWidget* meshWidget_{nullptr};
+    PropertyBrowserCustomWidget* customWidget_{nullptr};
+    PropertyBrowserCurveBindingWidget* curveBindingWidget_{nullptr};
 };
 
 }  // namespace raco::property_browser

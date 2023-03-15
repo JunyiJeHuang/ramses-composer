@@ -122,6 +122,20 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		if (!item->valueHandle().isObject()) {
 			generateItemTooltip(item, true);
 		}
+		if (item->displayName() == "uniforms") {
+			//setUniformControls(item, labelLayout);
+			std::vector<Uniform> uniforms = Item2Uniform(item);
+			raco::guiData::MaterialManager::GetInstance().curUniformClear();
+			NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+			pNode->uniformClear();
+			for (auto& un : uniforms) {
+				raco::guiData::MaterialManager::GetInstance().addCurUniform(un);
+				pNode->insertUniformData(un);
+			}
+			// Get the uniform of the PNode
+			showedUniforChildren_.clear();
+			uniformSubtreeViewList_.clear();
+		}
 
 		if (item->displayName() == "uniforms") {
 			setUniformControls(item, labelLayout);
@@ -568,14 +582,14 @@ void PropertySubtreeView::updateChildrenContainer() {
 				} else {
 					auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
 					childrenContainer_->addWidget(subtree);
-				}
+				//}
 			}
 
 			QObject::connect(item_, &PropertyBrowserItem::childrenChanged, childrenContainer_, [this](const QList<PropertyBrowserItem*> items) {
 				Q_EMIT model_->beforeStructuralChange(this);
-				if (item_->displayName() == "uniforms" && materialChanged()) {
-					return;
-				}
+				//if (item_->displayName() == "uniforms" && materialChanged()) {
+				//	return;
+				//}
 				for (auto& childWidget : childrenContainer_->findChildren<PropertySubtreeView*>(QString{}, Qt::FindDirectChildrenOnly)) {
 					Q_EMIT model_->beforeRemoveWidget(childWidget);
 					childrenContainer_->removeWidget(childWidget);
@@ -585,15 +599,6 @@ void PropertySubtreeView::updateChildrenContainer() {
 					if (child->parentItem()->displayName() != "uniforms") {
 						auto* subtree = new PropertySubtreeView{model_, child, childrenContainer_};
 						childrenContainer_->addWidget(subtree);
-					} else {
-						for (auto& it : showedUniforChildren_) {
-							if (child->displayName() == it->displayName()) {
-								auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-								childrenContainer_->addWidget(subtree);
-								break;
-							}
-						}
-					}
 				}
 				recalculateTabOrder();
 			});

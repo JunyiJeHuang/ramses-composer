@@ -73,6 +73,7 @@ PUBLIC
         raco::Curve
         raco::signal
         raco::TimeAxis
+#        raco::VisualCurve
         raco::material_logic
         raco::dataConvert
 	Qt5::Widgets

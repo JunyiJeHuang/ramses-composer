@@ -236,6 +236,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	QObject::connect(dockModel, &raco::object_tree::model::ObjectTreeViewDefaultModel::meshImportFailed, mainWindow, &MainWindow::showMeshImportErrorMessage);
 	dockModel->buildObjectTree();
 	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel);
+<<<<<<< HEAD
 	if (sortFilterModel && sortFilterModel->sortingEnabled()) {
 		newTreeView->sortByColumn(
 			title == MainWindow::DockWidgetTypes::RESOURCES
@@ -243,8 +244,13 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 				: raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_TYPE,
 			Qt::SortOrder::AscendingOrder);
 	QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
+=======
+	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
+	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
+>>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
     QObject::connect(mainWindow, &MainWindow::updateMeshData, newTreeView, &raco::object_tree::view::ObjectTreeView::updateMeshData);
-	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setResourceHandles, mainWindow, &MainWindow::setResourceHandles);
+	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setMaterialResHandles, mainWindow, &MainWindow::setMaterialResHandles);
+	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setTextureResHandles, mainWindow, &MainWindow::setTextureResHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::updateNodeHandles, mainWindow, &MainWindow::updateNodeHandles);
 
 	QString tempTitle(title);
@@ -876,7 +882,8 @@ bool MainWindow::exportBMWAssets() {
 			return false;
 		}
 
-		Q_EMIT getResourceHandles();
+		Q_EMIT getMaterialResHandles();
+		Q_EMIT getTextureResHandles();
 		Q_EMIT updateMeshData();
 		recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
 		updateActiveProjectConnection();
@@ -898,7 +905,7 @@ bool MainWindow::importBMWAssets() {
 		return false;
 	}
 
-	programManager_.readBMWAssets(assetsPath);
+//	programManager_.readBMWAssets(assetsPath);
 	return true;
 }
 
@@ -923,8 +930,6 @@ bool MainWindow::saveAsActiveProject() {
 			return false;
         }
 
-        Q_EMIT getResourceHandles();
-        Q_EMIT updateMeshData();
 		if (!newPath.endsWith(".rca")) newPath += ".rca";
 		std::string errorMsg;
 <<<<<<< HEAD
@@ -1128,6 +1133,7 @@ void MainWindow::updateActiveProjectConnection() {
 	}
 }
 
+<<<<<<< HEAD
 void MainWindow::updateProjectSavedConnection() {
 	QObject::disconnect(projectSavedConnection_);
 	projectSavedConnection_ = QObject::connect(&racoApplication_->activeRaCoProject(), &raco::application::RaCoProject::projectSuccessfullySaved, [this]() {
@@ -1145,10 +1151,20 @@ void MainWindow::focusToObject(const QString& objectID) {
 }
 
 void MainWindow::setResourceHandles(const std::map<std::string, ValueHandle> &map) {
+=======
+void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
+>>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
     if (materialLogic_) {
-        materialLogic_->setResourcesHandleReMap(map);
+		materialLogic_->setMaterialResourcesHandleReMap(mMap);
         materialLogic_->Analyzing();
     }
+}
+
+void MainWindow::setTextureResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
+	if (materialLogic_) {
+		materialLogic_->setTextureResourcesHandleReMap(mMap);
+		materialLogic_->AnalyzingTexture();
+	}
 }
 
 void MainWindow::updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map) {
@@ -1178,16 +1194,15 @@ void MainWindow::slotCreateCurveAndBinding(QString property, QString curve, QVar
         curveNameWidget_->setBindingData(property, curve);
         if (curveNameWidget_->exec() == QDialog::Accepted) {
             curveNameWidget_->getBindingData(property, curve);
-            Q_EMIT signalProxy::GetInstance().sigInsertCurve_From_NodeUI(property, curve, value);
+
             Q_EMIT signalProxy::GetInstance().sigInsertCurveBinding_From_NodeUI(property, curve);
-            Q_EMIT signalProxy::GetInstance().sigInsertKeyFrame_From_NodeUI();
+            Q_EMIT signalProxy::GetInstance().sigInsertCurve_From_NodeUI(property, curve, value);
             Q_EMIT signalProxy::GetInstance().sigRepaintTimeAxis_From_NodeUI();
         }
     }
 }
 
 void MainWindow::slotCreateCurve(QString property, QString curve, QVariant value) {
-    Q_EMIT signalProxy::GetInstance().sigInsertKeyFrame_From_NodeUI();
     Q_EMIT signalProxy::GetInstance().sigInsertCurve_From_NodeUI(property, curve, value);
     Q_EMIT signalProxy::GetInstance().sigRepaintTimeAxis_From_NodeUI();
 }

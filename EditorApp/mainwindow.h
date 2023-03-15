@@ -85,7 +85,8 @@ public Q_SLOTS:
 	void focusToObject(const QString& objectID);
 	void slotCreateCurveAndBinding(QString property, QString curve, QVariant value);
 	void slotCreateCurve(QString property, QString curve, QVariant value);
-    void setResourceHandles(const std::map<std::string, raco::core::ValueHandle> &map);
+    void setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle> &map);
+	void setTextureResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap);
     void updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map);
 protected:
 	void timerEvent(QTimerEvent* event) override;
@@ -113,7 +114,8 @@ protected Q_SLOTS:
 	void updateProjectSavedConnection();
 
 Q_SIGNALS:
-    void getResourceHandles();
+    void getMaterialResHandles();
+	void getTextureResHandles();
     void updateMeshData();
 
 	void viewportChanged(const QSize& sceneSize);

@@ -15,10 +15,16 @@
 #include "ExtrefOperations.h"
 #include "Handles.h"
 #include "Link.h"
+#include "NodeData/nodeDataEx.h"
+#include "NodeData/nodeManager.h"
 
 namespace raco::serialization {
 struct ObjectsDeserialization;
 }  // namespace raco::serialization
+
+namespace raco::guiData {
+class NodeData;
+}  // namespace raco::guiData
 
 namespace raco::core {
 struct MeshDescriptor;
@@ -31,6 +37,7 @@ class UndoStack;
 class Errors;
 class UserObjectFactoryInterface;
 class EngineInterface;
+
 
 class FileChangeCallback;
 
@@ -145,6 +152,9 @@ public:
 	// This includes generating Mesh resources, Nodes and MeshNodes as well as searching for already created Materials.
 	// If parent is invalid, the mesh scenegraph root node will be the project's scenegraph root node.
 	void insertAssetScenegraph(const raco::core::MeshScenegraph& scenegraph, const std::string& absPath, SEditorObject const& parent);
+
+	// If parent is invalid, the mesh scenegraph root node will be the project's scenegraph root node.
+	void insertBMWAssetScenegraph(raco::guiData::NodeData* node, SEditorObject const& parent);
 
 	// Link operations
 	SLink addLink(const ValueHandle& start, const ValueHandle& end, bool isWeak = false);

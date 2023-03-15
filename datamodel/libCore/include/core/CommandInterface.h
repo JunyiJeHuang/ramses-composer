@@ -16,7 +16,11 @@
 #include <string>
 #include <vector>
 
+namespace raco::guiData {
+class NodeData;
+}
 namespace raco::core {
+
 struct MeshDescriptor;
 struct MeshScenegraph;
 
@@ -108,6 +112,7 @@ public:
 	// Calls Context::insertAssetScenegraph and generates a composite undo command.
 	void insertAssetScenegraph(const raco::core::MeshScenegraph& scenegraph, const std::string& absPath, SEditorObject const& parent);
 
+	void insertBMWAssetScenegraph(raco::guiData::NodeData* nodeData, SEditorObject const& parent);
 	/**
 	 * Creates a serialized representation of all given [EditorObject]'s and their appropriate dependencies.
 	 * Used in conjunction with #pasteObjects.

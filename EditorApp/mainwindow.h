@@ -115,6 +115,7 @@ protected Q_SLOTS:
 
 Q_SIGNALS:
     void getMaterialResHandles();
+	void getNodeDataResHandles();
 	void getTextureResHandles();
     void updateMeshData();
 

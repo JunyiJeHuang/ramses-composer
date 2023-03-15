@@ -68,6 +68,8 @@ public Q_SLOTS:
     void slotTreeMenu(const QPoint& pos);
     void slotRefreshPropertyBrowser();
     void slotResetPropertyBrowser();
+	void slotRefreshCurveBindingWidget();
+
 private:
 	void setLocked(bool locked);
 	void clearValueHandle(bool restorable);

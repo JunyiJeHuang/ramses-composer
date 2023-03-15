@@ -86,6 +86,7 @@ std::map<std::string, core::ValueHandle> &NodeLogic::getNodeNameHandleReMap() {
 
 void NodeLogic::setNodeNameHandleReMap(std::map<std::string, core::ValueHandle> nodeNameHandleReMap) {
     QMutexLocker locker(&handleMapMutex_);
+	nodeObjectIDHandleReMap_.clear();
     nodeObjectIDHandleReMap_ = std::move(nodeNameHandleReMap);
 }
 
@@ -311,6 +312,7 @@ void NodeLogic::setPropertyByCurveBinding(const std::string &objecID, const std:
     }
 }
 
+<<<<<<< HEAD
 bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyFrame, double &value) {
     int curX = VisualCurvePosManager::GetInstance().getCurX();
     int curY = VisualCurvePosManager::GetInstance().getCurY();
@@ -423,6 +425,13 @@ bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyF
     }
 
     return false;
+=======
+
+
+void NodeLogic::delNodeBindingByCurveName(std::string curveName) {
+	NodeDataManager::GetInstance().delCurveBindingByName(curveName);
+	Q_EMIT sig_initCurveBindingWidget__NodePro();
+>>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 }
 
 void NodeLogic::slotUpdateKeyFrame(int keyFrame) {

@@ -1294,7 +1294,7 @@ void MainWindow::convert2LuaAnimation() {
     // copy lua animation
     QDir dir(luaPath);
     QFileInfo fileInfo(luaPath);
-    if (!fileInfo.isDir()) {
+    if (!fileInfo.isDir() || QFile::exists(luaPath)) {
         QMessageBox::warning(this, "convert Error", fmt::format("Can not convert lua animation.").c_str(), QMessageBox::Ok);
         return;
     }

@@ -68,6 +68,7 @@ PUBLIC
 	raco::Core 
 	raco::ObjectTree
         raco::Animation
+        raco::Curve
         raco::signal
 	Qt5::Widgets
 	qtadvanceddocking

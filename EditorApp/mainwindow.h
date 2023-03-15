@@ -78,6 +78,7 @@ public:
 	void updateUpgradeMenu();
 
 	const std::vector<std::wstring>& pythonSearchPaths() const;
+	QString curveNameSuffix(QString curveName);
 
 public Q_SLOTS:
 	void showMeshImportErrorMessage(const std::string& filePath, const std::string& meshError);

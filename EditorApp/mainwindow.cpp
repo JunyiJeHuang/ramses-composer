@@ -612,7 +612,7 @@ void MainWindow::saveDockManagerCustomLayouts() {
 		LOG_ERROR(raco::log_system::COMMON, "Saving custom layout failed: {}", raco::core::PathManager::recentFilesStorePath().string());
 		QMessageBox::critical(this, "Saving custom layout failed", QString("Custom layout data could not be saved to disk and will be lost after closing Ramses Composer. Check whether the application can write to its config directory.\nFile: ") 
 			+ QString::fromStdString(PathManager::layoutFilePath().string()));
-	}
+    }
 }
 
 void MainWindow::timerEvent(QTimerEvent* event) {
@@ -851,9 +851,15 @@ bool MainWindow::saveActiveProject() {
 
 bool MainWindow::saveAsActiveProject(bool newID) {
 	if (racoApplication_->canSaveActiveProject()) {
+<<<<<<< HEAD
 		const bool setProjectName = racoApplication_->activeProjectPath().empty();
 		const auto dialogCaption = newID ? "Save As with new ID..." : "Save As...";
 		auto newPath = QFileDialog::getSaveFileName(this, dialogCaption, QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
+=======
+        QString path = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+        bool setProjectName = racoApplication_->activeProjectPath().empty();
+		auto newPath = QFileDialog::getSaveFileName(this, "Save As...", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
+>>>>>>> c7b6b1f (fixed ctm bugs & add visualCurveWidget 2 libTimeAxis)
 		if (newPath.isEmpty()) {
 			return false;
         }

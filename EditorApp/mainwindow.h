@@ -95,7 +95,7 @@ protected:
 	void restoreCachedLayout();
 	void restoreCustomLayout(const QString& layoutName);
 	void regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks);
-	void saveDockManagerCustomLayouts();
+    void saveDockManagerCustomLayouts();
 
 protected Q_SLOTS:
 	void openProject(const QString& file = {}, int featureLevel = -1, bool generateNewObjectIDs = false);

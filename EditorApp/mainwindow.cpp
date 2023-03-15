@@ -47,6 +47,7 @@
 #include "node_logic/NodeLogic.h"
 #include "property/PropertyMainWindow.h"
 #include "animation/AnimationMainWindow.h"
+#include "time_axis/TimeAxisMainWindow.h"
 #include "ramses_adaptor/SceneBackend.h"
 #include "ramses_base/BaseEngineBackend.h"
 #include "ramses_widgets/PreviewMainWindow.h"
@@ -153,16 +154,20 @@ ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* do
 	return dockManager->addDockWidget(ads::CenterDockWidgetArea, dock);
 }
 
-void connectPropertyBrowserAndTreeDockManager(raco::property_browser::PropertyBrowserWidget* propertyBrowser, raco::object_tree::view::ObjectTreeDockManager& treeDockManager) {
+void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::property_browser::PropertyBrowserWidget* propertyBrowser, raco::object_tree::view::ObjectTreeDockManager& treeDockManager) {
 	QObject::connect(&treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::newObjectTreeItemsSelected, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::setValueHandles);
 	QObject::connect(&treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectionCleared, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::clear);
+
+	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObjectAcrossAllTreeDocks);
+	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurve, mainWindow, &MainWindow::slotCreateCurve);
+    QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurveAndBinding, mainWindow, &MainWindow::slotCreateCurveAndBinding);
 }
 
-ads::CDockAreaWidget* createAndAddPropertyBrowser(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* application) {
+ads::CDockAreaWidget* createAndAddPropertyBrowser(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* application, raco::node_logic::NodeLogic* nodeDataPro) {
 	auto propertyBrowser = new raco::property_browser::PropertyBrowserWidget(application->dataChangeDispatcher(), application->activeRaCoProject().commandInterface(), application->sceneBackendImpl(), mainWindow);
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, mainWindow, &MainWindow::focusToObject);
 	QObject::connect(mainWindow, &MainWindow::objectFocusRequestedForPropertyBrowser, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::setValueHandleFromObjectId);
-	connectPropertyBrowserAndTreeDockManager(propertyBrowser, treeDockManager);
+	connectPropertyBrowserAndTreeDockManager(mainWindow, propertyBrowser, treeDockManager);
 	auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::PROPERTY_BROWSER, mainWindow);
 	dockWidget->setWidget(propertyBrowser);
 	dockWidget->setObjectName(dockObjName);
@@ -195,6 +200,15 @@ ads::CDockAreaWidget* createAndAddProperty(MainWindow* mainWindow, const char* d
     dockWidget->setWidget(propertyMainWindow);
     dockWidget->setObjectName(dockObjName);
     return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
+}
+
+ads::CDockAreaWidget* createAndAddTimeAxis(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* application) {
+    auto *timeAxisWindow = new raco::time_axis::TimeAxisMainWindow(application->dataChangeDispatcher(), application->activeRaCoProject().commandInterface(), mainWindow);
+
+    auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::TIME_AXIS_VIEW, mainWindow);
+    dockWidget->setWidget(timeAxisWindow);
+    dockWidget->setObjectName(dockObjName);
+    return dockManager->addDockWidget(ads::BottomDockWidgetArea, dockWidget);
 }
 
 void createAndAddProjectSettings(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::application::RaCoProject* project, SDataChangeDispatcher dataChangeDispatcher, CommandInterface* commandInterface, SceneBackend* sceneBackend) {
@@ -418,6 +432,7 @@ void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::Renderer
 	createAndAddUndoView(application, "defaultUndoView", &application->activeRaCoProject(), mainWindow, dockManager, leftDockArea);
 
     createAndAddPropertyBrowser(mainWindow, "defaultPropertyBrowser", dockManager, treeDockManager, application, nodeDataPro);
+	createAndAddTimeAxis(mainWindow, "defaultTimeAxis", dockManager, treeDockManager, application);
 	createAndAddProperty(mainWindow, "defaultPropertyEditor", dockManager);
     createAndAddAnimation(mainWindow, "defaultAnimation", dockManager);
 	createAndAddCurve(mainWindow, "defaultCurve", dockManager, treeDockManager, application);
@@ -445,6 +460,9 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 	setWindowIcon(QIcon(":applicationLogo"));
 
 	logViewModel_ = new raco::common_widgets::LogViewModel(this);
+
+	// create keyframe widget
+	curveNameWidget_ = new CurveNameWidget(this);
 
 	// Shortcuts
 	{
@@ -512,7 +530,8 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
     QObject::connect(ui->actionNewProperty, &QAction::triggered, [this]() { createAndAddProperty(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
     QObject::connect(ui->actionNewAnimation, &QAction::triggered, [this]() { createAndAddAnimation(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
     QObject::connect(ui->actionNewCurve, &QAction::triggered, [this]() { createAndAddCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, treeDockManager_, racoApplication_); });
-    // QObject::connect(ui->actionNewVisualCurve, &QAction::triggered, [this]() { createAndAddVisualCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
+    QObject::connect(ui->actionNewTimeAxisView, &QAction::triggered, [this]() { createAndAddTimeAxis(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, treeDockManager_, racoApplication_); });
+	// QObject::connect(ui->actionNewVisualCurve, &QAction::triggered, [this]() { createAndAddVisualCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
 
 	QObject::connect(ui->actionSaveCurrentLayout, &QAction::triggered, [this]() {
 		bool ok;
@@ -946,7 +965,9 @@ void MainWindow::regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks
             createAndAddProperty(this, dockNameCString, dockManager_);
         }else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
             createAndAddAnimation(this, dockNameCString, dockManager_);
-		} else {
+		} else if (savedDockType == DockWidgetTypes::TIME_AXIS_VIEW) {
+			createAndAddTimeAxis(this, dockNameCString, dockManager_, treeDockManager_, racoApplication_);
+        } else {
 			LOG_DEBUG(raco::log_system::COMMON, "Ignoring unknown dock type '{}'.", savedDockType.toStdString());
 		}
 	}
@@ -980,6 +1001,25 @@ void MainWindow::focusToObject(const QString& objectID) {
 	} else {
 		Q_EMIT objectFocusRequestedForPropertyBrowser(objectID);
 	}
+}
+
+void MainWindow::slotCreateCurveAndBinding(QString property, QString curve, QVariant value) {
+    if (curveNameWidget_) {
+        curveNameWidget_->setBindingData(property, curve);
+        if (curveNameWidget_->exec() == QDialog::Accepted) {
+            curveNameWidget_->getBindingData(property, curve);
+            Q_EMIT signalProxy::GetInstance().sigInsertCurve_From_NodeUI(property, curve, value);
+            Q_EMIT signalProxy::GetInstance().sigInsertCurveBinding_From_NodeUI(property, curve);
+            Q_EMIT signalProxy::GetInstance().sigInsertKeyFrame_From_NodeUI();
+            Q_EMIT signalProxy::GetInstance().sigRepaintTimeAxis_From_NodeUI();
+        }
+    }
+}
+
+void MainWindow::slotCreateCurve(QString property, QString curve, QVariant value) {
+    Q_EMIT signalProxy::GetInstance().sigInsertKeyFrame_From_NodeUI();
+    Q_EMIT signalProxy::GetInstance().sigInsertCurve_From_NodeUI(property, curve, value);
+    Q_EMIT signalProxy::GetInstance().sigRepaintTimeAxis_From_NodeUI();
 }
 
 void MainWindow::showMeshImportErrorMessage(const std::string& filePath, const std::string& meshError) {

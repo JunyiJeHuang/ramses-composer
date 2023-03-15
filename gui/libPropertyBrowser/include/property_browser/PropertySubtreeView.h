@@ -14,13 +14,21 @@
 #include <QStyle>
 #include <QWidget>
 #include <QLabel>
+#include <QClipboard>
 
 #include "core/SceneBackendInterface.h"
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserLayouts.h"
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertySubtreeChildrenContainer.h"
+#include "property_browser/controls/ExpandButton.h"
+#include "CurveData/CurveManager.h"
+#include "NodeData/nodeManager.h"
+#include "AnimationData/animationData.h"
+#include "signal/SignalProxy.h"
 
+using namespace raco::signal;
+using namespace raco::guiData;
 namespace raco::property_browser {
 class PropertyControl;
 class PropertyEditor;
@@ -40,7 +48,10 @@ public Q_SLOTS:
 	void playStructureChangeAnimation();
 	void setLabelAreaWidth(int offset);
 	void updateChildrenContainer();
-
+	void updatePropertyControl();
+    void slotTreeMenu(const QPoint &pos);
+    void slotInsertKeyFrame();
+    void slotCopyProperty();
 protected:
 	void paintEvent(QPaintEvent* event) override;
 	int getLabelAreaWidthHint() const;
@@ -50,8 +61,8 @@ private:
 	void collectTabWidgets(QObject* item, QWidgetList& tabWidgets);
 	void recalculateTabOrder();
 	void registerCopyPasteContextMenu(QWidget* widget);
-
 	raco::core::SceneBackendInterface* sceneBackend_;
+    bool isValidValueHandle(QStringList list, raco::core::ValueHandle handle);
 
 	PropertyBrowserItem* item_{nullptr};
 	PropertyBrowserModel* model_ {nullptr};
@@ -60,6 +71,8 @@ private:
 	QLabel* label_{nullptr};
 	PropertyEditor* propertyControl_{nullptr};
 	PropertySubtreeChildrenContainer* childrenContainer_{nullptr};
+    QAction* insertKeyFrameAction_{nullptr};
+    QAction* copyProperty_{nullptr};
 	int labelWidth_{0};
 	float highlight_{0};
 	void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);

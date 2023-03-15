@@ -16,6 +16,7 @@
 #include "ramses_widgets/RendererBackend.h"
 #include "common_widgets/log_model/LogViewModel.h"
 #include "node_logic/NodeLogic.h"
+#include "curve/CurveNameWidget.h"
 
 #include <QListWidget>
 #include <QMainWindow>
@@ -56,6 +57,7 @@ public:
 		static inline const char* PYTHON_RUNNER{"Python Runner"};
 		static inline const char* TRACE_PLAYER{"Trace Player"};
 		static inline const char* PROPERTY_VIEW{"property View"};
+		static inline const char* TIME_AXIS_VIEW{"Time Axis View"};
 	};
 
 	explicit MainWindow(
@@ -75,6 +77,8 @@ public:
 public Q_SLOTS:
 	void showMeshImportErrorMessage(const std::string& filePath, const std::string& meshError);
 	void focusToObject(const QString& objectID);
+	void slotCreateCurveAndBinding(QString property, QString curve, QVariant value);
+	void slotCreateCurve(QString property, QString curve, QVariant value);
 
 protected:
 	void timerEvent(QTimerEvent* event) override;
@@ -120,6 +124,7 @@ private:
 	std::map<QString, qint64> pythonScriptCache_;
 	std::map<QString, qint64> pythonScriptArgumentCache_;
 	raco::node_logic::NodeLogic* nodeLogic_{nullptr};
+	CurveNameWidget* curveNameWidget_{nullptr};
 
 	int renderTimerId_ = 0;
 };

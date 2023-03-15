@@ -44,6 +44,7 @@
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertyBrowserWidget.h"
 #include "curve/CurveWindow.h"
+#include "property/PropertyMainWindow.h"
 #include "animation/AnimationMainWindow.h"
 #include "ramses_adaptor/SceneBackend.h"
 #include "ramses_base/BaseEngineBackend.h"
@@ -182,6 +183,15 @@ ads::CDockAreaWidget* createAndAddCurve(MainWindow* mainWindow, const char* dock
 
     auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::CURVE_VIEW, mainWindow);
     dockWidget->setWidget(curveWindow);
+    dockWidget->setObjectName(dockObjName);
+    return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
+}
+
+ads::CDockAreaWidget* createAndAddProperty(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager) {
+    auto *propertyMainWindow = new raco::property::PropertyMainWindows(mainWindow);
+
+    auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::PROPERTY_VIEW, mainWindow);
+    dockWidget->setWidget(propertyMainWindow);
     dockWidget->setObjectName(dockObjName);
     return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
 }
@@ -398,7 +408,7 @@ void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::Renderer
 	createAndAddUndoView(application, "defaultUndoView", &application->activeRaCoProject(), mainWindow, dockManager, leftDockArea);
 
 	createAndAddPropertyBrowser(mainWindow, "defaultPropertyBrowser", dockManager, treeDockManager, application);
-
+	createAndAddProperty(mainWindow, "defaultPropertyEditor", dockManager);
     createAndAddAnimation(mainWindow, "defaultAnimation", dockManager);
 	createAndAddCurve(mainWindow, "defaultCurve", dockManager, treeDockManager, application);
 }
@@ -487,6 +497,7 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		resetDockManager();
 		createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_);
 	});
+    QObject::connect(ui->actionNewProperty, &QAction::triggered, [this]() { createAndAddProperty(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
     QObject::connect(ui->actionNewAnimation, &QAction::triggered, [this]() { createAndAddAnimation(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
     QObject::connect(ui->actionNewCurve, &QAction::triggered, [this]() { createAndAddCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, treeDockManager_, racoApplication_); });
     // QObject::connect(ui->actionNewVisualCurve, &QAction::triggered, [this]() { createAndAddVisualCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
@@ -919,6 +930,8 @@ void MainWindow::regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks
         } else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
         }else if(savedDockType == DockWidgetTypes::CURVE_VIEW) {
 			createAndAddCurve(this, dockNameCString, dockManager_, treeDockManager_, racoApplication_);
+        }else if (savedDockType == DockWidgetTypes::PROPERTY_VIEW) {
+            createAndAddProperty(this, dockNameCString, dockManager_);
         }else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
             createAndAddAnimation(this, dockNameCString, dockManager_);
 		} else {

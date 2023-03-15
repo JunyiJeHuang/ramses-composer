@@ -67,6 +67,7 @@ PUBLIC
 	raco::Utils
 	raco::Core 
 	raco::ObjectTree
+        raco::Property
         raco::Animation
         raco::Curve
         raco::signal

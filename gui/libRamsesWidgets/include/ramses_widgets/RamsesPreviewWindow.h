@@ -10,6 +10,7 @@
 #pragma once
 
 #include "PreviewFramebufferScene.h"
+#include "PreviewBackgroundScene.h"
 #include "RendererBackend.h"
 #include <QSize>
 #include <QColor>
@@ -38,6 +39,8 @@ public:
 		QSize viewportSize{0, 0};
 		QSize targetSize{0, 0};
 		QSize virtualSize{0, 0};
+		QPoint maskViewportPosition{0, 0};
+		QSize maskViewportSize{0, 0};
 		QColor backgroundColor{};
 		PreviewFilteringMode filteringMode{PreviewFilteringMode::NearestNeighbor};
 		PreviewMultiSampleRate sampleRate{MSAA_0X};
@@ -61,6 +64,8 @@ public:
 	const State& currentState();
 	State& nextState();
 	void commit(bool forceUpdate = false);
+	void setEnableDisplayGrid(bool enable);
+	std::unique_ptr<raco::ramses_widgets::PreviewBackgroundScene>& getBackgroundScene();
 
 private:
 	void* windowHandle_;
@@ -69,6 +74,7 @@ private:
 	ramses::displayId_t displayId_;
 	ramses::displayBufferId_t offscreenBufferId_;
 	std::unique_ptr<raco::ramses_widgets::PreviewFramebufferScene> framebufferScene_;
+	std::unique_ptr<raco::ramses_widgets::PreviewBackgroundScene> backgroundScene_;
 
 	State current_{};
 	State next_{};

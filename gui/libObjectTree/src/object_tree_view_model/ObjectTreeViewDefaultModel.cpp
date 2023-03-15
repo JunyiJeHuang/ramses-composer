@@ -656,6 +656,22 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
 		MeshScenegraph sceneGraph{*sceneGraphPtr};
 		auto importStatus = raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr).exec();
 		if (importStatus == QDialog::Accepted) {
+			bool projectZup = project()->settings()->axes_.asBool();
+			ValueHandle translation_y{selectedObject, &user_types::Node::translation_, &core::Vec3f::y};
+			ValueHandle translation_z{selectedObject, &user_types::Node::translation_, &core::Vec3f::z};
+			ValueHandle rotation_x{selectedObject, &user_types::Node::rotation_, &core::Vec3f::x};
+			float y = translation_y.as<float>();
+			float z = translation_z.as<float>();
+			float rot_x = rotation_x.as<float>();
+			if (importDialog->yAxesUpButton_->isChecked() && projectZup) {
+				commandInterface_->set(translation_y, -z);
+				commandInterface_->set(translation_z, y);
+				commandInterface_->set(rotation_x, rot_x + 90.0);
+			} else if (importDialog->zAxesUpButton_->isChecked() && !projectZup) {
+				commandInterface_->set(translation_y, z);
+				commandInterface_->set(translation_z, -y);
+				commandInterface_->set(rotation_x, rot_x - 90.0);
+			}
 			commandInterface_->insertAssetScenegraph(sceneGraph, absPath, selectedObject);
 		}
 	} else {

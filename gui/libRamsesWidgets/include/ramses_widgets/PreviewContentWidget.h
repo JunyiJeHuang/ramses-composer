@@ -30,6 +30,9 @@ public:
 	void setBackgroundColor(core::Vec4f backgroundColor);
 	void setMsaaSampleRate(PreviewMultiSampleRate sampleRate);
 	void commit(bool forceUpdate);
+	void setFilteringMode(PreviewFilteringMode mode);
+	void setEnableDisplayGrid(bool enable);
+	std::unique_ptr<RamsesPreviewWindow>& getRamsesPreview();
 
 public Q_SLOTS:
 	void setViewportRect(
@@ -42,6 +45,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
 	void newMousePosition(const QPoint globalPosition);
+	void updateAxesIconLabel();
 
 protected:
 	void paintEvent(QPaintEvent* event) override;

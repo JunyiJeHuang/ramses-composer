@@ -854,12 +854,17 @@ bool MainWindow::saveActiveProject() {
 bool MainWindow::saveAsActiveProject(bool newID) {
 	if (racoApplication_->canSaveActiveProject()) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 		const bool setProjectName = racoApplication_->activeProjectPath().empty();
 		const auto dialogCaption = newID ? "Save As with new ID..." : "Save As...";
 		auto newPath = QFileDialog::getSaveFileName(this, dialogCaption, QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
 =======
         QString path = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
         bool setProjectName = racoApplication_->activeProjectPath().empty();
+=======
+		QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+		bool setProjectName = racoApplication_->activeProjectPath().empty();
+>>>>>>> 2880776 (feat:Improve the ptx export module, and update the uniform attribute)
 		auto newPath = QFileDialog::getSaveFileName(this, "Save As...", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
 >>>>>>> c7b6b1f (fixed ctm bugs & add visualCurveWidget 2 libTimeAxis)
 		if (newPath.isEmpty()) {
@@ -895,6 +900,7 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 			updateActiveProjectConnection();
 <<<<<<< HEAD
             updateApplicationTitle();
+			programManager_.setOpenedProjectPath(openedProjectPath);
             programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
 			programManager_.writeProgram2Json(newPath);
 =======

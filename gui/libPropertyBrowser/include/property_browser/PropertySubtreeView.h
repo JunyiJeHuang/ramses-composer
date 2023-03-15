@@ -15,6 +15,8 @@
 #include <QWidget>
 #include <QLabel>
 #include <QClipboard>
+#include <QStandardItemModel>
+#include <QComboBox>
 
 #include "core/SceneBackendInterface.h"
 #include "property_browser/PropertyBrowserItem.h"
@@ -32,11 +34,11 @@ using namespace raco::guiData;
 namespace raco::property_browser {
 class PropertyControl;
 class PropertyEditor;
-
 class EmbeddedPropertyBrowserView final : public QFrame {
 public:
 	explicit EmbeddedPropertyBrowserView(PropertyBrowserItem* item, QWidget* parent);
 };
+
 
 class PropertySubtreeView final : public QWidget {
 	Q_OBJECT
@@ -44,6 +46,12 @@ class PropertySubtreeView final : public QWidget {
 public:
 	explicit PropertySubtreeView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserModel* model, PropertyBrowserItem* item, QWidget* parent);
 	PropertyBrowserItem const* item() { return item_; }
+	void mousePressEvent(QMouseEvent* event);
+	void setUniformControls(PropertyBrowserItem* item, PropertyBrowserHBoxLayout* labelLayout);
+	std::vector<Uniform> Item2Uniform(PropertyBrowserItem* item);
+	bool materialChanged();
+
+
 public Q_SLOTS:
 	void playStructureChangeAnimation();
 	void setLabelAreaWidth(int offset);
@@ -51,10 +59,16 @@ public Q_SLOTS:
     void slotTreeMenu(const QPoint &pos);
     void slotInsertKeyFrame();
     void slotCopyProperty();
+	void updateUniformCombox();
+	void delUniformButtonClicked();
+	bool isShowUniform(QString name);
+	void slotUniformNameChanged(QString s);
+
 protected:
 	void paintEvent(QPaintEvent* event) override;
 	int getLabelAreaWidthHint() const;
 	Q_SLOT void updateError();
+
 private:
 	void recalculateLabelWidth();
 	void collectTabWidgets(QObject* item, QWidgetList& tabWidgets);
@@ -62,6 +76,7 @@ private:
 	void registerCopyPasteContextMenu(QWidget* widget);
 	raco::core::SceneBackendInterface* sceneBackend_;
     bool isValidValueHandle(QStringList list, raco::core::ValueHandle handle);
+	void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);
 
 	PropertyBrowserItem* item_{nullptr};
 	PropertyBrowserModel* model_ {nullptr};
@@ -72,9 +87,18 @@ private:
 	PropertySubtreeChildrenContainer* childrenContainer_{nullptr};
     QAction* insertKeyFrameAction_{nullptr};
     QAction* copyProperty_{nullptr};
+
 	int labelWidth_{0};
 	float highlight_{0};
-	void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);
+
+	// remove uniform attribute
+	QPushButton* uniformDelButton_{nullptr};
+	// Insert uniform attribute
+	QComboBox* uniformComBox_{nullptr};
+	bool isUniform_{false};
+	bool isChecked_{false};
+	QPalette palette_;
+	QWidget* labelContainer_;
 };
 
 }  // namespace raco::property_browser

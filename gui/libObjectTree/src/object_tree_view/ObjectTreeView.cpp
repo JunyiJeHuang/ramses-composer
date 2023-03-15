@@ -17,12 +17,14 @@
 #include "core/UserObjectFactoryInterface.h"
 #include "user_types/Mesh.h"
 #include "user_types/Node.h"
+#include "user_types/Material.h"
 
 #include "object_tree_view_model/ObjectTreeViewDefaultModel.h"
 #include "object_tree_view_model/ObjectTreeViewExternalProjectModel.h"
 #include "object_tree_view_model/ObjectTreeViewPrefabModel.h"
 #include "object_tree_view_model/ObjectTreeViewResourceModel.h"
 #include "object_tree_view_model/ObjectTreeViewSortProxyModels.h"
+#include "MeshData/MeshDataManager.h"
 #include "utils/u8path.h"
 
 #include <QContextMenuEvent>
@@ -185,16 +187,12 @@ std::vector<core::SEditorObject> ObjectTreeView::getSortedSelectedEditorObjects(
 
 void ObjectTreeView::getOnehandle(QModelIndex index, NodeData *parent, raco::guiData::NodeDataManager &nodeDataManager, std::map<std::string, core::ValueHandle> &NodeNameHandleReMap) {
 	if (!model()->hasChildren(index)) {
-		// 打印handle的信息
 		core::ValueHandle tempHandle = indexToSEditorObject(index);
 		NodeData tempNode;
 		std::string str;
 		str = tempHandle[0].getPropertyPath();
-		// 设置node的名字
 		tempNode.setName(str);
-		// 设置node的 ID
 		str = tempHandle[0].asString();
-		// objectID 和 handle的映射
 		NodeNameHandleReMap.emplace(str, tempHandle);
 		tempNode.setObjectID(str);
 
@@ -412,8 +410,6 @@ int ObjectTreeView::attriElementSize(VertexAttribDataType type) {
     }
 }
 
-<<<<<<< HEAD
-=======
 void ObjectTreeView::convertGltfAnimation() {
     int row = model()->rowCount();
     raco::core::ValueHandle valueHandle;
@@ -443,16 +439,6 @@ bool ObjectTreeView::getAnimationHandle(QModelIndex index, raco::core::ValueHand
     return false;
 }
 
-void ObjectTreeView::globalCopyCallback() {
-	auto selectedIndices = getSelectedIndices(true);
-	if (!selectedIndices.empty()) {
-		if (canCopyAtIndices(selectedIndices)) {
-			treeModel_->copyObjectsAtIndices(selectedIndices, false);
-		}
-	}
-}
-
->>>>>>> 120172d (0713 merge source code)
 void ObjectTreeView::globalOpreations() {
 	// TBD
     if (viewTitle_.compare("Scene Graph") != 0) {

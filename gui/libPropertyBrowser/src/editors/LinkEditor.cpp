@@ -142,36 +142,6 @@ void LinkEditor::setLinkState(const LinkState& linkstate) {
 			}
 		} else {
 			linkButton_->setIcon(Icons::instance().unlinkable);
-<<<<<<< HEAD
-=======
-
-			auto linkEnds = raco::core::Queries::getLinksConnectedToProperty(*item_->project(), item_->valueHandle(), true, false);
-			if (!linkEnds.empty()) {
-				goToLinkButton_->setIcon(Icons::instance().goTo);
-				goToLinkButton_->setDisabled(false);
-				goToLinkButton_->setToolTip("Go to link ends...");
-				goToLinkButtonConnection_ = QObject::connect(goToLinkButton_, &QPushButton::clicked, [this, linkEnds]() {
-					auto* linkEndMenu = new QMenu(this);
-					QString requestedLinkEndObj;
-
-					auto sortedLinkEnds = generateSortedLinkPoints(linkEnds);
-
-					for (const auto& linkEnd : sortedLinkEnds) {
-						auto linkEndPath = linkEnd.first;
-						auto linkEndObjID = linkEnd.second;
-						linkEndMenu->addAction(QString::fromStdString(linkEndPath),
-							[this, &requestedLinkEndObj, linkEndObjID]() {
-								requestedLinkEndObj = QString::fromStdString(linkEndObjID);
-                            });
-					}
-
-					linkEndMenu->exec(mapToGlobal(goToLinkButton_->pos() + QPoint(goToLinkButton_->width(), 0)));
-					if (!requestedLinkEndObj.isEmpty()) {
-						item_->model()->Q_EMIT objectSelectionRequested(requestedLinkEndObj);
-					}
-				});
-			}
->>>>>>> 120172d (0713 merge source code)
 		}
 	}
 

@@ -96,6 +96,7 @@ PUBLIC
     raco::CommonWidgets
     raco::TimeAxis
     raco::node_logic
+    raco::material_logic
     raco::GuiData
     raco::signal
     Qt5::Widgets

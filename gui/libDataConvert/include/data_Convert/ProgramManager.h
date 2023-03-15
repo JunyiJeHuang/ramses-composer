@@ -41,6 +41,7 @@ class ProgramManager : public QObject {
     Q_OBJECT
 public:
     void setRelativePath(QString path);
+	void setOpenedProjectPath(QString path);
     bool writeCTMFile();
 	bool writeProgram(QString filePath);
 	bool writeProgram2Json(QString filePath);

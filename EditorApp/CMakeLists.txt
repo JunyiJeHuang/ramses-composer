@@ -78,8 +78,12 @@ PUBLIC
 	qtadvanceddocking
 	raco::PythonAPI
 	raco::RamsesWidgets
-PRIVATE
     raco::pybind11
+
+	protobuf::libprotobuf-lite
+	protobuf::libprotobuf
+	protobuf::libprotoc
+	raco::LogSystem
 )
 add_compile_definitions(RaCoEditor PRIVATE CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 

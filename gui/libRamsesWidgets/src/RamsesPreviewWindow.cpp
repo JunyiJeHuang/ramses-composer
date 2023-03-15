@@ -93,10 +93,11 @@ namespace raco::ramses_widgets {
 
 RamsesPreviewWindow::RamsesPreviewWindow(
 	void* windowHandle,
-	RendererBackend& rendererBackend)
+	RendererBackend& rendererBackend,
+	raco::ramses_adaptor::SceneBackend* sceneBackend)
 	: windowHandle_{windowHandle}, rendererBackend_{rendererBackend}, displayId_{ramses::displayId_t::Invalid()}, offscreenBufferId_{ramses::displayBufferId_t::Invalid()},
 	framebufferScene_{std::make_unique<raco::ramses_widgets::PreviewFramebufferScene>(rendererBackend_.client(), rendererBackend.internalSceneId())},
-	backgroundScene_{std::make_unique<raco::ramses_widgets::PreviewBackgroundScene>(rendererBackend_.client(), rendererBackend.internalSceneId())} {
+	backgroundScene_{std::make_unique<raco::ramses_widgets::PreviewBackgroundScene>(rendererBackend_.client(), sceneBackend, rendererBackend.internalSceneId())} {
 }
 
 RamsesPreviewWindow::~RamsesPreviewWindow() {
@@ -181,6 +182,7 @@ void RamsesPreviewWindow::commit(bool forceUpdate) {
 			if (next_.sceneId.isValid()) {
 				sceneControlAPI.setSceneDisplayBufferAssignment(next_.sceneId, offscreenBufferId_);
 			}
+
 			sceneControlAPI.setSceneDisplayBufferAssignment(backgroundScene_->getSceneId(), offscreenBufferId_);
 			sceneControlAPI.flush();
 
@@ -213,8 +215,8 @@ void RamsesPreviewWindow::setEnableDisplayGrid(bool enable) {
 	backgroundScene_->setEnableDisplayGrid(enable);
 }
 
-std::unique_ptr<raco::ramses_widgets::PreviewBackgroundScene>& RamsesPreviewWindow::getBackgroundScene() {
-	return backgroundScene_;
+void RamsesPreviewWindow::sceneUpdate(bool z_up, float scaleValue) {
+	backgroundScene_->sceneUpdate(z_up, scaleValue);
 }
 
 }  // namespace raco::ramses_widgets

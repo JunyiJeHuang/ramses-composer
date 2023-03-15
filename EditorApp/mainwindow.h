@@ -111,7 +111,8 @@ Q_SIGNALS:
 	void objectFocusRequestedForTreeDock(const QString& objectID);
     void getResourceHandles();
     void axesChanged(const bool& z_up);
-    void displayGridChanged(const bool& z_up);
+    void displayGridChanged(const bool& enable);
+    void sceneUpdated(const bool& z_up);
 private:
 	Ui::MainWindow* ui;
 	OpenRecentMenu* recentFileMenu_;

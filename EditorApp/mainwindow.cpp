@@ -146,6 +146,7 @@ ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* do
 	QObject::connect(mainWindow, &MainWindow::viewportChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setViewport);
 	QObject::connect(mainWindow, &MainWindow::axesChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setAxes);
 	QObject::connect(mainWindow, &MainWindow::displayGridChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setEnableDisplayGrid);
+	QObject::connect(mainWindow, &MainWindow::sceneUpdated, previewWidget, &raco::ramses_widgets::PreviewMainWindow::sceneUpdate);
 	previewWidget->displayScene(application->sceneBackendImpl()->currentSceneId(), backgroundColor);
 	previewWidget->setWindowFlags(Qt::Widget);
 
@@ -635,6 +636,7 @@ void MainWindow::timerEvent(QTimerEvent* event) {
 	racoApplication_->sceneBackendImpl()->flush();
 
 	rendererBackend_->doOneLoop();
+	Q_EMIT sceneUpdated(axes);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {

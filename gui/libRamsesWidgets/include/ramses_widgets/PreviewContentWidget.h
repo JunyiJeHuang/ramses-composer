@@ -11,6 +11,7 @@
 
 #include "ramses_widgets/RamsesPreviewWindow.h"
 #include "ramses_widgets/RendererBackend.h"
+#include "ramses_adaptor/SceneBackend.h"
 #include <QCloseEvent>
 #include <QWidget>
 #include <memory>
@@ -23,7 +24,7 @@ class PreviewContentWidget final : public QWidget {
 	Q_OBJECT
 	Q_DISABLE_COPY(PreviewContentWidget)
 public:
-	explicit PreviewContentWidget(RendererBackend& rendererBackend, QWidget* parent = nullptr);
+	explicit PreviewContentWidget(RendererBackend& rendererBackend, raco::ramses_adaptor::SceneBackend* sceneBackend, QWidget* parent = nullptr);
 	virtual QPaintEngine* paintEngine() const override { return nullptr; }
 	ramses::sceneId_t getSceneId();
 	void setSceneId(ramses::sceneId_t id);
@@ -33,6 +34,7 @@ public:
 	void setFilteringMode(PreviewFilteringMode mode);
 	void setEnableDisplayGrid(bool enable);
 	std::unique_ptr<RamsesPreviewWindow>& getRamsesPreview();
+	void sceneUpdate(bool z_up, float scaleValue);
 
 public Q_SLOTS:
 	void setViewportRect(
@@ -54,6 +56,7 @@ protected:
 
 private:
 	std::unique_ptr<RamsesPreviewWindow> ramsesPreview_;
+	raco::ramses_adaptor::SceneBackend* sceneBackend_;
 };
 
 }  // namespace raco::ramses_widgets

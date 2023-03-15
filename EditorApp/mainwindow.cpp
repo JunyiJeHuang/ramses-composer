@@ -43,6 +43,7 @@
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertyBrowserWidget.h"
+#include "animation/AnimationMainWindow.h"
 #include "ramses_adaptor/SceneBackend.h"
 #include "ramses_base/BaseEngineBackend.h"
 #include "ramses_widgets/PreviewMainWindow.h"
@@ -163,6 +164,15 @@ ads::CDockAreaWidget* createAndAddPropertyBrowser(MainWindow* mainWindow, const 
 	dockWidget->setWidget(propertyBrowser);
 	dockWidget->setObjectName(dockObjName);
 	return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
+}
+
+ads::CDockAreaWidget* createAndAddAnimation(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager) {
+    auto *animationMainWindow = new raco::animation::AnimationMainWindow(mainWindow);
+
+    auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::ANIMATION_VIEW, mainWindow);
+    dockWidget->setWidget(animationMainWindow);
+    dockWidget->setObjectName(dockObjName);
+    return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
 }
 
 void createAndAddProjectSettings(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::application::RaCoProject* project, SDataChangeDispatcher dataChangeDispatcher, CommandInterface* commandInterface, SceneBackend* sceneBackend) {
@@ -377,6 +387,7 @@ void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::Renderer
 	createAndAddUndoView(application, "defaultUndoView", &application->activeRaCoProject(), mainWindow, dockManager, leftDockArea);
 
 	createAndAddPropertyBrowser(mainWindow, "defaultPropertyBrowser", dockManager, treeDockManager, application);
+    createAndAddAnimation(mainWindow, "defaultAnimation", dockManager);
 }
 
 }  // namespace
@@ -463,6 +474,7 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		resetDockManager();
 		createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_);
 	});
+    QObject::connect(ui->actionNewAnimation, &QAction::triggered, [this]() { createAndAddAnimation(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
 
 	QObject::connect(ui->actionSaveCurrentLayout, &QAction::triggered, [this]() {
 		bool ok;
@@ -889,6 +901,8 @@ void MainWindow::regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks
 			createAndAddTracePlayer(this, dockManager_, &racoApplication_->activeRaCoProject().tracePlayer());
 		} else if (savedDockType == DockWidgetTypes::PYTHON_RUNNER) {
 			createAndAddPythonRunner(this, racoApplication_, dockNameCString, pythonScriptCache_, pythonScriptArgumentCache_, dockManager_);
+        } else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
+            createAndAddAnimation(this, dockNameCString, dockManager_);
 		} else {
 			LOG_DEBUG(raco::log_system::COMMON, "Ignoring unknown dock type '{}'.", savedDockType.toStdString());
 		}

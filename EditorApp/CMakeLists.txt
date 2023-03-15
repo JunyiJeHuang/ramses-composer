@@ -67,6 +67,8 @@ PUBLIC
 	raco::Utils
 	raco::Core 
 	raco::ObjectTree
+        raco::Animation
+        raco::signal
 	Qt5::Widgets
 	qtadvanceddocking
 	raco::PythonAPI

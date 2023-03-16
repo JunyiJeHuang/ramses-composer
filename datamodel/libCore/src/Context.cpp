@@ -1321,9 +1321,9 @@ SLink BaseContext::addLink(const ValueHandle& start, const ValueHandle& end, boo
 
 	auto link = std::make_shared<Link>(start.getDescriptor(), end.getDescriptor(), true, isWeak);
 
-	project_->addLink(link);
-	changeMultiplexer_.recordAddLink(link->descriptor());
-	updateBrokenLinkErrors(*link->endObject_);
+    project_->addLink(link);
+    changeMultiplexer_.recordAddLink(link->descriptor());
+    updateBrokenLinkErrors(*link->endObject_);
 	return link;
 }
 

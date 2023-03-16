@@ -263,6 +263,7 @@ VisualCurveNodeTreeView::VisualCurveNodeTreeView(QWidget *parent, core::CommandI
     : QWidget{parent},
     commandInterface_(commandInterface) {
     visualCurveTreeView_ = new QTreeView(this);
+    visualCurveTreeView_->setAlternatingRowColors(true);
     model_ = new TreeModel(visualCurveTreeView_);
     model_->setColumnCount(2);
     visualCurveTreeView_->setModel(model_);
@@ -295,7 +296,12 @@ VisualCurveNodeTreeView::VisualCurveNodeTreeView(QWidget *parent, core::CommandI
     QObject::connect(&raco::signal::signalProxy::GetInstance(), &raco::signal::signalProxy::sigRepaintAfterUndoOpreation, this, &VisualCurveNodeTreeView::slotRefreshWidget);
 
     menu_ = new QMenu{this};
-    createFolder_ = new QAction("Create Floder");
+    visibleMenu_ = new QMenu{"Set Visible", this};
+    onAct_ = new QAction("ON");
+    offAct_ = new QAction("OFF");
+    visibleMenu_->addAction(onAct_);
+    visibleMenu_->addAction(offAct_);
+    createFolder_ = new QAction("Create Node");
     delete_ = new QAction("Delete");
     createCurve_ = new QAction("Create Curve");
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -304,6 +310,8 @@ VisualCurveNodeTreeView::VisualCurveNodeTreeView(QWidget *parent, core::CommandI
     connect(createFolder_, &QAction::triggered, this, &VisualCurveNodeTreeView::slotCreateFolder);
     connect(delete_, &QAction::triggered, this, &VisualCurveNodeTreeView::slotDelete);
     connect(createCurve_, &QAction::triggered, this, &VisualCurveNodeTreeView::slotCreateCurve);
+    connect(onAct_, &QAction::triggered, this, &VisualCurveNodeTreeView::slotSetVisibleOn);
+    connect(offAct_, &QAction::triggered, this, &VisualCurveNodeTreeView::slotSetVisibleOff);
     connect(model_, &QStandardItemModel::itemChanged, this, &VisualCurveNodeTreeView::slotItemChanged);
     connect(model_, &TreeModel::moveRowFinished, this, &VisualCurveNodeTreeView::slotModelMoved);
     connect(visualCurveTreeView_, &QTreeView::pressed, this, &VisualCurveNodeTreeView::slotCurrentRowChanged);
@@ -434,11 +442,14 @@ void VisualCurveNodeTreeView::slotShowContextMenu(const QPoint &p) {
     if (item) {
         std::string curve = curveFromItem(item).toStdString();
         menu_->addAction(delete_);
+        menu_->addAction(createFolder_);
+        menu_->addAction(createCurve_);
+        menu_->addMenu(visibleMenu_);
     } else {
         visualCurveTreeView_->setCurrentIndex(QModelIndex());
+        menu_->addAction(createFolder_);
+        menu_->addAction(createCurve_);
     }
-    menu_->addAction(createFolder_);
-    menu_->addAction(createCurve_);
     menu_->exec(mapToGlobal(p));
 }
 
@@ -527,6 +538,66 @@ void VisualCurveNodeTreeView::slotCreateCurve() {
         CurveManager::GetInstance().addCurve(tempCurve);
         pushState2UndoStack(fmt::format("create curve: '{}'", createCurve));
     }
+}
+
+void VisualCurveNodeTreeView::slotSetVisibleOn() {
+    std::string info;
+    QModelIndexList selectedIndexs = visualCurveTreeView_->selectionModel()->selectedRows();
+    std::sort(selectedIndexs.begin(), selectedIndexs.end(), [this](QModelIndex index1, QModelIndex index2) {
+        QStandardItem *item1 = model_->itemFromIndex(index1);
+        QStandardItem *item2 = model_->itemFromIndex(index2);
+        return item1->row() > item2->row();
+    });
+    for (auto selected : selectedIndexs) {
+        QStandardItem *item = model_->itemFromIndex(selected);
+        if (item) {
+            std::string itemName = curveFromItem(item).toStdString();
+            if (!itemName.empty()) {
+                if (folderDataMgr_->isCurve(itemName)) {
+                    Folder *folder{nullptr};
+                    STRUCT_CURVE_PROP *curveProp{nullptr};
+                    if (folderDataMgr_->curveFromPath(itemName, &folder, &curveProp)) {
+                        curveProp->visible_ = true;
+                        VisualCurvePosManager::GetInstance().deleteHidenCurve(itemName);
+                    }
+                }
+                info += itemName + ";";
+            }
+        }
+    }
+    visibleButton_->updateWidget();
+    Q_EMIT sigRefreshVisualCurve();
+    pushState2UndoStack(fmt::format("set visible on: '{}'", info));
+}
+
+void VisualCurveNodeTreeView::slotSetVisibleOff() {
+    std::string info;
+    QModelIndexList selectedIndexs = visualCurveTreeView_->selectionModel()->selectedRows();
+    std::sort(selectedIndexs.begin(), selectedIndexs.end(), [this](QModelIndex index1, QModelIndex index2) {
+        QStandardItem *item1 = model_->itemFromIndex(index1);
+        QStandardItem *item2 = model_->itemFromIndex(index2);
+        return item1->row() > item2->row();
+    });
+    for (auto selected : selectedIndexs) {
+        QStandardItem *item = model_->itemFromIndex(selected);
+        if (item) {
+            std::string itemName = curveFromItem(item).toStdString();
+            if (!itemName.empty()) {
+                if (folderDataMgr_->isCurve(itemName)) {
+                    Folder *folder{nullptr};
+                    STRUCT_CURVE_PROP *curveProp{nullptr};
+                    if (folderDataMgr_->curveFromPath(itemName, &folder, &curveProp)) {
+                        curveProp->visible_ = false;
+                        VisualCurvePosManager::GetInstance().insertHidenCurve(itemName);
+                    }
+                }
+                info += itemName + ";";
+            }
+        }
+    }
+    visibleButton_->updateWidget();
+    Q_EMIT sigRefreshVisualCurve();
+    pushState2UndoStack(fmt::format("set visible on: '{}'", info));
 }
 
 void VisualCurveNodeTreeView::slotDelete() {

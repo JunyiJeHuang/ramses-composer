@@ -10,7 +10,7 @@ NodeLogic::NodeLogic(raco::core::CommandInterface *commandInterface, QObject *pa
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateKeyFram_From_AnimationLogic, this, &NodeLogic::slotUpdateKeyFrame);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &NodeLogic::slotUpdateActiveAnimation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &NodeLogic::slotResetNodeData,Qt::DirectConnection);
-    connect(&signalProxy::GetInstance(), &signalProxy::sigValueHandleChanged_From_NodeUI, this, &NodeLogic::slotValueHandleChanged);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateNodeProp_From_ObjectView, this, &NodeLogic::slotUpdateNodeHandle);
 }
 
 void NodeLogic::setCommandInterface(core::CommandInterface *commandInterface) {
@@ -471,24 +471,19 @@ void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
 }
 
-void NodeLogic::slotValueHandleChanged(const core::ValueHandle &handle) {
-    core::ValueHandle tempHandle = handle;
-	while (tempHandle != NULL) {
-		if (tempHandle.hasProperty("objectID")) {
-			std::string objectID = tempHandle.get("objectID").asString();
-			if (hasHandleFromObjectID(objectID)) {
-				NodeData *data = NodeDataManager::GetInstance().searchNodeByID(objectID);
-				if (data) {
-                    if (tempHandle.hasProperty("objectName")) {
-                        std::string nodeName = tempHandle.get("objectName").asString();
-                        data->setName(nodeName);
-                    }
-                    initBasicProperty(tempHandle, data);
-					return;
-				}
-			}
-		}
-		tempHandle = tempHandle.parent();
+void NodeLogic::slotUpdateNodeHandle(const std::string &objectID, const core::ValueHandle &handle) {
+    handleMapMutex_.lock();
+    for (auto it = nodeObjectIDHandleReMap_.begin(); it != nodeObjectIDHandleReMap_.end(); it++) {
+        if (it->first == objectID) {
+            nodeObjectIDHandleReMap_.erase(it);
+            break;
+        }
     }
+    nodeObjectIDHandleReMap_.emplace(objectID, handle);
+    handleMapMutex_.unlock();
+
+    NodeData *node = NodeDataManager::GetInstance().searchNodeByID(objectID);
+    node->setName(handle[0].getPropertyPath());
+    initBasicProperty(handle, node);
 }
 }

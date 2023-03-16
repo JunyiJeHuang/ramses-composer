@@ -81,10 +81,13 @@
 #include "utils/u8path.h"
 #include "versiondialog.h"
 
+<<<<<<< HEAD
 #include "DockAreaWidget.h"
 #include "ads_globals.h"
 #include "python_api/PythonAPI.h"
 
+=======
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 #include <DockWidget.h>
 #include <IconProvider.h>
 #include <QDialog>
@@ -257,12 +260,13 @@ void createAndAddProjectSettings(MainWindow* mainWindow, const char* dockObjName
 ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dockObjName, raco::object_tree::model::ObjectTreeViewDefaultModel *dockModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel* sortFilterModel, ads::DockWidgetArea area, MainWindow* mainWindow, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic *materialLogic) {
 =======
 ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dockObjName, raco::object_tree::model::ObjectTreeViewDefaultModel* dockModel, QSortFilterProxyModel* sortFilterModel, ads::DockWidgetArea area, MainWindow* mainWindow,
-	RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, ads::CDockAreaWidget* dockArea,
+    RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication, ads::CDockAreaWidget* dockArea,
 	raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 	auto* dockObjectView = new raco::object_tree::view::ObjectTreeDock(title, mainWindow);
 	QObject::connect(dockModel, &raco::object_tree::model::ObjectTreeViewDefaultModel::meshImportFailed, mainWindow, &MainWindow::showMeshImportErrorMessage);
 	dockModel->buildObjectTree();
+<<<<<<< HEAD
 	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel);
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -276,6 +280,9 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
 =======
 =======
+=======
+    auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel, racoApplication->activeRaCoProject().commandInterface());
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 	QObject::connect(mainWindow, &MainWindow::getNodeDataResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::globalOpreations);
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
@@ -322,9 +329,13 @@ ads::CDockAreaWidget* createAndAddProjectBrowser(MainWindow* mainWindow, const c
 	ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	auto* model = new raco::object_tree::model::ObjectTreeViewExternalProjectModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects());
 <<<<<<< HEAD
+<<<<<<< HEAD
 	return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel(mainWindow),  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
 =======
 	return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new QSortFilterProxyModel,  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea,
+=======
+    return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new QSortFilterProxyModel,  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea,
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 		nodeDataPro, materialLogic, programManager);
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 }
@@ -357,8 +368,12 @@ ads::CDockAreaWidget* createAndAddResourceTree(MainWindow* mainWindow, const cha
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
 =======
 		MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new QSortFilterProxyModel,
+<<<<<<< HEAD
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic, programManager);
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
+=======
+        ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 }
 
 ads::CDockAreaWidget* createAndAddPrefabTree(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication, ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
@@ -384,8 +399,12 @@ ads::CDockAreaWidget* createAndAddPrefabTree(MainWindow* mainWindow, const char*
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
 =======
 		MainWindow::DockWidgetTypes::PREFABS, dockObjName, model, new raco::object_tree::model::ObjectTreeViewTopLevelSortFilterProxyModel,
+<<<<<<< HEAD
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic, programManager);
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
+=======
+        ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 }
 
 ads::CDockAreaWidget* createAndAddSceneGraphTree(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication,
@@ -409,8 +428,12 @@ ads::CDockAreaWidget* createAndAddSceneGraphTree(MainWindow* mainWindow, const c
 		ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, nullptr, nodeDataPro, materialLogic);
 =======
 	return createAndAddObjectTree(MainWindow::DockWidgetTypes::SCENE_GRAPH, dockObjName, model, nullptr,
+<<<<<<< HEAD
 		ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, nullptr, nodeDataPro, materialLogic, programManager);
 >>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
+=======
+        ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, nullptr, nodeDataPro, materialLogic, programManager);
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 }
 
 ads::CDockAreaWidget* createAndAddUndoView(raco::application::RaCoApplication* application, const char* dockObjName, raco::application::RaCoProject* project, MainWindow* mainWindow, RaCoDockManager* dockManager, ads::CDockAreaWidget* dockArea = nullptr) {
@@ -585,7 +608,13 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 
 		ui->actionImportBMWAssets->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionImportBMWAssets, &QAction::triggered, this, &MainWindow::importBMWAssets);
+<<<<<<< HEAD
 >>>>>>> 9b7e752 (fix: Fixed crash bug and added skeleton code for reading ptx files.)
+=======
+
+        ui->actionConvertLuaAnim->setShortcutContext(Qt::ApplicationShortcut);
+        QObject::connect(ui->actionConvertLuaAnim, &QAction::triggered, this, &MainWindow::convert2LuaAnimation);
+>>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 	}
 
 	QObject::connect(ui->actionOpen, &QAction::triggered, [this]() {
@@ -1248,7 +1277,72 @@ void MainWindow::updateActiveProjectConnection() {
 		activeProjectFileConnection_ = QObject::connect(&racoApplication_->activeRaCoProject(), &raco::application::RaCoProject::activeProjectFileChanged, [this]() {
 			updateApplicationTitle();
 		});
-	}
+    }
+}
+
+void MainWindow::convert2LuaAnimation() {
+    QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+    QString relativePath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+    QString projectPath = QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string());
+    QString luaPath = projectPath + "/scripts/luaAnimation";
+
+    // write json file
+    programManager_.setOpenedProjectPath(openedProjectPath);
+    programManager_.setRelativePath(relativePath);
+    programManager_.writeProgram2Json(openedProjectPath + "/Lua");
+
+    // copy lua animation
+    QDir dir(luaPath);
+    QFileInfo fileInfo(luaPath);
+    if (!fileInfo.isDir()) {
+        QMessageBox::warning(this, "convert Error", fmt::format("Can not convert lua animation.").c_str(), QMessageBox::Ok);
+        return;
+    }
+
+    QString destPath = (openedProjectPath + "/scripts");
+
+    QDir destDir;
+    if (!QFile::exists(destPath)) {
+        destDir.mkpath(destPath);
+    }
+    QString sourcePath = fileInfo.filePath();
+    for (auto fileName : dir.entryList()) {
+        if (QFile::exists((destPath + "/" + fileName))) {
+            QFile::remove((destPath + "/" + fileName));
+        }
+        if (!QFile::copy((sourcePath + "/" + fileName), (destPath + "/" + fileName))) {
+            // failed copy
+        }
+    }
+
+    QString script;
+    #if defined(__linux__)
+        script = "/build.sh";
+    #else
+        script = "/build.bat";
+    #endif
+
+    // call the bat
+    QString jsonPath = (openedProjectPath + "/Lua.json");
+    QProcess process;
+    process.setWorkingDirectory(destPath);
+    process.start(destPath + script, QStringList() << jsonPath);
+    process.waitForFinished();
+    process.close();
+
+    // create luaScripts & luaModule
+    destDir.setPath(destPath);
+    for (auto childFileInfo : destDir.entryInfoList()) {
+        if (childFileInfo.fileName().contains("Script")) {
+            auto uri{(childFileInfo.path().toStdString()) + "/" + childFileInfo.fileName().toStdString()};
+            const auto sLuaScript{racoApplication_->activeRaCoProject().commandInterface()->createObject(raco::user_types::LuaScript::typeDescription.typeName, childFileInfo.fileName().section(".", 0, 0).toStdString())};
+            racoApplication_->activeRaCoProject().commandInterface()->set(raco::core::ValueHandle{sLuaScript, {"uri"}}, uri);
+        } else if (childFileInfo.fileName().contains("Module")) {
+            auto uri{(childFileInfo.path().toStdString()) + "/" + childFileInfo.fileName().toStdString()};
+            const auto sLuaModule{racoApplication_->activeRaCoProject().commandInterface()->createObject(raco::user_types::LuaScriptModule::typeDescription.typeName, childFileInfo.fileName().section(".", 0, 0).toStdString())};
+            racoApplication_->activeRaCoProject().commandInterface()->set(raco::core::ValueHandle{sLuaModule, {"uri"}}, uri);
+        }
+    }
 }
 
 <<<<<<< HEAD

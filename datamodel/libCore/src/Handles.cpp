@@ -172,9 +172,11 @@ size_t ValueHandle::size() const {
 		return object_->size();
 	}
 	auto v = valueRef();
-	if (hasTypeSubstructure(v->type())) {
-		return v->getSubstructure().size();
-	}
+    if (v) {
+        if (hasTypeSubstructure(v->type())) {
+            return v->getSubstructure().size();
+        }
+    }
 	return 0;
 }
 

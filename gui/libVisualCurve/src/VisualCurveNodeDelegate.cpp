@@ -120,6 +120,61 @@ QSize ButtonDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelI
     return QSize(option.rect.width(),option.rect.height());
 }
 
+void ButtonDelegate::updateWidget() {
+    auto curveFromItem = [=](QStandardItem *item)->QString {
+        QString curve = item->text();
+        while(item->parent()) {
+            item = item->parent();
+            QString tempStr = item->text() + "|";
+            curve.insert(0, tempStr);
+        }
+        return curve;
+    };
+
+    auto updateWidget = [=](std::string curve, QStandardItem *item, QPushButton *button)->void {
+        if (!item) {
+            return;
+        }
+        if (!button) {
+            return;
+        }
+
+        bool visible{true};
+        if (folderMgr_->isCurve(curve)) {
+            Folder *folder{nullptr};
+            STRUCT_CURVE_PROP *curveProp{nullptr};
+            if (folderMgr_->curveFromPath(curve, &folder, &curveProp)) {
+                visible = curveProp->visible_;
+            }
+        } else {
+            Folder *folder{nullptr};
+            if (folderMgr_->folderFromPath(curve, &folder)) {
+                visible = folder->isVisible();
+            }
+        }
+        if (visible) {
+            button->setIcon(Icons::instance().visibilityOn);
+        } else {
+            button->setIcon(Icons::instance().visibilityOff);
+        }
+    };
+
+    for (auto it : m_iWidgets.toStdMap()) {
+        QWidget *tempWidget = it.second;
+        QModelIndex index(it.first);
+
+        QPushButton *button = static_cast<QPushButton *>(tempWidget);
+
+        QModelIndex siblingIndex = index.siblingAtColumn(0);
+        if (siblingIndex.isValid()) {
+            QStandardItem *item = model_->itemFromIndex(siblingIndex);
+            std::string curve = curveFromItem(item).toStdString();
+
+            updateWidget(curve, item, button);
+        }
+    }
+}
+
 void ButtonDelegate::clearWidget() {
     auto i = m_iWidgets.begin();
     while (i != m_iWidgets.end()) {

@@ -3,6 +3,7 @@
 namespace raco::time_axis{
 
 AnimationEditorView::AnimationEditorView(QWidget *parent) : QTreeView(parent) {
+    setAlternatingRowColors(true);
     setHeaderHidden(true);
 }
 

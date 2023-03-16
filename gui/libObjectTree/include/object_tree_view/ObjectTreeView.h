@@ -33,11 +33,11 @@ class ObjectTreeView : public QTreeView {
 	using SEditorObject = core::SEditorObject;
 
 public:
-	ObjectTreeView(const QString &viewTitle, raco::object_tree::model::ObjectTreeViewDefaultModel *viewModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel = nullptr, QWidget *parent = nullptr);
-
+	ObjectTreeView(const QString &viewTitle, raco::object_tree::model::ObjectTreeViewDefaultModel *viewModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel = nullptr, raco::core::CommandInterface* commandInterface = nullptr, QWidget *parent = nullptr);
 	std::set<ValueHandle> getSelectedHandles() const;
 	std::vector<SEditorObject> getSortedSelectedEditorObjects() const;
 	QString getViewTitle() const;
+
 	void setUniformsProperty(core::ValueHandle valueHandle, Uniform &tempUniform);
 	void getOnehandle(QModelIndex index, NodeData *parent, raco::guiData::NodeDataManager &nodeDataManager, std::map<std::string, core::ValueHandle> &NodeNameHandleReMap);
     void getOneMeshHandle(QModelIndex index, QMatrix4x4 matrix = QMatrix4x4());
@@ -46,11 +46,13 @@ public:
     bool getOneMeshData(ValueHandle valueHandle, raco::guiData::MeshData &meshData);
     bool getOneMaterialHandle(ValueHandle &valueHandle);
     void getOneMaterials(QModelIndex index, std::map<std::string, core::ValueHandle> &materialHandleMap);
+
     std::map<std::string, core::ValueHandle> updateNodeTree();
 	std::map<std::string, core::ValueHandle> updateResource();
     std::map<std::string, core::ValueHandle> updateMaterial();
 	std::map<std::string, core::ValueHandle> updateTexture();
     void updateMeshData();
+
     int attriElementSize(raco::guiData::VertexAttribDataType type);
 	void convertGltfAnimation(QString fileName);
     bool getAnimationHandle(QModelIndex index, core::ValueHandle valueHandle, std::set<raco::core::ValueHandle> &handles);
@@ -100,14 +102,16 @@ public Q_SLOTS:
     void selectActiveObject();
     void updateMeshModelMatrix(const std::string &objectID);
     void updateMeshNodeVisible(const bool &visible, const std::string &objectID);
+    void updateNodeProperty(const std::string &objectID);
     // void deleteAnimationHandle(std::string id);
 	void importBMWAssets(NodeData *nodeData, const std::vector<MaterialData>& maetrials);
     void deleteAnimationHandle(std::set<std::string> ids);
 	void importBMWAssets(NodeData *nodeData, const std::vector<MaterialData>& maetrials);
-	
+    void bindLuaScriptOutput(const QModelIndex &index);
 protected:
 	static inline auto SELECTION_MODE = QItemSelectionModel::Select | QItemSelectionModel::Rows;
 
+    raco::core::CommandInterface* commandInterface_;
 	raco::object_tree::model::ObjectTreeViewDefaultModel *treeModel_;
 	raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *proxyModel_;
 	QString viewTitle_;

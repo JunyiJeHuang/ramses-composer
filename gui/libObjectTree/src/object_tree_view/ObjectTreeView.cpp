@@ -47,7 +47,7 @@ namespace raco::object_tree::view {
 using namespace raco::object_tree::model;
 
 ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultModel *viewModel, ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel, QWidget *parent)
-	: QTreeView(parent), treeModel_(viewModel), proxyModel_(sortFilterProxyModel), viewTitle_(viewTitle) {
+	: QTreeView(parent), treeModel_(viewModel), proxyModel_(sortFilterProxyModel), commandInterface_(commandInterface), viewTitle_(viewTitle) {
 	setAlternatingRowColors(true);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -102,6 +102,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintAfterUndoOpreation, this, &ObjectTreeView::selectActiveObject);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshModelMatrix, this, &ObjectTreeView::updateMeshModelMatrix);
     connect(&signalProxy::GetInstance(), &signalProxy::sigSetVisibleMeshNode, this, &ObjectTreeView::updateMeshNodeVisible);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateNodeProp_From_SubView, this, &ObjectTreeView::updateNodeProperty);
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
@@ -517,13 +518,13 @@ std::map<std::string, core::ValueHandle> ObjectTreeView::updateNodeTree() {
 		QModelIndex index = model()->index(i, 0);
         getOnehandle(index, parent, nodeDataManager, NodeNameHandleReMap);
 	}
-	if (nodeDataManager.IsFirstInit()) {
-		nodeDataManager.setFirstInit(false);
-	} else {
-		nodeDataManager.clearNodeData();
-		nodeDataManager.setRoot(*parent);
-		nodeDataManager.setActiveNode(parent);
-	}
+    if (nodeDataManager.IsFirstInit()) {
+        nodeDataManager.setFirstInit(false);
+    } else {
+        nodeDataManager.clearNodeData();
+        nodeDataManager.setRoot(*parent);
+        nodeDataManager.setActiveNode(parent);
+    }
 	
 	return NodeNameHandleReMap;
 }
@@ -778,6 +779,21 @@ void ObjectTreeView::updateMeshNodeVisible(const bool &visible, const std::strin
     }
 }
 
+void ObjectTreeView::updateNodeProperty(const std::string &objectID) {
+    if (viewTitle_.compare(QString("Scene Graph")) != 0) {
+        return;
+    }
+
+    std::map<std::string, core::ValueHandle> NodeNameHandleReMap;
+    raco::guiData::NodeDataManager &nodeDataManager = raco::guiData::NodeDataManager::GetInstance();
+
+    QModelIndex index = indexFromTreeNodeID(objectID);
+    if (index.isValid()) {
+        core::ValueHandle tempHandle = indexToSEditorObject(index);
+        Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_ObjectView(objectID, tempHandle);
+    }
+}
+
 void ObjectTreeView::deleteAnimationHandle(std::set<std::string> ids) {
     for (const auto &id : ids) {
         auto index = indexFromTreeNodeID(id);
@@ -785,6 +801,52 @@ void ObjectTreeView::deleteAnimationHandle(std::set<std::string> ids) {
 
         if (delObjAmount > 0) {
             selectionModel()->Q_EMIT selectionChanged({}, {});
+        }
+    }
+}
+
+void ObjectTreeView::bindLuaScriptOutput(const QModelIndex &index) {
+    auto bindUniforms = [this](std::string property, raco::core::ValueHandle output, raco::core::ValueHandle handle)->void {
+        if (handle.hasProperty("materials")) {
+            raco::core::ValueHandle materialsHandle = handle.get("materials");
+            if (materialsHandle) {
+                raco::core::ValueHandle materialHandle = materialsHandle.get("material");
+                if (materialHandle) {
+                    raco::core::ValueHandle uniformsHandle = materialsHandle.get("uniforms");
+                    if (uniformsHandle) {
+                        raco::core::ValueHandle uniformHandle = uniformsHandle.get(property);
+                        commandInterface_->addLink(output, uniformHandle);
+                    }
+                }
+            }
+        }
+    };
+
+    if (index.isValid()) {
+        raco::core::ValueHandle handle = indexToSEditorObject(index);
+        if (handle.isObject()) {
+            raco::core::ValueHandle outputHandle = handle.get("luaOutputs");
+            if (outputHandle) {
+                for (int i = 0; i < outputHandle.size(); i++) {
+                    raco::core::ValueHandle valueHandle = outputHandle[i];
+                    if (valueHandle) {
+                        QString propName = QString::fromStdString(valueHandle.getPropName());
+                        QString property = propName.section(".", 1);
+                        std::string objectID = propName.section(".", 0, 0).toStdString();
+                        core::ValueHandle targetHandle = indexToSEditorObject(indexFromTreeNodeID(objectID));
+                        if (targetHandle) {
+                            if (!property.contains(".")) {
+                                if (targetHandle.hasProperty(property.toStdString())) {
+                                    raco::core::ValueHandle propHandle = targetHandle.get(property.toStdString());
+                                    commandInterface_->addLink(valueHandle, propHandle);
+                                }
+                            } else {
+                                bindUniforms(property.toStdString(), valueHandle, targetHandle);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1059,6 +1121,17 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 		// Pasting extrefs will ignore the current selection and always paste on top level.
 		extrefPasteAction->setEnabled(treeModel_->canPasteIntoIndex({}, pasteObjects, sourceProjectTopLevelObjectIds, true));
 	}
+
+    auto selectedIndices = getSelectedIndices();
+    if (selectedIndices.size() != 0) {
+        if (selectedIndices.front().data().compare("LuaScript") == 0) {
+            auto selectedIndex = selectedIndices.front();
+            auto actionBind = treeViewMenu->addAction(
+                "Auto Bind Lua OutPuts", [this, selectedIndex]() {
+                bindLuaScriptOutput(selectedIndex);
+            });
+        }
+    }
 
 	if (externalProjectModel) {
 		treeViewMenu->addSeparator();

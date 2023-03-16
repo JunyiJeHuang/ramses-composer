@@ -151,13 +151,13 @@ void PreviewScrollAreaWidget::updateViewport() {
 			break;
 		}
 		case AutoSizing::VERTICAL_FIT: {
-			const auto scale = static_cast<float>(areaSize.height()) / sceneSize_.height();
+            const auto scale = static_cast<double>(areaSize.height()) / sceneSize_.height();
 			widgetSize = sceneSize_ * scale;
 			scaleValue_ = scale;
 			break;
 		}
 		case AutoSizing::HORIZONTAL_FIT: {
-			const auto scale = static_cast<float>(areaSize.width()) / sceneSize_.width();
+            const auto scale = static_cast<double>(areaSize.width()) / sceneSize_.width();
 			widgetSize = sceneSize_ * scale;
 			scaleValue_ = scale;
 			break;

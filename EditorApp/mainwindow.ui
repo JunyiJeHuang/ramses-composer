@@ -47,6 +47,7 @@
     <addaction name="actionExportGltf"/>
     <addaction name="actionExportBMWAssets"/>
     <addaction name="actionImportBMWAssets"/>
+    <addaction name="actionConvertLuaAnim"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -312,6 +313,14 @@
    </property>
    <property name="toolTip">
     <string>Export Gltf</string>
+   </property>
+  </action>
+  <action name="actionConvertLuaAnim">
+   <property name="text">
+    <string>Convert to Lua animation</string>
+   </property>
+   <property name="toolTip">
+    <string>Convert to Lua animation</string>
    </property>
   </action>
  </widget>

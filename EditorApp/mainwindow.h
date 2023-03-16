@@ -24,6 +24,8 @@
 
 #include <QListWidget>
 #include <QMainWindow>
+#include <QTextEdit>
+#include <QProcess>
 
 namespace Ui {
 class MainWindow;
@@ -113,6 +115,7 @@ protected Q_SLOTS:
 	void resetDockManager();
 	void updateActiveProjectConnection();
 	void updateProjectSavedConnection();
+    void convert2LuaAnimation();
 
 Q_SIGNALS:
     void getMaterialResHandles();

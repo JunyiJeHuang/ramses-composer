@@ -138,6 +138,7 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 			updateUniformCombox();
 		}
         QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateMesh);
+        QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateNode);
 
 		if (item->displayName() == "uniforms") {
 			setUniformControls(item, labelLayout);
@@ -155,13 +156,13 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		label_->setFixedWidth(0);
 		label_->setFixedHeight(0);
 		labelLayout->addWidget(decorationWidget_, 0);
-		labelLayout->addWidget(label_, 0);
+        labelLayout->addWidget(label_, 0);
 	}
 
 	QObject::connect(item, &PropertyBrowserItem::errorChanged, this, &PropertySubtreeView::updateError);
-	updateError();
+    updateError();
 
-	layout_.addWidget(labelContainer_, 1, 0);
+    layout_.addWidget(labelContainer_, 1, 0);
 
 	if (item->expandable()) {
 		// Events which can cause a build or destroy of the childrenContainer_
@@ -213,15 +214,29 @@ void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
     if (parent.isProperty()) {
         std::string parentProp = parent.getPropName();
         if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
-			qDebug() << QString::fromStdString(v.rootObject()->objectID());
             Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrix(v.rootObject()->objectID());
         }
     }
     if (v.isProperty()) {
         std::string prop = v.getPropName();
         if (prop == "visible") {
-			qDebug() << QString::fromStdString(v.rootObject()->objectID());
             Q_EMIT signalProxy::GetInstance().sigSetVisibleMeshNode(v.asBool(), v.rootObject()->objectID());
+        }
+    }
+}
+
+void PropertySubtreeView::updateNode(core::ValueHandle &v) {
+    core::ValueHandle parent = v.parent();
+    if (parent.isProperty()) {
+        std::string parentProp = parent.getPropName();
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_SubView(v.rootObject()->objectID());
+        }
+    }
+    if (v.isProperty()) {
+        std::string prop = v.getPropName();
+        if (prop == "objectName") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_SubView(v.rootObject()->objectID());
         }
     }
 }
@@ -657,8 +672,8 @@ void PropertySubtreeView::updateChildrenContainer() {
 		if (!item_->valueHandle().isObject() && item_->type() == core::PrimitiveType::Ref) {
 			childrenContainer_ = new PropertySubtreeChildrenContainer{item_, this};
 			childrenContainer_->addWidget(new EmbeddedPropertyBrowserView{item_, this});
-			layout_.addWidget(childrenContainer_, 2, 0);
-		} else if (item_->valueHandle().isObject() || hasTypeSubstructure(item_->type())) {
+            layout_.addWidget(childrenContainer_, 2, 0);
+        } else if (item_->valueHandle().isObject() || hasTypeSubstructure(item_->type())) {
 			childrenContainer_ = new PropertySubtreeChildrenContainer{item_, this};
 			// match is in nodeData by uniform
 			for (const auto& child : item_->children()) {
@@ -691,8 +706,8 @@ void PropertySubtreeView::updateChildrenContainer() {
 				}
 				recalculateTabOrder();
 			});
-			recalculateLabelWidth();
-			layout_.addWidget(childrenContainer_, 2, 0);
+            recalculateLabelWidth();
+            layout_.addWidget(childrenContainer_, 2, 0);
 		}
 	} else if (!item_->showChildren() && childrenContainer_) {
 		delete childrenContainer_;

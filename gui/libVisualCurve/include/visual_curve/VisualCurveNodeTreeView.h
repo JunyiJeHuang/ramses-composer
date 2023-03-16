@@ -60,6 +60,8 @@ public Q_SLOTS:
     void slotShowContextMenu(const QPoint &p);
     void slotCreateFolder();
     void slotCreateCurve();
+    void slotSetVisibleOn();
+    void slotSetVisibleOff();
     void slotDelete();
     void slotItemChanged(QStandardItem *item);
     void slotCurrentRowChanged(const QModelIndex &index);
@@ -90,6 +92,9 @@ private:
     QAction *createFolder_{nullptr};
     QAction *delete_{nullptr};
     QAction *createCurve_{nullptr};
+    QMenu *visibleMenu_{nullptr};
+    QAction *onAct_{nullptr};
+    QAction *offAct_{nullptr};
     FolderDataManager *folderDataMgr_{nullptr};
     std::string selNode_;
     ButtonDelegate *visibleButton_{nullptr};

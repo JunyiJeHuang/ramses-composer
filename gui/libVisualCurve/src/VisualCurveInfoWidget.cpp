@@ -18,6 +18,7 @@ VisualCurveInfoWidget::VisualCurveInfoWidget(QWidget *parent, raco::core::Comman
     centreWidget_->addWidget(visualCurveKeyWidget_);
     centreWidget_->addWidget(visualCurveCursorWidget_);
     centreWidget_->setCurrentWidget(visualCurveCursorWidget_);
+    centreWidget_->setFixedWidth(200);
 
     QVBoxLayout *vLayout = new QVBoxLayout(this);
     vLayout->addWidget(centreWidget_);
@@ -28,7 +29,7 @@ VisualCurveInfoWidget::VisualCurveInfoWidget(QWidget *parent, raco::core::Comman
 
 void VisualCurveInfoWidget::initVisualCurveKeyWidget() {
     visualCurveKeyWidget_ = new QWidget{this};
-    visualCurveKeyWidget_->setFixedSize(235, 330);
+//    visualCurveKeyWidget_->setBaseSize(235, 330);
 
     QLabel *label = new QLabel("Active KeyFrame", visualCurveKeyWidget_);
     QLabel *interpolationLabel = new QLabel("Interpolation", visualCurveKeyWidget_);
@@ -89,9 +90,9 @@ void VisualCurveInfoWidget::initVisualCurveKeyWidget() {
     keyGridLayout->addWidget(rightValueSpinBox_, 12, 1);
     keyGridLayout->addWidget(rightTangentLabel_, 13, 0, Qt::AlignLeft);
     keyGridLayout->addWidget(rightTangentSpinBox_, 13, 1);
-    keyGridLayout->addItem(new QSpacerItem(0, 200, QSizePolicy::Expanding, QSizePolicy::Minimum), 14, 0);
-
+    keyGridLayout->setRowStretch(14, 1);
     visualCurveKeyWidget_->setLayout(keyGridLayout);
+
     leftTangentSpinBox_->setVisible(false);
     rightTangentSpinBox_->setVisible(false);
     leftTangentLabel_->setVisible(false);
@@ -120,7 +121,7 @@ void VisualCurveInfoWidget::initVisualCurveKeyWidget() {
 
 void VisualCurveInfoWidget::initVisualCurveCursorWidget() {
     visualCurveCursorWidget_ = new QWidget{this};
-    visualCurveCursorWidget_->setFixedSize(235, 200);
+//    visualCurveCursorWidget_->setBaseSize(235, 200);
     QLabel *cursorXLabel = new QLabel("Cursor X", visualCurveCursorWidget_);
     QLabel *cursorYLabel = new QLabel("Y", visualCurveCursorWidget_);
     QLabel *curveScaleLabel = new QLabel("Curve Scale Spring", visualCurveCursorWidget_);
@@ -143,10 +144,10 @@ void VisualCurveInfoWidget::initVisualCurveCursorWidget() {
     cursorLayout_->addWidget(cursorXSpinBox_, 2, 1);
     cursorLayout_->addWidget(cursorYLabel, 3, 0, Qt::AlignRight);
     cursorLayout_->addWidget(cursorYSpinBox_, 3, 1);
-    cursorLayout_->addItem(new QSpacerItem(0, 100, QSizePolicy::Expanding, QSizePolicy::Minimum), 4, 0);
-    cursorLayout_->addWidget(curveScaleLabel, 4, 0, Qt::AlignRight);
-    cursorLayout_->addWidget(curveScaleSpinBox_, 4, 1);
-
+    cursorLayout_->addItem(new QSpacerItem(0, 8, QSizePolicy::Expanding, QSizePolicy::Minimum), 4, 0);
+    cursorLayout_->addWidget(curveScaleLabel, 5, 0, Qt::AlignRight);
+    cursorLayout_->addWidget(curveScaleSpinBox_, 5, 1);
+    cursorLayout_->setRowStretch(6, 1);
     visualCurveCursorWidget_->setLayout(cursorLayout_);
 
     connect(showCursorCheckBox_, &QCheckBox::clicked, this, &VisualCurveInfoWidget::slotCursorShow);

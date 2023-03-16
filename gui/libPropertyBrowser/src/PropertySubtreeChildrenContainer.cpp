@@ -19,7 +19,7 @@ namespace raco::property_browser {
 
 PropertySubtreeChildrenContainer::PropertySubtreeChildrenContainer(PropertyBrowserItem* item, QWidget* parent)
 	: QWidget{parent}, layout_{new PropertyBrowserVBoxLayout{this}} {
-	layout_->setAlignment(Qt::AlignTop);
+    layout_->setAlignment(Qt::AlignTop);
 }
 
 void PropertySubtreeChildrenContainer::setOffset(int offset) {

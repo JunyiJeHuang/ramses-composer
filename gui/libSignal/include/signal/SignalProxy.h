@@ -65,8 +65,6 @@ Q_SIGNALS:
     //
     void sigInitPropertyBrowserView();
     //
-    void sigValueHandleChanged_From_NodeUI(const raco::core::ValueHandle &handle);
-    //
     void sigUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString file);
     //
     void sigDeleteAniamtionNode(std::set<std::string> ids);
@@ -88,6 +86,10 @@ Q_SIGNALS:
     void sigSetVisibleMeshNode(const bool &visible, const std::string &objectID);
     //
     void sigSwitchHandleType(const int &type);
+    //
+    void sigUpdateNodeProp_From_SubView(const std::string &objectID);
+    //
+    void sigUpdateNodeProp_From_ObjectView(const std::string &objectID, const raco::core::ValueHandle &handle);
 };
 
 }

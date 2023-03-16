@@ -153,6 +153,8 @@ public:
 	// If parent is invalid, the mesh scenegraph root node will be the project's scenegraph root node.
 	void insertAssetScenegraph(const raco::core::MeshScenegraph& scenegraph, const std::string& absPath, SEditorObject const& parent);
 
+    bool exportAssetScenegraph(raco::core::MeshScenegraph& scenegraph);
+
 	// If parent is invalid, the mesh scenegraph root node will be the project's scenegraph root node.
 	void insertBMWAssetScenegraph(raco::guiData::NodeData* node, SEditorObject const& parent);
 

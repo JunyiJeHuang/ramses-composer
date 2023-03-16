@@ -574,6 +574,9 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		QObject::connect(ui->actionSaveAsWithNewID, &QAction::triggered, this, &MainWindow::saveAsActiveProjectWithNewID);
 =======
 
+        ui->actionExportGltf->setShortcutContext(Qt::ApplicationShortcut);
+        QObject::connect(ui->actionExportGltf, &QAction::triggered, this, &MainWindow::exportGltf);
+
 		ui->actionExportBMWAssets->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionExportBMWAssets, &QAction::triggered, this, &MainWindow::exportBMWAssets);
 <<<<<<< HEAD
@@ -953,7 +956,34 @@ bool MainWindow::saveActiveProject() {
 	} else {
 		QMessageBox::warning(this, "Save Error", fmt::format("Can not save project: externally referenced projects not clean.").c_str(), QMessageBox::Ok);
 	}
-	return false;
+    return false;
+}
+
+bool MainWindow::exportGltf() {
+    if (racoApplication_->canSaveActiveProject()) {
+        QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+        bool setProjectName = racoApplication_->activeProjectPath().empty();
+
+        auto newPath = QFileDialog::getSaveFileName(this, "Export Gltf", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "glTF files (*.gltf *.glb)");
+
+        if (newPath.isEmpty()) {
+            return false;
+        }
+        MeshScenegraph sceneGraph;
+        if (!racoApplication_->activeRaCoProject().commandInterface()->exportAssetScenegraph(sceneGraph)) {
+//            QMessageBox::warning(this, "Export Gltf Error", fmt::format("Can not export gltf.").c_str(), QMessageBox::Ok);
+//            return false;
+        }
+
+        if (!racoApplication_->activeRaCoProject().meshCache()->writeMeshScenegraph(sceneGraph, newPath.toStdString())) {
+            QMessageBox::warning(this, "Export Gltf Error", fmt::format("Can not export gltf.").c_str(), QMessageBox::Ok);
+        }
+
+        return true;
+    } else {
+        QMessageBox::warning(this, "Export Gltf Error", fmt::format("Can not export gltf.").c_str(), QMessageBox::Ok);
+    }
+    return false;
 }
 
 <<<<<<< HEAD

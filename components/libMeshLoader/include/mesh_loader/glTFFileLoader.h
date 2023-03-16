@@ -26,6 +26,7 @@ public:
 
 	raco::core::SharedMeshData loadMesh(const raco::core::MeshDescriptor& descriptor) override;
 	const raco::core::MeshScenegraph* getScenegraph(const std::string& absPath) override;
+    bool writeScenegraphGltf(const core::MeshScenegraph& sceneGraph, const std::string& absPath) override;
 	int getTotalMeshCount() override;
 	raco::core::SharedAnimationSamplerData getAnimationSamplerData(const std::string& absPath, int animIndex, int samplerIndex) override;
 	std::string getError() override;

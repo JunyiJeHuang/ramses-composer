@@ -44,6 +44,7 @@
     <addaction name="menuUpgrade"/>
     <addaction name="separator"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportGltf"/>
     <addaction name="actionExportBMWAssets"/>
     <addaction name="actionImportBMWAssets"/>
     <addaction name="separator"/>
@@ -303,6 +304,14 @@
    </property>
    <property name="toolTip">
     <string>BMW Asset</string>
+   </property>
+  </action>
+  <action name="actionExportGltf">
+   <property name="text">
+    <string>Export Gltf</string>
+   </property>
+   <property name="toolTip">
+    <string>Export Gltf</string>
    </property>
   </action>
  </widget>

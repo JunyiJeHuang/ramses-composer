@@ -39,7 +39,7 @@ public:
 	QRadioButton* zAxesUpButton_;
 	QHBoxLayout* axesDirectionButtonLayout_;
     QRadioButton* animationNodeButton_;
-    QRadioButton* animationKeyFrameButton_;
+    QRadioButton* animationEditorButton_;
     QHBoxLayout* animationModeButtonLayout_;
     QVBoxLayout* selButtonLayout_;
 

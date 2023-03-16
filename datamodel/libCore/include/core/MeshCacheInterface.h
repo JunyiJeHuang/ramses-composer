@@ -305,7 +305,7 @@ public:
 
 	// Construct and return MeshData object. Will load file if necessary.
 	// Returns nullptr if mesh loading failed.
-	virtual SharedMeshData loadMesh(const MeshDescriptor& descriptor) = 0;
+    virtual SharedMeshData loadMesh(const MeshDescriptor& descriptor) = 0;
 
 	virtual std::string getError() = 0;
 
@@ -313,6 +313,8 @@ public:
 	virtual void reset() = 0;
 
 	virtual const MeshScenegraph* getScenegraph(const std::string& absPath) = 0;
+
+    virtual bool writeScenegraphGltf(const core::MeshScenegraph& sceneGraph, const std::string& absPath) = 0;
 
 	virtual int getTotalMeshCount() = 0;
 
@@ -332,6 +334,8 @@ public:
 	virtual const MeshScenegraph* getMeshScenegraph(const std::string& absPath) = 0;
 	virtual std::string getMeshError(const std::string& absPath) = 0;
 
+    virtual bool writeMeshScenegraph(const MeshScenegraph& sceneGraph, const std::string& absPath) = 0;
+
 	virtual int getTotalMeshCount(const std::string& absPath) = 0;
 
 	virtual SharedAnimationSamplerData getAnimationSamplerData(const std::string& absPath, int animIndex, int samplerIndex) = 0;
@@ -340,6 +344,7 @@ public:
 
 protected:
 	virtual MeshCacheEntry* getLoader(std::string absPath) = 0;
+    virtual MeshCacheEntry* getWriter(std::string absPath) = 0;
 };
 
 }  // namespace raco::core

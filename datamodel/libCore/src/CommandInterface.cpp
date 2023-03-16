@@ -470,7 +470,11 @@ void CommandInterface::insertAssetScenegraph(const raco::core::MeshScenegraph& s
 	context_->insertAssetScenegraph(scenegraph, absPath, parent);
 	PrefabOperations::globalPrefabUpdate(*context_);
 	undoStack_->push(fmt::format("Inserted assets from {}", absPath));
-	PathManager::setCachedPath(raco::core::PathManager::FolderTypeKeys::Mesh, raco::utils::u8path(absPath).parent_path().string());
+    PathManager::setCachedPath(raco::core::PathManager::FolderTypeKeys::Mesh, raco::utils::u8path(absPath).parent_path().string());
+}
+
+bool CommandInterface::exportAssetScenegraph(MeshScenegraph &scenegraph) {
+    return context_->exportAssetScenegraph(scenegraph);
 }
 
 std::string CommandInterface::copyObjects(const std::vector<SEditorObject>& objects, bool deepCopy) {

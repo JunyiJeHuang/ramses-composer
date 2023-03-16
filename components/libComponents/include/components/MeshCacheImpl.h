@@ -35,6 +35,7 @@ public:
 	raco::core::SharedAnimationSamplerData getAnimationSamplerData(const std::string& absPath, int animIndex, int samplerIndex) override;
 
 	core::SharedSkinData loadSkin(const std::string& absPath, int skinIndex, std::string& outError) override;
+    bool writeMeshScenegraph(const core::MeshScenegraph& sceneGraph, const std::string& absPath) override;
 
 private:
 	virtual void unregister(std::string absPath, typename core::MeshCache::Callback* listener) override;
@@ -42,10 +43,12 @@ private:
 
 	core::MeshCacheEntry* getLoader(std::string absPath) override;
 
+    core::MeshCacheEntry* getWriter(std::string absPath) override;
+
 	void forceReloadCachedMesh(const std::string& absPath);
 	void onAfterMeshFileUpdate(const std::string& meshFileAbsPath);
 
-	std::unordered_map<std::string, core::UniqueMeshCacheEntry> meshCacheEntries_;
+    std::unordered_map<std::string, core::UniqueMeshCacheEntry> meshCacheEntries_;
 };
 
 }  // namespace raco::components

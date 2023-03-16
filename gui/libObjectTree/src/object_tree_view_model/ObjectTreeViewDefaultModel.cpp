@@ -660,7 +660,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
 		MeshScenegraph sceneGraph{*sceneGraphPtr};
 		auto importDialog = new raco::common_widgets::MeshAssetImportDialog(*sceneGraph, nullptr);
 		auto importStatus = importDialog->exec();
-        keyAnimation = importDialog->animationKeyFrameButton_->isChecked();
+        keyAnimation = importDialog->animationEditorButton_->isChecked();
 		if (importStatus == QDialog::Accepted && selectedObject != nullptr) {
 			bool projectZup = project()->settings()->axes_.asBool();
 			ValueHandle translation_y{selectedObject, &user_types::Node::translation_, &core::Vec3f::y};

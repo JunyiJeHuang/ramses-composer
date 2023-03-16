@@ -92,15 +92,15 @@ MeshAssetImportDialog::MeshAssetImportDialog(raco::core::MeshScenegraph& sceneGr
 //    axesDirectionButtonLayout_->addStretch();
 
     animationNodeButton_ = new QRadioButton(this);
-    animationKeyFrameButton_ = new QRadioButton(this);
+    animationEditorButton_ = new QRadioButton(this);
     QButtonGroup *animationButtonGroup = new QButtonGroup(this);
     animationButtonGroup->addButton(animationNodeButton_);
-    animationButtonGroup->addButton(animationKeyFrameButton_);
-    animationKeyFrameButton_->setChecked(true);
+    animationButtonGroup->addButton(animationEditorButton_);
+    animationEditorButton_->setChecked(true);
     animationModeButtonLayout_ = new QHBoxLayout(nullptr);
     animationModeButtonLayout_->addWidget(new QLabel("Animation Mode:"));
     animationModeButtonLayout_->addStretch();
-    animationModeButtonLayout_->addWidget(animationKeyFrameButton_);
+    animationModeButtonLayout_->addWidget(animationEditorButton_);
     animationModeButtonLayout_->addWidget(new QLabel("Animation Editor"));
     animationModeButtonLayout_->addStretch();
     animationModeButtonLayout_->addWidget(animationNodeButton_);

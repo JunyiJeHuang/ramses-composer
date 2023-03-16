@@ -50,7 +50,12 @@ std::string raco::components::MeshCacheImpl::getMeshError(const std::string &abs
 
 int raco::components::MeshCacheImpl::getTotalMeshCount(const std::string &absPath) {
 	auto *loader = getLoader(absPath);
-	return loader->getTotalMeshCount();
+    return loader->getTotalMeshCount();
+}
+
+bool MeshCacheImpl::writeMeshScenegraph(const core::MeshScenegraph& sceneGraph, const std::string &absPath) {
+    auto *writer = getWriter(absPath);
+    return writer->writeScenegraphGltf(sceneGraph, absPath);
 }
 
 raco::core::SharedAnimationSamplerData MeshCacheImpl::getAnimationSamplerData(const std::string &absPath, int animIndex, int samplerIndex) {
@@ -96,7 +101,13 @@ raco::core::MeshCacheEntry *MeshCacheImpl::getLoader(std::string absPath) {
 			meshCacheEntries_[absPath] = std::unique_ptr<raco::core::MeshCacheEntry>(new mesh_loader::CTMFileLoader(absPath));
 		}
 	}
-	return meshCacheEntries_[absPath].get();
+    return meshCacheEntries_[absPath].get();
+}
+
+core::MeshCacheEntry *MeshCacheImpl::getWriter(std::string absPath) {
+    static core::UniqueMeshCacheEntry entry = std::unique_ptr<raco::core::MeshCacheEntry>(new mesh_loader::glTFFileLoader(absPath));
+    return meshCacheEntries_.begin()->second.get();
+    return entry.get();
 }
 
 }  // namespace raco::components

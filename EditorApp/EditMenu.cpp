@@ -8,9 +8,10 @@
  * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "EditMenu.h"
-
+#include "common_widgets/RaCoClipboard.h"
 #include "object_tree_view/ObjectTreeDock.h"
 #include "object_tree_view/ObjectTreeDockManager.h"
+#include "object_tree_view/ObjectTreeView.h"
 
 #include <QShortcut>
 
@@ -63,18 +64,22 @@ void EditMenu::globalRedoCallback(raco::application::RaCoApplication* racoApplic
 
 void EditMenu::globalCopyCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager) {
 	if (auto activeObjectTreeDockWithSelection = objectTreeDockManager->getActiveDockWithSelection()) {
-		auto focusedTreeView = activeObjectTreeDockWithSelection->getCurrentlyActiveTreeView();
+		auto focusedTreeView = activeObjectTreeDockWithSelection->getActiveTreeView();
         focusedTreeView->globalCopyCallback();
 	}
 }
 
 void EditMenu::globalPasteCallback(raco::application::RaCoApplication* racoApplication, raco::object_tree::view::ObjectTreeDockManager* objectTreeDockManager) {
 	if (auto activeObjectTreeDockWithSelection = objectTreeDockManager->getActiveDockWithSelection()) {
-		auto focusedTreeView = activeObjectTreeDockWithSelection->getCurrentlyActiveTreeView();
+		auto focusedTreeView = activeObjectTreeDockWithSelection->getActiveTreeView();
 
 		focusedTreeView->globalPasteCallback(focusedTreeView->getSelectedInsertionTargetIndex());
 	} else {
 		auto copiedObjs = raco::RaCoClipboard::get();
-		racoApplication->activeRaCoProject().commandInterface()->pasteObjects(copiedObjs);
+		try {
+			racoApplication->activeRaCoProject().commandInterface()->pasteObjects(copiedObjs);
+		} catch (std::exception& error) {
+			// Just ignore a failed paste
+		}
 	}
 }

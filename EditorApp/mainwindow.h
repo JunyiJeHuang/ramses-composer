@@ -59,7 +59,6 @@ public:
 		static inline const char* LOG_VIEW{"Log View"};
 		static inline const char* ANIMATION_VIEW{"animation View"};
 		static inline const char* CURVE_VIEW{"Curve View"};
-		static inline const char* LOG_VIEW{"Log View"};
 		static inline const char* PYTHON_RUNNER{"Python Runner"};
 		static inline const char* TRACE_PLAYER{"Trace Player"};
 		static inline const char* PROPERTY_VIEW{"property View"};

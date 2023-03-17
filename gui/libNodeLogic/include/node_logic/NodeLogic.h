@@ -50,7 +50,7 @@ public Q_SLOTS:
     void slotUpdateActiveAnimation(QString animation);
     void slotUpdateKeyFrame(int keyFrame);
     void slotResetNodeData();
-    void slotUpdateNodeHandle(const std::string &objectID, const core::ValueHandle &handle);
+
 signals:
 	void sig_getHandles_from_NodePro(std::set<core::ValueHandle>& handles);
 	void sig_initCurveBindingWidget__NodePro();

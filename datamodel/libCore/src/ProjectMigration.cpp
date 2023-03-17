@@ -1379,6 +1379,9 @@ void migrateProject(ProjectDeserializationInfoIR& deserializedIR, raco::serializ
 				if (linkEndProps.size() >= 3 && linkEndProps[2] == "uniforms") {
 					migrateLink(link, 3);
 				}
+            }
+        }
+    }
 	// File Version 52: Added z_up to the ProjectSettings.
 	if (deserializedIR.fileVersion < 52) {
 		for (const auto& dynObj : deserializedIR.objects) {

@@ -413,6 +413,7 @@ void PreviewMainWindow::setAxes(const bool& z_up) {
 
 void PreviewMainWindow::setEnableDisplayGrid(bool enable) {
 	previewWidget_->setEnableDisplayGrid(enable);
+}
 
 void PreviewMainWindow::sceneUpdate(bool z_up) {
     previewWidget_->sceneUpdate(z_up, scaleValue_);

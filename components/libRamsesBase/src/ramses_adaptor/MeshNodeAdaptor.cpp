@@ -137,46 +137,44 @@ void MeshNodeAdaptor::syncMaterials(core::Errors* errors) {
 }
 
 void MeshNodeAdaptor::syncMaterial(core::Errors* errors, size_t index) {
-	assert((index == 0) && "We only support one material for now.");
-	// we need to reset the geometry in case of the new appearance not being compatible with the current geometry
-	ramsesObject().removeAppearanceAndGeometry();
+    assert((index == 0) && "We only support one material for now.");
+    // we need to reset the geometry in case of the new appearance not being compatible with the current geometry
+    ramsesObject().removeAppearanceAndGeometry();
 
-	bool haveMeshNormals = false;
-	if (MeshAdaptor* meshAdapt = meshAdaptor()) {
-		auto vertexData = meshAdapt->vertexData();
-		if (vertexData.find("a_Normal") != vertexData.end()) {
-			haveMeshNormals = true;
-		}
-	}
+    bool haveMeshNormals = false;
+    if (MeshAdaptor* meshAdapt = meshAdaptor()) {
+        auto vertexData = meshAdapt->vertexData();
+        if (vertexData.find("a_Normal") != vertexData.end()) {
+            haveMeshNormals = true;
+        }
+    }
 
-	appearanceBinding_.reset();
-	privateAppearance_.reset();
+    appearanceBinding_.reset();
+    privateAppearance_.reset();
 
-	if (auto materialAdapt = materialAdaptor(index)) {
-		LOG_TRACE(raco::log_system::RAMSES_ADAPTOR, "using materialAdaptor (valid)");
-		if (editorObject()->materialPrivate(index)) {
-			privateAppearance_ = raco::ramses_base::ramsesAppearance(sceneAdaptor_->scene(), materialAdapt->getRamsesObjectPointer());
-			currentAppearance_ = privateAppearance_;
+    if (auto materialAdapt = materialAdaptor(index)) {
+        LOG_TRACE(raco::log_system::RAMSES_ADAPTOR, "using materialAdaptor (valid)");
+        if (editorObject()->materialPrivate(index)) {
+            privateAppearance_ = raco::ramses_base::ramsesAppearance(sceneAdaptor_->scene(), materialAdapt->getRamsesObjectPointer());
+            currentAppearance_ = privateAppearance_;
 
-			core::ValueHandle optionsHandle = editorObject()->getMaterialOptionsHandle(index);
-			core::ValueHandle uniformsHandle = editorObject()->getUniformContainerHandle(index);
-			core::ValueHandle MUniformsHandle = {materialAdapt->editorObject(), &user_types::Material::uniforms_};
-			//updateAppearance(errors, sceneAdaptor_, privateAppearance_, optionsHandle, MUniformsHandle);
-			updateMeshNodeAppearance(errors, sceneAdaptor_, privateAppearance_, optionsHandle, uniformsHandle, MUniformsHandle);
+            core::ValueHandle optionsHandle = editorObject()->getMaterialOptionsHandle(index);
+            core::ValueHandle uniformsHandle = editorObject()->getUniformContainerHandle(index);
+            updateAppearance(errors, sceneAdaptor_, privateAppearance_, optionsHandle, uniformsHandle);
 
-			(*privateAppearance_)->setName(std::string(this->editorObject()->objectName() + "_Appearance").c_str());
+            (*privateAppearance_)->setName(std::string(this->editorObject()->objectName() + "_Appearance").c_str());
 
-			appearanceBinding_ = raco::ramses_base::ramsesAppearanceBinding(*privateAppearance_->get(), &sceneAdaptor_->logicEngine(), editorObject()->objectName() + "_AppearanceBinding", editorObject_->objectIDAsRamsesLogicID());
+            appearanceBinding_ = raco::ramses_base::ramsesAppearanceBinding(*privateAppearance_->get(), &sceneAdaptor_->logicEngine(), editorObject()->objectName() + "_AppearanceBinding", editorObject_->objectIDAsRamsesLogicID());
 
-		} else {
-			currentAppearance_ = materialAdapt->appearance();
-		}
-	} else {
-		LOG_TRACE(raco::log_system::RAMSES_ADAPTOR, "using materialAdaptor (invalid)");
-		currentAppearance_ = sceneAdaptor_->defaultAppearance(haveMeshNormals);
-	}
+        } else {
+            currentAppearance_ = materialAdapt->appearance();
+        }
+    } else {
+        LOG_TRACE(raco::log_system::RAMSES_ADAPTOR, "using materialAdaptor (invalid)");
+        currentAppearance_ = sceneAdaptor_->defaultAppearance(haveMeshNormals);
+    }
 
-	ramsesObject().setAppearance(currentAppearance_);
+    ramsesObject().setAppearance(currentAppearance_);
 }
 
 void MeshNodeAdaptor::syncMeshObject() {

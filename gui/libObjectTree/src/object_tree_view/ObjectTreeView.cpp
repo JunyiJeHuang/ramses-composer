@@ -46,8 +46,8 @@ namespace raco::object_tree::view {
 
 using namespace raco::object_tree::model;
 
-ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultModel *viewModel, ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel, QWidget *parent)
-	: QTreeView(parent), treeModel_(viewModel), proxyModel_(sortFilterProxyModel), commandInterface_(commandInterface), viewTitle_(viewTitle) {
+ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultModel *viewModel, ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel, raco::core::CommandInterface* commandInterface, QWidget *parent)
+    : QTreeView(parent), treeModel_(viewModel), proxyModel_(sortFilterProxyModel), commandInterface_(commandInterface), viewTitle_(viewTitle) {
 	setAlternatingRowColors(true);
 	setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -106,18 +106,10 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
-	auto copyShortcut = new QShortcut(QKeySequence::Copy, this, nullptr, nullptr, Qt::WidgetShortcut);
-	QObject::connect(copyShortcut, &QShortcut::activated, this, &ObjectTreeView::copyObjects);
-
-	auto pasteShortcut = new QShortcut(QKeySequence::Paste, this, nullptr, nullptr, Qt::WidgetShortcut);
-	QObject::connect(pasteShortcut, &QShortcut::activated, this, [this]() {
-		pasteObjects(getSelectedInsertionTargetIndex());
-	});
-
 	auto cutShortcut = new QShortcut(QKeySequence::Cut, this, nullptr, nullptr, Qt::WidgetShortcut);
-	QObject::connect(cutShortcut, &QShortcut::activated, this, &ObjectTreeView::cutObjects);
+	QObject::connect(cutShortcut, &QShortcut::activated, this, &ObjectTreeView::cut);
 	auto deleteShortcut = new QShortcut({"Del"}, this, nullptr, nullptr, Qt::WidgetShortcut);
-	QObject::connect(deleteShortcut, &QShortcut::activated, this, &ObjectTreeView::deleteObjects);
+	QObject::connect(deleteShortcut, &QShortcut::activated, this, &ObjectTreeView::shortcutDelete);
 
 	auto duplicateShortcut = new QShortcut({"Ctrl+D"}, this, nullptr, nullptr, Qt::WidgetShortcut);
 	QObject::connect(duplicateShortcut, &QShortcut::activated, this, &ObjectTreeView::duplicateObjects);
@@ -633,48 +625,6 @@ void ObjectTreeView::globalOpreations() {
     updateMeshData();
 }
 
-void ObjectTreeView::copyObjects() {
-	auto selectedIndices = getSelectedIndices(true);
-	if (!selectedIndices.empty()) {
-		if (canCopyAtIndices(selectedIndices)) {
-			treeModel_->copyObjectsAtIndices(selectedIndices, false);
-		}
-	}
-}
-
-void ObjectTreeView::pasteObjects(const QModelIndex &index, bool asExtRef) {
-	if (canPasteIntoIndex(index, asExtRef)) {
-		treeModel_->pasteObjectAtIndex(index, asExtRef);
-	} else if (canPasteIntoIndex({}, asExtRef)) {
-		treeModel_->pasteObjectAtIndex({}, asExtRef);
-	}
-}
-
-void ObjectTreeView::cutObjects() {
-	auto selectedIndices = getSelectedIndices(true);
-	if (!selectedIndices.isEmpty()) {
-		treeModel_->cutObjectsAtIndices(selectedIndices, false);
-	}
-}
-
-void ObjectTreeView::deleteObjects() {
-	auto selectedIndices = getSelectedIndices();
-	if (!selectedIndices.empty()) {
-		auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices);
-
-		if (delObjAmount > 0) {
-			selectionModel()->Q_EMIT selectionChanged({}, {});
-		}
-	}
-}
-
-void raco::object_tree::view::ObjectTreeView::duplicateObjects() {
-	auto selectedIndices = getSelectedIndices(true);
-	if (!selectedIndices.isEmpty() && treeModel_->canDuplicateAtIndices(selectedIndices)) {
-		treeModel_->duplicateObjectsAtIndices(selectedIndices);
-	}
-}
-
 void ObjectTreeView::selectObject(const QString &objectID) {
 	if (objectID.isEmpty()) {
 		resetSelection();
@@ -875,6 +825,39 @@ void ObjectTreeView::collapseRecusively(const QModelIndex& index) {
 	}
 }
 
+void ObjectTreeView::cut() {
+	auto selectedIndices = getSelectedIndices(true);
+	if (!selectedIndices.isEmpty()) {
+		treeModel_->cutObjectsAtIndices(selectedIndices, false);
+	}
+}
+
+void raco::object_tree::view::ObjectTreeView::duplicateObjects() {
+	auto selectedIndices = getSelectedIndices(true);
+	if (!selectedIndices.isEmpty() && treeModel_->canDuplicateAtIndices(selectedIndices)) {
+		treeModel_->duplicateObjectsAtIndices(selectedIndices);
+	}
+}
+
+void ObjectTreeView::globalPasteCallback(const QModelIndex &index, bool asExtRef) {
+	if (canPasteIntoIndex(index, asExtRef)) {
+		treeModel_->pasteObjectAtIndex(index, asExtRef);
+	} else if (canPasteIntoIndex({}, asExtRef)) {
+		treeModel_->pasteObjectAtIndex({}, asExtRef);
+	}
+}
+
+void ObjectTreeView::shortcutDelete() {
+	auto selectedIndices = getSelectedIndices();
+	if (!selectedIndices.empty()) {
+		auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices);
+
+		if (delObjAmount > 0) {
+			selectionModel()->Q_EMIT selectionChanged({}, {});
+		}
+	}
+}
+
 QString ObjectTreeView::getViewTitle() const {
 	return viewTitle_;
 }
@@ -943,6 +926,15 @@ void ObjectTreeView::resetSelection() {
 	viewport()->update();
 }
 
+void ObjectTreeView::globalCopyCallback() {
+	auto selectedIndices = getSelectedIndices(true);
+	if (!selectedIndices.empty()) {
+		if (canCopyAtIndices(selectedIndices)) {
+			treeModel_->copyObjectsAtIndices(selectedIndices, false);
+		}
+	}
+}
+
 // TODO:
 void ObjectTreeView::createBMWMaterial(const std::vector<MaterialData> &materialArr, const QModelIndex &parent) {
 	EditorObject::TypeDescriptor nodeType;
@@ -950,7 +942,7 @@ void ObjectTreeView::createBMWMaterial(const std::vector<MaterialData> &material
 	nodeType.typeName = "Material";
 
 	selectedItemIDs_.clear();
-	auto createdObject = treeModel_->createNewObject(nodeType, "testMaterial", parent);
+    auto createdObject = treeModel_->createNewObject(nodeType.typeName, "testMaterial", parent);
 	selectedItemIDs_.insert(createdObject->objectID());
 
 	for (EditorObject::ChildIterator it = createdObject->begin(); it != createdObject->end(); ++it) {
@@ -977,7 +969,7 @@ void ObjectTreeView::createBMWMaterial(const std::vector<MaterialData> &material
 		auto unValueBase = createdObject->get("uniforms");
 		unValueBase->set<SEditorObject>(createdObject);
 
-		auto un1 = treeModel_->createNewObject(nodeType, "u_move", parent);	 // 继续创建子结点  nodeType=u_move
+        auto un1 = treeModel_->createNewObject(nodeType.typeName, "u_move", parent);	 // 继续创建子结点  nodeType=u_move
 		selectedItemIDs_.insert(un1->objectID());
 		if (un1->hasProperty("objectName")) {
 			auto baseHandle = un1->get("objectName");

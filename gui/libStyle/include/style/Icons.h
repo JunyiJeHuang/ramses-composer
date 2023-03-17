@@ -76,15 +76,13 @@ public:
 	const QIcon typeSkin{":typeSkinIcon"};
 	const QIcon visibilityDisabled{makeDisabled(":visibilityDisabledIcon")};
 	const QIcon visibilityOn{makeDisabled(":visibilityOnIcon")};
-	const QIcon visibilityOff{makeDisabled(":visibilityOffIcon")};=
+    const QIcon visibilityOff{makeDisabled(":visibilityOffIcon")};
     const QIcon typeZoom{":typeZoomIcon"};
     const QIcon animationNext{":typeAnimationNextIcon"};
     const QIcon animationPrevious{":typeAnimationPreviousIcon"};
     const QIcon animationStart{":typeAnimationStartIcon"};
     const QIcon animationStop{":typeAnimationStopIcon"};
     const QIcon appLogo{":applicationLogo"};
-    const QIcon visibilityOff{":visibilityOff"};
-    const QIcon visibilityOn{":visibilityOn"};
 
 	static const Icons &instance();
 	static QIcon makeDisabled(const QString &name);

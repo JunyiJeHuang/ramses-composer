@@ -12,6 +12,7 @@
 #include "property_browser/PropertyBrowserRef.h"
 
 #include "PropertyEditor.h"
+#include <QComboBox>
 
 class QPushButton;
 class QLineEdit;
@@ -37,8 +38,10 @@ protected:
 	QLineEdit* currentRef_{nullptr};
 	QPushButton* changeRefButton_{nullptr};
 	QPushButton* goToRefObjectButton_{nullptr};
+    QComboBox* comboBox_{nullptr};
 protected Q_SLOTS:
 	void createCustomContextMenu(const QPoint& p);
+    void updateItems(const PropertyBrowserRef::RefItems& items);
 };
 
 }  // namespace raco::property_browser

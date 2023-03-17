@@ -1139,16 +1139,6 @@ void readJsonFillPropertyData(QJsonObject jsonObj) {
     }
 }
 
-int attriIndex(std::vector<Attribute> attrs, std::string aName) {
-    for (int i{0}; i < attrs.size(); i++) {
-        auto attrIt = attrs.at(i);
-        if (attrIt.name.compare(aName) == 0) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 namespace raco::dataConvert {
 
 bool ProgramManager::writeProgram(QString filePath) {
@@ -1260,7 +1250,7 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
 		}
 
         // normals
-        int posIndex = attriIndex(mesh.getAttributes(), "a_Normal");
+        int posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Normal");
         if (posIndex != -1) {
             aNormals = new CTMfloat[aVerCount * 3];
             Attribute attri = mesh.getAttributes().at(posIndex);
@@ -1269,7 +1259,7 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
         }
 
         // vertices
-        posIndex = attriIndex(mesh.getAttributes(), "a_Position");
+        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Position");
         if (posIndex != -1) {
             Attribute attri = mesh.getAttributes().at(posIndex);
             auto verticesData = reinterpret_cast<float *>(attri.data.data());
@@ -1278,8 +1268,8 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
 
         ctmDefineMesh(context, aVertices, aVerCount, aIndices, aTriCount, aNormals);
 
-        // uv maps a_TextureCoordinate
-        posIndex = attriIndex(mesh.getAttributes(), "a_TextureCoordinate");
+        // uv maps
+        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate");
         if (posIndex != -1) {
             aUVMaps = new CTMfloat[aVerCount * 2];
             Attribute attri = mesh.getAttributes().at(posIndex);
@@ -1291,19 +1281,6 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
         }
         // uv maps a_TextureCoordinate1
 		posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate1");
-		if (posIndex != -1) {
-			aUVMaps = new CTMfloat[aVerCount * 2];
-			Attribute attri = mesh.getAttributes().at(posIndex);
-			auto uvMapsData = reinterpret_cast<float *>(attri.data.data());
-			;
-			std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
-			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate1", NULL)) {
-				qDebug() << "uv failed";
-			}
-		}
-
-        // uv maps a_TextureCoordinate1
-		posIndex = attriIndex(mesh.getAttributes(), "a_TextureCoordinate1");
 		if (posIndex != -1) {
 			aUVMaps = new CTMfloat[aVerCount * 2];
 			Attribute attri = mesh.getAttributes().at(posIndex);

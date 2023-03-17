@@ -46,7 +46,7 @@ class PropertySubtreeView final : public QWidget {
 public:
 	explicit PropertySubtreeView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserModel* model, PropertyBrowserItem* item, QWidget* parent);
 	PropertyBrowserItem const* item() { return item_; }
-	void mousePressEvent(QMouseEvent* event);
+    void mousePressEvent(QMouseEvent* event) override;
 	void setUniformControls(PropertyBrowserItem* item, PropertyBrowserHBoxLayout* labelLayout);
 	std::vector<Uniform> Item2Uniform(PropertyBrowserItem* item);
 	void setUniformsProperty(core::ValueHandle valueHandle, Uniform& tempUniform);

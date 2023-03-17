@@ -164,7 +164,7 @@ void RefEditor::setNodeDataMaterialChanged(int index) {
 	}
 }
 
-void RefEditor::updateItems(const PropertyBrowserRef::ComboBoxItems& items) {
+void RefEditor::updateItems(const PropertyBrowserRef::RefItems &items) {
 	QObject::disconnect(comboBox_, qOverload<int>(&QComboBox::activated), ref_, &PropertyBrowserRef::setIndex);
 	comboBox_->clear();
 	for (const auto& comboItem : items) {

@@ -163,7 +163,7 @@ void RamsesPreviewWindow::commit(bool forceUpdate) {
 				/// @todo maybe we need to reset old scene mapping?
 				sceneControlAPI.setSceneMapping(next_.sceneId, displayId_);
 			}
-			setAndWaitSceneState(rendererBackend_, ramses::RendererSceneState::Ready, framebufferScene_, next_.sceneId);
+            setAndWaitSceneState(rendererBackend_, ramses::RendererSceneState::Ready, framebufferScene_, backgroundScene_, next_.sceneId);
 
 			// Set up the render buffer we use as a default framebuffer.
 			// This is not a normal Ramses render target / render buffer created with Scene::createRenderBuffer / Scene::createRenderTarget

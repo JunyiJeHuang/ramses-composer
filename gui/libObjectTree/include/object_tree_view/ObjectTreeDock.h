@@ -34,8 +34,7 @@ public:
 	ObjectTreeView *getActiveTreeView() const;
 
 public Q_SLOTS:
-	void resetSelection();
-	void selectTreeView(const QString &treeViewTitle);
+    void resetSelection();
 
 Q_SIGNALS:
 	void externalObjectSelected(ObjectTreeDock *srcDock);
@@ -54,7 +53,7 @@ private:
 	QComboBox *filterByComboBox_;
 	QHBoxLayout *treeDockSettingsLayout_;
 
-	QStackedWidget *treeViewStack_;
+    QStackedWidget *treeViewStack_;
 
 	std::shared_ptr<raco::core::BaseContext> currentContext_;
 	

@@ -98,7 +98,7 @@ ObjectTreeView *ObjectTreeDock::getActiveTreeView() const {
 }
 
 void ObjectTreeDock::resetSelection() {
-	getActiveTreeView()->resetSelection();
+    getActiveTreeView()->resetSelection();
 }
 
 void ObjectTreeDock::filterTreeViewObjects() {

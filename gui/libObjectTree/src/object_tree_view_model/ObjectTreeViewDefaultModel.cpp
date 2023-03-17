@@ -658,7 +658,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
 	auto dummyCacheEntry = commandInterface_->meshCache()->registerFileChangedHandler(absPath, {nullptr, nullptr, []() {}});
 	if (auto sceneGraphPtr = commandInterface_->meshCache()->getMeshScenegraph(absPath)) {
 		MeshScenegraph sceneGraph{*sceneGraphPtr};
-		auto importDialog = new raco::common_widgets::MeshAssetImportDialog(*sceneGraph, nullptr);
+        auto importDialog = new raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr);
 		auto importStatus = importDialog->exec();
         keyAnimation = importDialog->animationEditorButton_->isChecked();
 		if (importStatus == QDialog::Accepted && selectedObject != nullptr) {
@@ -678,7 +678,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
                 commandInterface_->set(translation_z, -y);
                 commandInterface_->set(rotation_x, rot_x - 90.0);
             }
-			commandInterface_->insertAssetScenegraph(*sceneGraph, absPath, selectedObject);
+            commandInterface_->insertAssetScenegraph(sceneGraph, absPath, selectedObject);
 		}
 	} else {
 		auto meshError = commandInterface_->meshCache()->getMeshError(absPath);

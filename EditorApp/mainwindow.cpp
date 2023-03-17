@@ -80,14 +80,10 @@
 
 #include "utils/u8path.h"
 #include "versiondialog.h"
-
-<<<<<<< HEAD
 #include "DockAreaWidget.h"
 #include "ads_globals.h"
 #include "python_api/PythonAPI.h"
 
-=======
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 #include <DockWidget.h>
 #include <IconProvider.h>
 #include <QDialog>
@@ -171,21 +167,11 @@ void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::prop
 	QObject::connect(&treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::newObjectTreeItemsSelected, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::setValueHandles);
 	QObject::connect(&treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectionCleared, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::clear);
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObjectAcrossAllTreeDocks);
+	
 	QObject::connect(&programManager, &raco::dataConvert::ProgramManager::selectObject, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObject);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-=======
     QObject::connect(&signalProxy::GetInstance(), &raco::signal::signalProxy::sigSwitchObjectNode, &treeDockManager, &raco::object_tree::view::ObjectTreeDockManager::selectObject);
->>>>>>> 7166c2f (<fixed>([visualcurve.cpp]): <fixed bug of curves that are hidden are saved after opening >)
 
 	// Trigger to create keyframes and curves
-<<<<<<< HEAD
->>>>>>> b51b33c (fix: Fixed export ptx information redundancy and export uniform property)
-=======
-
->>>>>>> 0342eca (modify uniform in mesh node)
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurve, mainWindow, &MainWindow::slotCreateCurve);
     QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::sigCreateCurveAndBinding, mainWindow, &MainWindow::slotCreateCurveAndBinding);
 
@@ -194,16 +180,11 @@ void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::prop
 }
 
 ads::CDockAreaWidget* createAndAddPropertyBrowser(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* application, raco::node_logic::NodeLogic* nodeDataPro, raco::dataConvert::ProgramManager& programManager) {
-<<<<<<< HEAD
 	auto propertyBrowser = new raco::property_browser::PropertyBrowserWidget(application->dataChangeDispatcher(), application->activeRaCoProject().commandInterface(), application->sceneBackendImpl(), mainWindow);
+	connectPropertyBrowserAndTreeDockManager(mainWindow, propertyBrowser, treeDockManager, programManager, nodeDataPro);
 	QObject::connect(propertyBrowser->model(), &raco::property_browser::PropertyBrowserModel::objectSelectionRequested, mainWindow, &MainWindow::focusToObject);
 	QObject::connect(mainWindow, &MainWindow::objectFocusRequestedForPropertyBrowser, propertyBrowser, &raco::property_browser::PropertyBrowserWidget::setValueHandleFromObjectId);
-	connectPropertyBrowserAndTreeDockManager(mainWindow, propertyBrowser, treeDockManager, programManager);
 
-=======
-	auto propertyBrowser = new raco::property_browser::PropertyBrowserWidget(application->dataChangeDispatcher(), application->activeRaCoProject().commandInterface(), mainWindow);
-	connectPropertyBrowserAndTreeDockManager(mainWindow, propertyBrowser, treeDockManager, programManager, nodeDataPro);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 	auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::PROPERTY_BROWSER, mainWindow);
 	dockWidget->setWidget(propertyBrowser);
 	dockWidget->setObjectName(dockObjName);
@@ -256,43 +237,27 @@ void createAndAddProjectSettings(MainWindow* mainWindow, const char* dockObjName
 	dockManager->addDockWidget(ads::RightDockWidgetArea, dock);
 }
 
-<<<<<<< HEAD
-ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dockObjName, raco::object_tree::model::ObjectTreeViewDefaultModel *dockModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel* sortFilterModel, ads::DockWidgetArea area, MainWindow* mainWindow, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic *materialLogic) {
-=======
-ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dockObjName, raco::object_tree::model::ObjectTreeViewDefaultModel* dockModel, QSortFilterProxyModel* sortFilterModel, ads::DockWidgetArea area, MainWindow* mainWindow,
-    RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication, ads::CDockAreaWidget* dockArea,
-	raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
+ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dockObjName, raco::object_tree::model::ObjectTreeViewDefaultModel *dockModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel* sortFilterModel, ads::DockWidgetArea area, MainWindow* mainWindow, 
+	RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication, ads::CDockAreaWidget* dockArea, 
+	raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic *materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	auto* dockObjectView = new raco::object_tree::view::ObjectTreeDock(title, mainWindow);
 	QObject::connect(dockModel, &raco::object_tree::model::ObjectTreeViewDefaultModel::meshImportFailed, mainWindow, &MainWindow::showMeshImportErrorMessage);
 	dockModel->buildObjectTree();
-<<<<<<< HEAD
-	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
+	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel, racoApplication->activeRaCoProject().commandInterface());
 	if (sortFilterModel && sortFilterModel->sortingEnabled()) {
 		newTreeView->sortByColumn(
 			title == MainWindow::DockWidgetTypes::RESOURCES
-			 	? raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_NAME
+				? raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_NAME
 				: raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_TYPE,
 			Qt::SortOrder::AscendingOrder);
-	QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
-=======
-=======
-=======
-    auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel, racoApplication->activeRaCoProject().commandInterface());
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
+	}
+
 	QObject::connect(mainWindow, &MainWindow::getNodeDataResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::globalOpreations);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
 	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
->>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
-=======
-	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
-	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
->>>>>>> 087cb43 (fix: Modify the texture attribute information in the export ptx.)
     QObject::connect(mainWindow, &MainWindow::updateMeshData, newTreeView, &raco::object_tree::view::ObjectTreeView::updateMeshData);
+	
 	QObject::connect(&programManager, &raco::dataConvert::ProgramManager::createNode, newTreeView, &raco::object_tree::view::ObjectTreeView::importBMWAssets);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setMaterialResHandles, mainWindow, &MainWindow::setMaterialResHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setTextureResHandles, mainWindow, &MainWindow::setTextureResHandles);
@@ -328,16 +293,8 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 ads::CDockAreaWidget* createAndAddProjectBrowser(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication,
 	ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	auto* model = new raco::object_tree::model::ObjectTreeViewExternalProjectModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects());
-<<<<<<< HEAD
-<<<<<<< HEAD
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel(mainWindow),  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
-=======
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new QSortFilterProxyModel,  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea,
-=======
-    return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROJECT_BROWSER, dockObjName, model, new QSortFilterProxyModel,  ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea,
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
-		nodeDataPro, materialLogic, programManager);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
+	return createAndAddObjectTree(MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
+		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
 }
 
 ads::CDockAreaWidget* createAndAddResourceTree(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication,
@@ -362,18 +319,8 @@ ads::CDockAreaWidget* createAndAddResourceTree(MainWindow* mainWindow, const cha
 		RenderPass::typeDescription.typeName};
 
 	auto* model = new raco::object_tree::model::ObjectTreeViewResourceModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects(), allowedCreateableUserTypes);
-	return createAndAddObjectTree(
-<<<<<<< HEAD
-		MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
-		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
-=======
-		MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new QSortFilterProxyModel,
-<<<<<<< HEAD
-		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic, programManager);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
-=======
-        ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
+	return createAndAddObjectTree(MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
+		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
 }
 
 ads::CDockAreaWidget* createAndAddPrefabTree(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication, ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
@@ -394,17 +341,8 @@ ads::CDockAreaWidget* createAndAddPrefabTree(MainWindow* mainWindow, const char*
 	auto* model = new raco::object_tree::model::ObjectTreeViewPrefabModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects(), allowedCreateableUserTypes);
 
 	return createAndAddObjectTree(
-<<<<<<< HEAD
 		MainWindow::DockWidgetTypes::PREFABS, dockObjName, model, new raco::object_tree::model::ObjectTreeViewTopLevelSortFilterProxyModel(mainWindow),
-		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic);
-=======
-		MainWindow::DockWidgetTypes::PREFABS, dockObjName, model, new raco::object_tree::model::ObjectTreeViewTopLevelSortFilterProxyModel,
-<<<<<<< HEAD
-		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, dockArea, nodeDataPro, materialLogic, programManager);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
-=======
-        ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
+		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
 }
 
 ads::CDockAreaWidget* createAndAddSceneGraphTree(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication,
@@ -423,17 +361,8 @@ ads::CDockAreaWidget* createAndAddSceneGraphTree(MainWindow* mainWindow, const c
 		Skin::typeDescription.typeName};
 
 	auto* model = new raco::object_tree::model::ObjectTreeViewDefaultModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects(), allowedCreateableUserTypes);
-<<<<<<< HEAD
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::SCENE_GRAPH, dockObjName, model, new raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel(mainWindow, false),
-		ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, nullptr, nodeDataPro, materialLogic);
-=======
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::SCENE_GRAPH, dockObjName, model, nullptr,
-<<<<<<< HEAD
-		ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, nullptr, nodeDataPro, materialLogic, programManager);
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
-=======
-        ads::LeftDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, nullptr, nodeDataPro, materialLogic, programManager);
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
+	return createAndAddObjectTree(MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
+		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, nullptr, nodeDataPro, materialLogic, programManager);
 }
 
 ads::CDockAreaWidget* createAndAddUndoView(raco::application::RaCoApplication* application, const char* dockObjName, raco::application::RaCoProject* project, MainWindow* mainWindow, RaCoDockManager* dockManager, ads::CDockAreaWidget* dockArea = nullptr) {
@@ -460,7 +389,6 @@ ads::CDockAreaWidget* createAndAddLogView(MainWindow* mainWindow, raco::applicat
 	return dockManager->addDockWidget(ads::BottomDockWidgetArea, dock, dockArea);
 }
 
-<<<<<<< HEAD
 ads::CDockAreaWidget* createAndAddPythonRunner(MainWindow* mainWindow, raco::application::RaCoApplication* application, const char* dockObjName, std::map<QString, qint64>& scriptEntries, std::map<QString, qint64>& commandLineParamEntries, RaCoDockManager* dockManager, ads::CDockAreaWidget* dockArea = nullptr) {
 	auto* pythonRunner = new raco::common_widgets::RunScriptDialog(scriptEntries, commandLineParamEntries, mainWindow);
 	auto* dock = createDockWidget(MainWindow::DockWidgetTypes::PYTHON_RUNNER, mainWindow);
@@ -529,10 +457,7 @@ ads::CDockAreaWidget* createAndAddTracePlayer(MainWindow* mainWindow, RaCoDockMa
 	return dockManager->addDockWidget(ads::TopDockWidgetArea, newTraceplayerDock, previewDockArea);
 }
 
-void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::RendererBackend& rendererBackend, raco::application::RaCoApplication* application,  RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::node_logic::NodeLogic *nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
-=======
 void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::RendererBackend& rendererBackend, raco::application::RaCoApplication* application, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, CurveLogic *curveLogic, raco::dataConvert::ProgramManager& programManager) {
->>>>>>> 9581cb2 (fixed bugs Push To Master branch)
 	createAndAddPreview(mainWindow, "defaultPreview", dockManager, rendererBackend, application);
 
     auto leftDockArea = createAndAddSceneGraphTree(mainWindow, "defaultSceneGraph", dockManager, treeDockManager, application, nodeDataPro, materialLogic, programManager);
@@ -592,29 +517,17 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		ui->actionSaveAs->setShortcut(QKeySequence::SaveAs);
 		ui->actionSaveAs->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionSaveAs, &QAction::triggered, this, &MainWindow::saveAsActiveProject);
-<<<<<<< HEAD
-		
 		QObject::connect(ui->actionSaveAsWithNewID, &QAction::triggered, this, &MainWindow::saveAsActiveProjectWithNewID);
-=======
 
         ui->actionExportGltf->setShortcutContext(Qt::ApplicationShortcut);
         QObject::connect(ui->actionExportGltf, &QAction::triggered, this, &MainWindow::exportGltf);
 
 		ui->actionExportBMWAssets->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionExportBMWAssets, &QAction::triggered, this, &MainWindow::exportBMWAssets);
-<<<<<<< HEAD
->>>>>>> 716c9dc (fix: Fixed some bugs in uniform, added option to export BMW Assets)
-=======
-
 		ui->actionImportBMWAssets->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionImportBMWAssets, &QAction::triggered, this, &MainWindow::importBMWAssets);
-<<<<<<< HEAD
->>>>>>> 9b7e752 (fix: Fixed crash bug and added skeleton code for reading ptx files.)
-=======
-
         ui->actionConvertLuaAnim->setShortcutContext(Qt::ApplicationShortcut);
         QObject::connect(ui->actionConvertLuaAnim, &QAction::triggered, this, &MainWindow::convert2LuaAnimation);
->>>>>>> d8d78c6 (feature:add animation data convert to lua scripts)
 	}
 
 	QObject::connect(ui->actionOpen, &QAction::triggered, [this]() {
@@ -810,23 +723,12 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	// Don't create a new DockManager right away - making QMessageBoxes pop up messes up state restoring
 	// (see https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/315)
 	delete dockManager_;
-<<<<<<< HEAD
 	logViewModel_->clear();
-<<<<<<< HEAD
 
 
 	killTimer(renderTimerId_);
-
-=======
 	programManager_.readProgramFromJson(file);
->>>>>>> 0342eca (modify uniform in mesh node)
-=======
     logViewModel_->clear();
-<<<<<<< HEAD
->>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
-=======
-	programManager_.readProgramFromJson(file);
->>>>>>> aef5216 (Fix bug about uniform)
 	try {
 		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
 			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
@@ -881,32 +783,12 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	restoreCachedLayout();
 	configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
 
-<<<<<<< HEAD
+	programManager_.readProgramFromJson(file);
 	updateApplicationTitle();
 	updateActiveProjectConnection();
-<<<<<<< HEAD
-<<<<<<< HEAD
 	updateProjectSavedConnection();
 	updateUpgradeMenu();
-=======
-    programManager_.readProgramFromJson(file);
->>>>>>> ae77086 (<fix>([mainWindow]): <fixed read json timing bug>)
-=======
 	programManager_.updateUIFromJson(file);
->>>>>>> aef5216 (Fix bug about uniform)
-=======
-    updateApplicationTitle();
-    updateActiveProjectConnection();
-    programManager_.updateUIFromJson(file);
->>>>>>> 0b38cc1 (<function>([Undo/VisualCurve]): <add Undo/UndoState function and fixed the bug of a point is bezier/hermite type, next point can't show left worker point info>)
-
-	if (racoApplication_->activeRaCoProject().project()->settings()->enableTimerFlag_.asBool() == true) {
-		ui->menuDebug->addAction(ui->actionEnableRuntimeScriptPreview);
-		ui->actionEnableRuntimeScriptPreview->setChecked(racoApplication_->activeRaCoProject().project()->settings()->runTimer_.asBool());
-	} else {
-		ui->menuDebug->removeAction(ui->actionEnableRuntimeScriptPreview);
-		racoApplication_->activeRaCoProject().project()->settings()->runTimer_ = false;
-	}
 }
 
 MainWindow::~MainWindow() {
@@ -1015,9 +897,6 @@ bool MainWindow::exportGltf() {
     return false;
 }
 
-<<<<<<< HEAD
-bool MainWindow::saveAsActiveProject(bool newID) {
-=======
 bool MainWindow::exportBMWAssets() {
 	if (racoApplication_->canSaveActiveProject()) {
 		QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
@@ -1056,30 +935,40 @@ bool MainWindow::importBMWAssets() {
 	return true;
 }
 
-bool MainWindow::saveAsActiveProject() {
->>>>>>> 716c9dc (fix: Fixed some bugs in uniform, added option to export BMW Assets)
+void MainWindow::importScene() {
+    auto sceneFolder = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Mesh, racoApplication_->activeProjectFolder());
+    auto filePath = QFileDialog::getOpenFileName(this, "Load Asset File", QString::fromStdString(sceneFolder.string()), "glTF files (*.gltf *.glb)");
+    if (!filePath.isEmpty()) {
+        MeshDescriptor meshDesc;
+        meshDesc.absPath = filePath.toStdString();
+        meshDesc.bakeAllSubmeshes = false;
+
+        if (auto sceneGraphPtr = racoApplication_->activeRaCoProject().meshCache()->getMeshScenegraph(meshDesc.absPath)) {
+            MeshScenegraph sceneGraph{*sceneGraphPtr};
+            int featureLevel = racoApplication_->activeRaCoProject().commandInterface()->project()->featureLevel();
+            auto importStatus = raco::common_widgets::MeshAssetImportDialog(sceneGraph, featureLevel, this).exec();
+            if (importStatus == QDialog::Accepted) {
+                racoApplication_->activeRaCoProject().commandInterface()->insertAssetScenegraph(sceneGraph, meshDesc.absPath, nullptr);
+            }
+        } else {
+            auto meshError = racoApplication_->activeRaCoProject().meshCache()->getMeshError(meshDesc.absPath);
+            showMeshImportErrorMessage(meshDesc.absPath, meshError);
+        }
+    }
+}
+
+bool MainWindow::saveAsActiveProject(bool newID) {
 	if (racoApplication_->canSaveActiveProject()) {
-<<<<<<< HEAD
-<<<<<<< HEAD
+		QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
 		const bool setProjectName = racoApplication_->activeProjectPath().empty();
 		const auto dialogCaption = newID ? "Save As with new ID..." : "Save As...";
 		auto newPath = QFileDialog::getSaveFileName(this, dialogCaption, QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
-=======
-        QString path = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
-        bool setProjectName = racoApplication_->activeProjectPath().empty();
-=======
-		QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
-		bool setProjectName = racoApplication_->activeProjectPath().empty();
->>>>>>> 2880776 (feat:Improve the ptx export module, and update the uniform attribute)
-		auto newPath = QFileDialog::getSaveFileName(this, "Save As...", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca)");
->>>>>>> c7b6b1f (fixed ctm bugs & add visualCurveWidget 2 libTimeAxis)
 		if (newPath.isEmpty()) {
 			return false;
-        }
+		}
 
 		if (!newPath.endsWith(".rca")) newPath += ".rca";
 		std::string errorMsg;
-<<<<<<< HEAD
 		if (newID) {
 			if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
 				openProject(QString::fromStdString(racoApplication_->activeProjectPath()), -1, true);
@@ -1087,41 +976,14 @@ bool MainWindow::saveAsActiveProject() {
 					updateActiveProjectConnection();
 					updateProjectSavedConnection();
 					updateUpgradeMenu();
+					programManager_.setOpenedProjectPath(openedProjectPath);
+            		programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
 					programManager_.writeProgram2Json(newPath);
 					return true;
 				} else {
 					updateApplicationTitle();
 					QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
 				}
-			} else {
-				updateApplicationTitle();
-				QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
-			}
-=======
-		if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
-			recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
-
-			updateActiveProjectConnection();
-<<<<<<< HEAD
-            updateApplicationTitle();
-			programManager_.setOpenedProjectPath(openedProjectPath);
-            programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
-			programManager_.writeProgram2Json(newPath);
-<<<<<<< HEAD
-=======
-			updateApplicationTitle();		
-			programManager_.writeProgram(newPath);
->>>>>>> 7ebcf85 (feat:add ptx export module framework)
-=======
->>>>>>> 435d871 (fix: Fixed some bugs in the ptx export file format.)
-			return true;
->>>>>>> a2e89e5 (add mesh logic)
-		} else {
-			if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
-				updateActiveProjectConnection();
-				updateProjectSavedConnection();
-				updateUpgradeMenu();
-				return true;
 			} else {
 				updateApplicationTitle();
 				QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
@@ -1345,8 +1207,6 @@ void MainWindow::convert2LuaAnimation() {
     }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 void MainWindow::updateProjectSavedConnection() {
 	QObject::disconnect(projectSavedConnection_);
 	projectSavedConnection_ = QObject::connect(&racoApplication_->activeRaCoProject(), &raco::application::RaCoProject::projectSuccessfullySaved, [this]() {
@@ -1363,13 +1223,7 @@ void MainWindow::focusToObject(const QString& objectID) {
 	}
 }
 
-void MainWindow::setResourceHandles(const std::map<std::string, ValueHandle> &map) {
-=======
 void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
->>>>>>> 3ae2b5d (<feat>([/gui/libVisualCurve]): <Create a visualization curve window and implement corresponding functions>)
-=======
-void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
->>>>>>> 087cb43 (fix: Modify the texture attribute information in the export ptx.)
     if (materialLogic_) {
 		materialLogic_->setMaterialResourcesHandleReMap(mMap);
         materialLogic_->Analyzing();

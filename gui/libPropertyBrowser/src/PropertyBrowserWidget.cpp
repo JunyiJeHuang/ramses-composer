@@ -259,7 +259,7 @@ void PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo(raco::core::Valu
                 clearValueHandle(true);
             }
         });
-        propertyBrowser_.reset(new PropertyBrowserView{new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, model_}, model_, this});
+        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, sceneBackend_, model_}, model_, this});
         layout_.addWidget(propertyBrowser_.get(), 1, 0);
     }
 }

@@ -57,7 +57,7 @@ public:
 	void convertGltfAnimation(QString fileName);
     bool getAnimationHandle(QModelIndex index, core::ValueHandle valueHandle, std::set<raco::core::ValueHandle> &handles);
 
-	void requestNewNode(EditorObject::TypeDescriptor nodeType, const std::string &nodeName, const QModelIndex &parent);
+    void requestNewNode(const std::string &nodeType, const std::string &nodeName, const QModelIndex &parent);
 	void showContextMenu(const QPoint &p);
 	bool canCopyAtIndices(const QModelIndexList &indices);
 	bool canPasteIntoIndex(const QModelIndex &index, bool asExtref);
@@ -85,13 +85,12 @@ Q_SIGNALS:
 
 public Q_SLOTS:
 	void resetSelection();
-	void copyObjects();
-	void pasteObjects(const QModelIndex &index, bool asExtRef = false);
-	void cutObjects();
-	void deleteObjects();
+	void globalCopyCallback();
+	void cut();
     void globalOpreations();
 	void duplicateObjects();
-
+	void globalPasteCallback(const QModelIndex &index, bool asExtRef = false);
+	void shortcutDelete();
 	void selectObject(const QString &objectID);
 	void expandAllParentsOfObject(const QString &objectID);
 	void expanded(const QModelIndex &index);
@@ -106,7 +105,6 @@ public Q_SLOTS:
     // void deleteAnimationHandle(std::string id);
 	void importBMWAssets(NodeData *nodeData, const std::vector<MaterialData>& maetrials);
     void deleteAnimationHandle(std::set<std::string> ids);
-	void importBMWAssets(NodeData *nodeData, const std::vector<MaterialData>& maetrials);
     void bindLuaScriptOutput(const QModelIndex &index);
 protected:
 	static inline auto SELECTION_MODE = QItemSelectionModel::Select | QItemSelectionModel::Rows;

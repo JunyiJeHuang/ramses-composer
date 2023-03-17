@@ -53,6 +53,7 @@ add_library(libCore
         include/core/SerializationKeys.h
 	include/core/TagDataCache.h src/TagDataCache.cpp
 	include/core/Undo.h src/Undo.cpp
+        include/core/UndoState.h src/UndoState.cpp
 	include/core/UserObjectFactoryInterface.h
 )
 

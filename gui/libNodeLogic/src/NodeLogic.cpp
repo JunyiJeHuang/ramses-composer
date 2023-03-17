@@ -10,7 +10,6 @@ NodeLogic::NodeLogic(raco::core::CommandInterface *commandInterface, QObject *pa
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateKeyFram_From_AnimationLogic, this, &NodeLogic::slotUpdateKeyFrame);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &NodeLogic::slotUpdateActiveAnimation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &NodeLogic::slotResetNodeData,Qt::DirectConnection);
-    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateNodeProp_From_ObjectView, this, &NodeLogic::slotUpdateNodeHandle);
 }
 
 void NodeLogic::setCommandInterface(core::CommandInterface *commandInterface) {
@@ -145,135 +144,14 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 				scal.x = tempHandle.get("x").asDouble();
 				scal.y = tempHandle.get("y").asDouble();
 				scal.z = tempHandle.get("z").asDouble();
-<<<<<<< HEAD
-				
-				node->insertSystemData("scale", scal);
-			}
-=======
 				node->insertSystemData("scale", scal);
 
 			}  
->>>>>>> 0c50c3d (handle merge uniform node animation)
             initBasicProperty(valueHandle[i], node);
 		}
     }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-void NodeLogic::setUniformProperty(raco::core::ValueHandle valueHandle, NodeData *node,bool bVec ) {
-	using PrimitiveType = core::PrimitiveType;
-	for (int i{0}; i < valueHandle.size(); i++) {
-		raco::core::ValueHandle tempHandle = valueHandle[i];
-		switch (tempHandle.type()) {
-			case PrimitiveType::String: {
-				break;
-			}
-			case PrimitiveType::Bool: {
-				if (bVec) {
-					//PropertyValue *proValue = property->getValue();
-					//std::string parentName = property->getValue()->getValueHandle().getPropName();
-					std::string curveName = tempHandle.getPropName();
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					//proValue->addValue(QString::fromStdString(curveName), tempHandle.asBool());
-				} else {
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					//PropertyValue *proValue = new PropertyValue(tempHandle);
-					qDebug() << "x = " << tempHandle.asBool();
-	/*				proValue->addValue("x", tempHandle.asBool());
-					tempProperty = new PropertyTree(proValue, property);
-					property->addChild(tempProperty);*/
-				}
-				break;
-			}
-			case PrimitiveType::Int: {
-				if (bVec) {
-					//PropertyValue *proValue = property->getValue();
-					//std::string parentName = property->getValue()->getValueHandle().getPropName();
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					std::string curveName = tempHandle.getPropName();
-					qDebug() << " curve name :" << QString::fromStdString(curveName);
-					qDebug() << " tempHandle.asInt() :" << tempHandle.asInt();
-					//proValue->addValue(QString::fromStdString(curveName), tempHandle.asInt());
-				} else {
-					//PropertyValue *proValue = new PropertyValue(tempHandle);
-					//proValue->addValue("x", tempHandle.asInt());
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					qDebug() << path << " x = " << tempHandle.asInt();
-	/*				tempProperty = new PropertyTree(proValue, property);
-					property->addChild(tempProperty);*/
-				}
-				break;
-			}
-			case PrimitiveType::Double: {
-				if (bVec) {
-					//PropertyValue *proValue = property->getValue();
-					//std::string parentName = property->getValue()->getValueHandle().getPropName();
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					std::string curveName = tempHandle.getPropName();
-					//proValue->addValue(QString::fromStdString(curveName), tempHandle.asDouble());
-
-					qDebug() << " curve name :" << QString::fromStdString(curveName);
-					qDebug() << " tempHandle.asDouble() :" << tempHandle.asDouble();
-				} else {
-					//PropertyValue *proValue = new PropertyValue(tempHandle);
-					//proValue->addValue("x", tempHandle.asDouble());
-					//tempProperty = new PropertyTree(proValue, property);
-					//property->addChild(tempProperty);
-					QString path = QString::fromStdString(tempHandle.getPropertyPath());
-					qDebug() << path << " x = " << tempHandle.asDouble();
-				}
-				break;
-			}
-			case PrimitiveType::Ref:
-			case PrimitiveType::Table:
-			default: {
-				QString path = QString::fromStdString(tempHandle.getPropertyPath());
-				break;
-			}
-		};
-		setUniformProperty(valueHandle[i], node, true);
-	}
-}
-
-void NodeLogic::setMaterial(raco::core::ValueHandle valueHandle, NodeData *node) {
-	for (int i{0}; i < valueHandle.size(); i++) {
-		if (!valueHandle[i].isObject()) {
-			raco::core::ValueHandle tempHandle = valueHandle[i];
-			QString strObjId;
-			if (QString::fromStdString(tempHandle.getPropName()).compare("objectID") == 0) {
-				strObjId = QString::fromStdString(tempHandle.asString());
-				qDebug() << " material ObjectId :" << strObjId;
-			}
-			if (QString::fromStdString(tempHandle.getPropName()).compare("materials") == 0) {
-				for (int j{0}; j < tempHandle.size(); j++) {
-					if (QString::fromStdString(tempHandle[j].getPropName()).compare("material") == 0) {
-						raco::core::ValueHandle materialValue = tempHandle.get("material");
-						raco::core::ValueHandle uniformHandle = tempHandle[j].get("uniforms");
-						setUniformProperty(uniformHandle, node);
-						QString uniformName = QString::fromStdString(uniformHandle.getPropertyPath());
-						setMaterial(materialValue, node);
-						return;
-					}
-				}
-			}
-			if (QString::fromStdString(tempHandle.getPropName()).compare("uniforms") == 0) {
-				raco::core::ValueHandle materialValue = tempHandle;
-				//raco::core::ValueHandle uniformHandle = tempHandle[j].get("uniforms");
-				setUniformProperty(tempHandle, node);
-				QString MaterialName = QString::fromStdString(tempHandle.getPropertyPath());
-				setMaterial(materialValue, node);
-				return;
-			}
-			setMaterial(tempHandle, node);
-		}
-	}
-}
-
-=======
->>>>>>> d41580e (fix: Add the logic of node parsing private material information and)
-=======
->>>>>>> ca864b9 (handle visual curve merge)
 void NodeLogic::slotUpdateActiveAnimation(QString animation) {
     curAnimation_ = animation;
 }
@@ -310,17 +188,13 @@ void NodeLogic::setPropertyByCurveBinding(const std::string &objecID, const std:
             }
         }
     }
-<<<<<<< HEAD
-=======
 }
 
 void NodeLogic::delNodeBindingByCurveName(std::string curveName) {
 	NodeDataManager::GetInstance().delCurveBindingByName(curveName);
 	Q_EMIT sig_initCurveBindingWidget__NodePro();
->>>>>>> feb96fe (fix: Release a new version, modify the version number to 1.0.2, and Fix)
 }
 
-<<<<<<< HEAD
 bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyFrame, double &value) {
     int curX = VisualCurvePosManager::GetInstance().getCurX();
     int curY = VisualCurvePosManager::GetInstance().getCurY();
@@ -338,29 +212,16 @@ bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyF
             std::list<Point *> pointList = curveData->getPointList();
             for (auto it = pointList.begin(); it != pointList.end(); it++) {
                 auto itTemp = it;
-<<<<<<< HEAD
                 itTemp++;
                 if (itTemp != pointList.end()) {
                     Point *point1 = *it;
                     Point *point2 = *itTemp;
-=======
-				itTemp++;
-				if (itTemp != pointList.end()) {
-                    Point *point1 = *it;
-					Point *point2 = *itTemp;
->>>>>>> 270ac27 (fixed: export curve left auxiliary point and fixed a crash bug.)
                     if (point1->getKeyFrame() < keyFrame && point2->getKeyFrame() > keyFrame) {
                         QList<QPointF> srcPoints, destPoints;
                         srcPoints.push_back(QPointF(point1->getKeyFrame() * eachFrameWidth, std::any_cast<double>(point1->getDataValue()) * eachValueWidth));
-<<<<<<< HEAD
                         srcPoints.push_back(QPointF(point1->getRightKeyFrame() * eachFrameWidth, std::any_cast<double>(point1->getRightData()) * eachValueWidth));
                         srcPoints.push_back(QPointF(point2->getLeftKeyFrame() * eachFrameWidth, std::any_cast<double>(point2->getLeftData()) * eachValueWidth));
                         srcPoints.push_back(QPointF(point2->getKeyFrame() * eachFrameWidth, std::any_cast<double>(point2->getDataValue()) * eachValueWidth));
-=======
-						srcPoints.push_back(QPointF(point1->getRightKeyFrame() * eachFrameWidth, std::any_cast<double>(point1->getRightData()) * eachValueWidth));
-						srcPoints.push_back(QPointF(point2->getLeftKeyFrame() * eachFrameWidth, std::any_cast<double>(point2->getLeftData()) * eachValueWidth));
-						srcPoints.push_back(QPointF(point2->getKeyFrame() * eachFrameWidth, std::any_cast<double>(point2->getDataValue()) * eachValueWidth));
->>>>>>> 6bb7d98 (fixed: Fixed curve calculation problems and compilation problems.)
 
                         time_axis::createNBezierCurve(srcPoints, destPoints, 0.001);
 
@@ -394,21 +255,12 @@ bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyF
         if (CurveManager::GetInstance().hasCurve(curve)) {
             Curve *curveData = CurveManager::GetInstance().getCurve(curve);
             std::list<Point *> pointList = curveData->getPointList();
-<<<<<<< HEAD
             for (auto it = pointList.begin(); it != pointList.end(); it++) {
                 auto itTemp = it;
                 itTemp++;
                 if (itTemp != pointList.end()) {
                     Point *point1 = *it;
                     Point *point2 = *itTemp;
-=======
-			for (auto it = pointList.begin(); it != pointList.end(); it++) {
-				auto itTemp = it;
-				itTemp++;
-				if (itTemp != pointList.end()) {
-					Point *point1 = *it;
-					Point *point2 = *itTemp;
->>>>>>> 270ac27 (fixed: export curve left auxiliary point and fixed a crash bug.)
                     if (point1->getKeyFrame() < keyFrame && point2->getKeyFrame() > keyFrame) {
                         QList<QPointF> srcPoints, destPoints;
 
@@ -454,13 +306,6 @@ bool NodeLogic::getKeyValue(std::string curve, EInterPolationType type, int keyF
     }
 
     return false;
-=======
-
-
-void NodeLogic::delNodeBindingByCurveName(std::string curveName) {
-	NodeDataManager::GetInstance().delCurveBindingByName(curveName);
-	Q_EMIT sig_initCurveBindingWidget__NodePro();
->>>>>>> 8786847 (fix: Modify the rotation order of Euler angles in ramses, and the)
 }
 
 void NodeLogic::slotUpdateKeyFrame(int keyFrame) {
@@ -471,19 +316,4 @@ void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
 }
 
-void NodeLogic::slotUpdateNodeHandle(const std::string &objectID, const core::ValueHandle &handle) {
-    handleMapMutex_.lock();
-    for (auto it = nodeObjectIDHandleReMap_.begin(); it != nodeObjectIDHandleReMap_.end(); it++) {
-        if (it->first == objectID) {
-            nodeObjectIDHandleReMap_.erase(it);
-            break;
-        }
-    }
-    nodeObjectIDHandleReMap_.emplace(objectID, handle);
-    handleMapMutex_.unlock();
-
-    NodeData *node = NodeDataManager::GetInstance().searchNodeByID(objectID);
-    node->setName(handle[0].getPropertyPath());
-    initBasicProperty(handle, node);
-}
 }

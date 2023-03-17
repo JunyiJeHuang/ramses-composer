@@ -32,7 +32,6 @@ void setIsDefaultMaterial(std::string id, MaterialData& materialData) {
 	materialData.setDefaultID(id);
 }
 
-
 void MateralLogic::AnalyzingTexture() {
 	for (const auto &it : textureResourcesHandleReMap_) {
 		MaterialData materialData;

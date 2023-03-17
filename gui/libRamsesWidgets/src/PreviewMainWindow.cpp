@@ -329,7 +329,7 @@ void PreviewMainWindow::commit(bool forceUpdate) {
 	if (sceneSize_ != areaSize) {
 		sceneSize_ = areaSize;
 		QRect scrollRect = QRect(scrollAreaWidget_->pos(), scrollAreaWidget_->size());
-		axesIcon_->setGeometry(scrollRect.width() - 130, scrollRect.y() + 20, 100, 100);
+//		axesIcon_->setGeometry(scrollRect.width() - 130, scrollRect.y() + 20, 100, 100);
 	}
 }
 

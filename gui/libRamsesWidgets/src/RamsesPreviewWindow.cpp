@@ -45,9 +45,9 @@ void setAndWaitSceneState(
 	if (framebufferScene && framebufferScene->getSceneId().isValid()) {
 		backend.eventHandler().waitForSceneState(framebufferScene->getSceneId(), state);
 	}
-	if (backgroundScene && backgroundScene->getSceneId().isValid()) {
-		backend.eventHandler().waitForSceneState(backgroundScene->getSceneId(), state);
-	}
+    if (backgroundScene && backgroundScene->getSceneId().isValid()) {
+        backend.eventHandler().waitForSceneState(backgroundScene->getSceneId(), state);
+    }
 	if (sceneId.isValid()) {
 		backend.eventHandler().waitForSceneState(sceneId, state);
 	}
@@ -163,6 +163,7 @@ void RamsesPreviewWindow::commit(bool forceUpdate) {
 				/// @todo maybe we need to reset old scene mapping?
 				sceneControlAPI.setSceneMapping(next_.sceneId, displayId_);
 			}
+            sceneControlAPI.setSceneMapping(backgroundScene_->getSceneId(), displayId_);
             setAndWaitSceneState(rendererBackend_, ramses::RendererSceneState::Ready, framebufferScene_, backgroundScene_, next_.sceneId);
 
 			// Set up the render buffer we use as a default framebuffer.

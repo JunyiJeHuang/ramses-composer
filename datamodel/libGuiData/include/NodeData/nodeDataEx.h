@@ -30,7 +30,7 @@ private:
     //     < sampleProp_ ,  <property_, curve_> >
     //       animationName
 };
-
+//////////// not avilable for gui used ////////////////
 class CustomProp
 {
 public:
@@ -55,7 +55,7 @@ private:
     std::map<std::string, std::any> typeMap_;
 };
 
-/////////////////////////////////////////////
+//////////// not avilable for gui used ////////////////
 class MeshProp{
 public:
     MeshProp():

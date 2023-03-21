@@ -120,7 +120,7 @@ private:
 	void messageBoxError(std::string curveName, int errorNum);
 	void addAnimationDomain(HmiWidget::TWidget* widget, std::string animationName);
 	void triggerByInternalModel(HmiWidget::TWidget* widget);
-	void triggerByExternalModel(HmiWidget::TWidget* widget);
+	void triggerByExSingleAnimation(HmiWidget::TWidget* widget);
 	bool hasMultiCurveOneProp(std::string prop, NodeData* node, std::vector<std::map<std::string, CurvesSingleProp>>& curves);
 	void modifyMultiCurveTransform(HmiWidget::TWidget* widget, HmiWidget::TNodeTransform* transform, std::string propName, std::vector<std::map<std::string, CurvesSingleProp>> curves);
 	bool hasMultiAnimationOneCurve(std::string curveName, NodeData* pNode, AnimationsSingleCurve& aniSingleCurv, std::string& animationName);
@@ -159,7 +159,8 @@ private:
 
 	void addEx2Ellie(HmiWidget::TWidget* widget);
 
-	void externalTriggerDomain(HmiWidget::TWidget* widget);
+	void triggerByExMultiAnimation(HmiWidget::TWidget* widget);
+	void setUniformOperation(guiData::Uniform& vecUniform, TOperation* operation, std::string* curveNameArr, std::string* multiCurveOrAnimationName);
 
 private:
 	std::map<std::string, std::vector<std::string>> nodeIDUniformsName_;

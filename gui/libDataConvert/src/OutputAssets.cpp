@@ -81,7 +81,7 @@ void changeExNamePrefixInit() {
 }
 
 void OutputPtx::isNotAddedAttribute(std::string name) {
-	if (name == "a_Position" || name == "a_TextureCoordinate" || name == "a_TextureCoordinate1") {
+	if (name == "a_Position" || name == "a_TextureCoordinate" || name == "a_TextureCoordinate1" || name == "a_Normal") {
 		return;
 	}
 
@@ -697,7 +697,7 @@ void updateCurveAnimationMap(NodeData* pNode) {
 				}*/
 				auto iter = it->second.find(animation.first);
 				if (iter != it->second.end()
-					&& (iter->second.at(iter->second.size() - 1)).pNode->objectID() != pNode->objectID()) {  // if animation is found
+					/*&& (iter->second.at(iter->second.size() - 1)).pNode->objectID() != pNode->objectID()*/) {  // if animation is found
 					iter->second.push_back(data);
 				} else { // no animation found
 					std::vector<AnimationsSingleCurve> datas;
@@ -1208,6 +1208,12 @@ void OutputPtx::writeMaterial2MaterialLib(HmiScenegraph::TMaterialLib* materialL
 		// RenderMode
 		HmiScenegraph::TRenderMode* rRenderMode = new HmiScenegraph::TRenderMode();
 		RenderMode renderMode = data.getRenderMode();
+
+		// Ellie's Mirror Interface: Right
+		if (ProjectName_ == PRO_ELLIE && renderMode.getCulling() != raco::guiData::CU_None) {
+			DEBUG(__FILE__, __FUNCTION__, __LINE__, QString::fromStdString("Please set Ellie's \" ") + QString::fromStdString(data.getObjectName()) + " \"Culling Mode to 'Disabled'!");
+		}
+
 		// setRenderMode
 		setMaterialRenderMode(renderMode, rRenderMode);
 		tMaterial.set_allocated_rendermode(rRenderMode);
@@ -1503,7 +1509,7 @@ void OutputPtw::triggerByInternalModel(HmiWidget::TWidget* widget) {
 }
 
 
-void OutputPtw::externalTriggerDomain(HmiWidget::TWidget* widget) {
+void OutputPtw::triggerByExMultiAnimation(HmiWidget::TWidget* widget) {
 	auto animationList = raco::guiData::animationDataManager::GetInstance().getAnitnList();
 	if (0 == animationList.size()) {
 		messageBoxError("", 5);
@@ -1529,7 +1535,7 @@ void OutputPtw::externalTriggerDomain(HmiWidget::TWidget* widget) {
 	switchMultAnimsOneCurve(widget);
 }
 
-void OutputPtw::triggerByExternalModel(HmiWidget::TWidget* widget) {
+void OutputPtw::triggerByExSingleAnimation(HmiWidget::TWidget* widget) {
 	if (isSingleAnimation_) {
 		externalAnimation(widget);
 		auto domain = widget->add_internalmodelvalue();
@@ -1538,8 +1544,6 @@ void OutputPtw::triggerByExternalModel(HmiWidget::TWidget* widget) {
 		int frames = animationInfo.GetEndTime() - animationInfo.GetStartTime();
 		auto binding = assetsFun_.BindingValueStrNumericOperatorType(ptwExTriggleAnimation, TEProviderSource_ExtModelValue, frames, TEOperatorType_Mul);
 		domain->set_allocated_binding(binding);
-	} else {
-		// todo:
 	}
 }
 
@@ -1714,6 +1718,21 @@ bool hasUColorUniform(std::string id) {
 	return false;
 }
 
+// The curve which bound to Node does not exist!
+bool isBindingCurveExist(std::string CurveName, std::string aniName, std::string NodeName, std::string propertyName) {
+	auto curveList = raco::guiData::CurveManager::GetInstance().getCurveList();
+	for (auto curve : curveList) {
+		if (curve->getCurveName() == CurveName) {
+			return true;
+		}
+	}
+	QString msg = QString::fromStdString(aniName) + ": ";
+	msg = msg + " The curve \" " + QString::fromStdString(CurveName);
+	msg = msg + "\" which bound to \"" + QString::fromStdString(NodeName) + "'s " + QString::fromStdString(propertyName) + "\" does not exist!";
+	DEBUG(__FILE__, __FUNCTION__, __LINE__, msg);
+	return false;
+}
+
 void OutputPtw::ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData& node) {
 	if (0 != node.getBindingySize() || hasUColorUniform(node.objectID())) {
 		HmiWidget::TNodeParam* nodeParam = widget->add_nodeparam();
@@ -1787,6 +1806,7 @@ void OutputPtw::ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData&
 				} else { // find uniform curve
 					AddUniform(widget, curveProP, nodeParam, &node);
 				}
+				isBindingCurveExist(curveProP.second, cuvebindList.first, node.getName(), curveProP.first);
 			}
 		}
 		// add u_color uniforms
@@ -1854,7 +1874,7 @@ void OutputPtw::addEx2Ellie(HmiWidget::TWidget* widget) {
 	// Right
 	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
 	externalModelValue->set_allocated_key(assetsFun_.Key(ptwExRightMirror));
-	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(1.0));
+	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(0.0));
 
 	// RightGreater0
 	{
@@ -1951,8 +1971,10 @@ void OutputPtw::WriteAsset(std::string filePath) {
 	}
 	else {
 		changeExNamePrefixInit();
-		triggerByExternalModel(widget);
-		externalTriggerDomain(widget);
+		// Single Animation
+		triggerByExSingleAnimation(widget);
+		// Multi Animations
+		triggerByExMultiAnimation(widget);
 	}
 	switchAnimations(widget);
 	externalScaleData(widget);
@@ -2566,6 +2588,26 @@ size_t getArrIndex(std::string name) {
 	return -1;
 }
 
+std::string getDirectFromIndex(int index, std::string resultName) {
+	std::string pre = resultName.substr(0, resultName.length() - 1);
+	switch (index) {
+		case 0:
+			pre += "x";
+			break;
+		case 1:
+			pre += "y";
+			break;
+		case 2:
+			pre += "z";
+			break;
+		case 3: {
+			pre += "w";
+			break;
+		}
+	}
+	return pre;
+}
+
 void OutputPtw::addOperandCurveRef2Operation(TOperation* operation, std::string curveName, std::string multiCurveName) {
 	auto operand = operation->add_operand();
 	if (multiCurveName == "") {
@@ -2690,6 +2732,86 @@ void OutputPtw::setUniformOperationByType(raco::guiData::Uniform& vecUniform, TO
 	}
 }
 
+void OutputPtw::setUniformOperation(raco::guiData::Uniform& vecUniform, TOperation* operation, std::string* curveNameArr, std::string* multiCurveArr) {
+	auto usedUniformType = vecUniform.getType();
+	switch (usedUniformType) {
+		case raco::guiData::Vec2f:
+			operation->set_operator_(TEOperatorType_MuxVec2);
+			for (int i = 0; i < 2; ++i) {
+				operation->add_datatype(TEDataType_Float);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		case raco::guiData::Vec3f:
+			operation->set_operator_(TEOperatorType_MuxVec3);
+			for (int i = 0; i < 3; ++i) {
+				operation->add_datatype(TEDataType_Float);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		case raco::guiData::Vec4f:
+			operation->set_operator_(TEOperatorType_MuxVec4);
+			for (int i = 0; i < 4; ++i) {
+				operation->add_datatype(TEDataType_Float);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		case raco::guiData::Vec2i:
+			operation->set_operator_(TEOperatorType_MuxVec2);
+			for (int i = 0; i < 2; ++i) {
+				operation->add_datatype(TEDataType_Int);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		case raco::guiData::Vec3i:
+			operation->set_operator_(TEOperatorType_MuxVec3);
+			for (int i = 0; i < 3; ++i) {
+				operation->add_datatype(TEDataType_Int);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		case raco::guiData::Vec4i:
+			operation->set_operator_(TEOperatorType_MuxVec4);
+			for (int i = 0; i < 4; ++i) {
+				operation->add_datatype(TEDataType_Int);
+				if (curveNameArr[i] == "") {
+					float data = getUniformValueByType(vecUniform, i);
+					addOperandOne2Operation(operation, data);
+				} else {
+					addOperandCurveRef2Operation(operation, curveNameArr[i], multiCurveArr[i]);
+				}
+			}
+			break;
+		default:
+			break;
+	}
+}
+
 bool OutputPtw::isAddedUniform(std::string name, raco::guiData::NodeData* node) {
 	auto re = nodeIDUniformsName_.find(node->objectID());
 	if (re != nodeIDUniformsName_.end()) {
@@ -2727,7 +2849,7 @@ void OutputPtw::addVecValue2Uniform(HmiWidget::TWidget* widget, std::pair<std::s
 	bool isInUniforms = false;
 	NodeMaterial nodeMaterial;
 	raco::guiData::MaterialManager::GetInstance().getNodeMaterial(node->objectID(), nodeMaterial);
-	// get weights
+	// get direction
 	raco::guiData::Uniform vecUniform;
 	vecUniform.setType(UniformType::Null);
 	std::vector<Uniform> uniforms = nodeMaterial.getUniforms();
@@ -2756,8 +2878,10 @@ void OutputPtw::addVecValue2Uniform(HmiWidget::TWidget* widget, std::pair<std::s
 	TDataProvider* valProvder = new TDataProvider;
 	TOperation* operation = new TOperation;
 	TDataBinding* value = new TDataBinding;
-
-	// get which weight used
+	if (curveProP.second == "Speaking_CN_Calm.01-particals.u_Rotate.x") {
+		qDebug() << QString::fromStdString(curveProP.second);
+	}
+	// get which direction used
 	std::string curveNameArr[4] = {""};
 	std::map<std::string, std::map<std::string, std::string>>& map = node->NodeExtendRef().curveBindingRef().bindingMap();
 	for (auto& an : map) {
@@ -2780,9 +2904,27 @@ void OutputPtw::addVecValue2Uniform(HmiWidget::TWidget* widget, std::pair<std::s
 		// set operation
 		setUniformOperationByType(vecUniform, operation, curveNameArr);
 	} else if (hasMultiCurveSingleProp && !hasMultiAnimationSingleCurve) {
-		std::string multiCurveName = PTW_PRE_CURVES_ONE_PROP + (curves.at(0).begin())->second.curveName;
-		setUniformOperationByType(vecUniform, operation, curveNameArr, multiCurveName);
-		multiCurveBindingSinglePropSwitch(widget, curveProP.first, curves);
+		std::string multiCurveName[4] = {""};
+		// PTW_PRE_CURVES_ONE_PROP + (curves.at(0).begin())->second.curveName;
+		multiCurveBindingSinglePropSwitch(widget, curveProP.first, curves);  // curveProP
+		bool isFirst = true;
+		for (int i = 0; i < 4; ++i) {
+			if (curveNameArr[i] != "") {
+				if (isFirst) {
+					multiCurveName[i] = PTW_PRE_CURVES_ONE_PROP + (curves.at(0).begin())->second.curveName;
+					isFirst = false;
+				}
+				std::string propName = getDirectFromIndex(i, curveProP.first);
+				bool hasMultiCurveSingleProp = hasMultiCurveOneProp(propName, node, curves);
+				if (hasMultiCurveSingleProp) {
+					multiCurveName[i] = PTW_PRE_CURVES_ONE_PROP + (curves.at(0).begin())->second.curveName;
+					std::string multiCurveName = PTW_PRE_CURVES_ONE_PROP + (curves.at(0).begin())->second.curveName;  // curves.at(0).begin())->second.curveName
+					multiCurveBindingSinglePropSwitch(widget, propName, curves);
+				}
+			}
+		}
+		// uniform Value.operation
+		setUniformOperation(vecUniform, operation, curveNameArr, multiCurveName);
 	} else if (!hasMultiCurveSingleProp && hasMultiAnimationSingleCurve) {
 		std::string curveName = animaitionName + "-" + curveProP.second;
 		bool isMultiAnimationSingleCurve = true;
@@ -3210,5 +3352,6 @@ void OutputPtw::internalDurationValue(HmiWidget::TWidget* widget) {
 	HmiWidget::TInternalModelParameter* internalModelswitch = widget->add_internalmodelvalue();
 	assetsFun_.SwitchAnimation(internalModelswitch, data);
 }
+
 
 }  // namespace raco::dataConvert

@@ -62,7 +62,7 @@ public:
 	~PreviewMainWindow();
 	void displayScene(ramses::sceneId_t sceneId, core::Vec4f const& backgroundColor);
 	void setAxesIconLabel(QLabel * axesIcon);
-	void setAxesIcon(const bool& z_up);
+    void setAxesIcon(const bool& z_up);
 	void sceneScaleUpdate(bool zup, float scaleValue, bool scaleUp);
 
 protected:

@@ -269,8 +269,8 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
     jsonObj.insert(JSON_ROTATION, rotation);
 
 	QJsonObject scale;
-	if (node.hasSystemData("scale")) {
-		Vec3 scal = std::any_cast<Vec3>(node.getSystemData("scale"));
+    if (node.hasSystemData("scale")) {
+        Vec3 scal = std::any_cast<Vec3>(node.getSystemData("scale"));
 		scale.insert(JSON_X, scal.x);
 		scale.insert(JSON_Y, scal.y);
 		scale.insert(JSON_Z, scal.z);

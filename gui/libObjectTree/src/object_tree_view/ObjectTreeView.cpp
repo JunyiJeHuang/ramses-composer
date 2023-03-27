@@ -339,6 +339,7 @@ void ObjectTreeView::getOneMeshHandle(QModelIndex index, QMatrix4x4 matrix) {
 
         raco::guiData::MeshData mesh;
         std::string objectID = tempHandle[0].asString();
+        std::string name = tempHandle[1].asString();
         if (getOneMeshData(tempHandle, mesh)) {
             mesh.setModelMatrix(matrix);
             MeshDataManager::GetInstance().addMeshData(objectID, mesh);
@@ -349,6 +350,7 @@ void ObjectTreeView::getOneMeshHandle(QModelIndex index, QMatrix4x4 matrix) {
 
         raco::guiData::MeshData mesh;
         std::string objectID = tempHandle[0].asString();
+        std::string name = tempHandle[1].asString();
         if (getOneMeshData(tempHandle, mesh)) {
             mesh.setModelMatrix(matrix);
             MeshDataManager::GetInstance().addMeshData(objectID, mesh);
@@ -747,10 +749,14 @@ void ObjectTreeView::updateNodeProperty(const std::string &objectID) {
 void ObjectTreeView::deleteAnimationHandle(std::set<std::string> ids) {
     for (const auto &id : ids) {
         auto index = indexFromTreeNodeID(id);
-        auto delObjAmount = treeModel_->deleteObjectsAtIndices(QModelIndexList() << index);
-
-        if (delObjAmount > 0) {
-            selectionModel()->Q_EMIT selectionChanged({}, {});
+        if (proxyModel_) {
+            index = proxyModel_->mapToSource(index);
+        }
+        if (treeModel_->canDeleteAtIndices(QModelIndexList() << index)) {
+            auto delObjAmount = treeModel_->deleteObjectsAtIndices(QModelIndexList() << index);
+            if (delObjAmount > 0) {
+                selectionModel()->Q_EMIT selectionChanged({}, {});
+            }
         }
     }
 }
@@ -1396,7 +1402,7 @@ QMatrix4x4 ObjectTreeView::rotationEuler(ValueHandle handle) {
 
 QMatrix4x4 ObjectTreeView::scaling(ValueHandle handle) {
     QVector3D vector;
-    if (getBasicProperty(handle, "scale", vector)) {
+    if (getBasicProperty(handle, "scaling", vector)) {
         double x{0.0},y{0.0},z{0.0};
         x = vector.x();
         y = vector.y();

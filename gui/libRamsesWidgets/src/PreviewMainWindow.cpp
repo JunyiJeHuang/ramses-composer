@@ -36,7 +36,6 @@
 namespace raco::ramses_widgets {
 
 using namespace raco::core;
-using raco::log_system::PREVIEW_MAIN;
 
 PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ramses_adaptor::SceneBackend* sceneBackend, const QSize& sceneSize, raco::core::Project* project,
 	raco::components::SDataChangeDispatcher dispatcher, raco::core::CommandInterface* commandInterface, QWidget* parent)
@@ -60,7 +59,7 @@ PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ram
 	scaleValue_ = 1.0f;
 	// scroll and zoom logic widget
 	scrollAreaWidget_ = new PreviewScrollAreaWidget{sceneSize, this};
-	connect(scrollAreaWidget_, &PreviewScrollAreaWidget::scaleChanged, [this, scaleLabel](double scale, bool addvalue) {
+    connect(scrollAreaWidget_, &PreviewScrollAreaWidget::scaleChanged, [this, scaleLabel](double scale, bool addvalue) {
 		QString content{};
 		content.append("scale: ");
 		content.append(std::to_string(scale).c_str());
@@ -282,10 +281,9 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
                     return;
                 }
                 float x = 2.0f * previewPosition->x() / width - 1.0f;
-                float y = 1.0f - (2.0f * previewPosition->y() / height);
+                float y = 1.0f - (2.0f * (height - previewPosition->y()) / height);
 
                 // caculate ray direction
-                QMatrix4x4 vec = view_matrix.inverted();
                 QVector3D ray_nds = QVector3D(x, y, 1.0f);
                 QVector4D ray_clip = QVector4D(ray_nds, 1.0f);
                 QVector4D ray_eye = projection_matrix.inverted() * ray_clip;
@@ -338,10 +336,9 @@ void PreviewMainWindow::updateAxesIconLabel() {
 }
 
 void PreviewMainWindow::setAxesIcon(const bool& z_up) {
-	if (sceneSize_.height() != 0 && sceneSize_.width() != 0) {
-		previewWidget_->setMask({0, 0, 1, 1});
-		previewWidget_->update();
-        axesIcon_->clear();
+    if (sceneSize_.height() != 0 && sceneSize_.width() != 0) {
+//        previewWidget_->setMask({0, 0, 1, 1});
+        previewWidget_->update();
         if (z_up) {
             QPixmap pix = QPixmap(":zUp");
 //            axesIcon_->setPixmap(pix);
@@ -361,12 +358,12 @@ void PreviewMainWindow::setAxesIcon(const bool& z_up) {
 */
 void PreviewMainWindow::setAxes(const bool& z_up) {
 	if (!haveInited_) {
-		setAxesIcon(z_up);
+        setAxesIcon(z_up);
 		haveInited_ = true;
-		zUp_ = z_up;
+        zUp_ = z_up;
 		return;
 	}
-	if (zUp_ == z_up) {
+    if (zUp_ == z_up) {
 		if (updateAxesIconLabel_) {
 			updateAxesIconLabel_ = false;
 			scrollAreaWidget_->setForceUpdateFlag(false);

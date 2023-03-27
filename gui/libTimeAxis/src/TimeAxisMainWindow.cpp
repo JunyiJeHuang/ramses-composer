@@ -94,13 +94,11 @@ TimeAxisMainWindow::TimeAxisMainWindow(raco::components::SDataChangeDispatcher d
 void TimeAxisMainWindow::startAnimation() {
     if (animationStarted_) {
         startBtn_->setFlat(true);
-        startBtn_->setIcon(Icons::instance().animationStart);
-//        startBtn_->setStyleSheet("QPushButton{background-image: url(:/animationStart);}");
+        startBtn_->setIcon(Icons::instance().playInactive);
         timeAxisWidget_->stopAnimation();
     } else {
         startBtn_->setFlat(true);
-        startBtn_->setIcon(Icons::instance().animationStop);
-//        startBtn_->setStyleSheet("QPushButton{background-image: url(:/animationStop);}");
+        startBtn_->setIcon(Icons::instance().stopInactive);
         timeAxisWidget_->startAnimation();
     }
     animationStarted_ = !animationStarted_;
@@ -388,16 +386,16 @@ bool TimeAxisMainWindow::initTitle(QWidget* parent) {
 
     startBtn_ = new QPushButton(titleWidget_);
     startBtn_->setFlat(true);
-    startBtn_->setIcon(Icons::instance().animationStart);
+    startBtn_->setIcon(Icons::instance().playInactive);
     connect(startBtn_, &QPushButton::clicked, this, &TimeAxisMainWindow::startAnimation);
     previousBtn_ = new QPushButton(titleWidget_);
     previousBtn_->setFlat(true);
-    previousBtn_->setIcon(Icons::instance().animationPrevious);
+    previousBtn_->setIcon(Icons::instance().skipPrevious);
     connect(previousBtn_, &QPushButton::clicked, timeAxisWidget_, &TimeAxisWidget::slotSetCurFrameToBegin);
 
     nextBtn_ = new QPushButton(titleWidget_);
     nextBtn_->setFlat(true);
-    nextBtn_->setIcon(Icons::instance().animationNext);
+    nextBtn_->setIcon(Icons::instance().skipNext);
     connect(nextBtn_, &QPushButton::clicked, timeAxisWidget_, &TimeAxisWidget::slotSetCurFrameToEnd);
 
     QWidget* spacerRight = new QWidget(titleWidget_);

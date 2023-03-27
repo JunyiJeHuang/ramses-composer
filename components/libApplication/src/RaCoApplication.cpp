@@ -236,8 +236,7 @@ bool RaCoApplication::exportProjectImpl(const std::string& ramsesExport, const s
 		R"___({{
 	"generator" : "{}"
 }})___",
-        QCoreApplication::applicationName().toStdString()));
-    std::string str = QCoreApplication::applicationName().toStdString();
+		QCoreApplication::applicationName().toStdString()));
 	metadata.setExporterVersion(RACO_VERSION_MAJOR, RACO_VERSION_MINOR, RACO_VERSION_PATCH, raco::serialization::RAMSES_PROJECT_FILE_VERSION);
 
 	metadata.setLuaSavingMode(static_cast<rlogic::ELuaSavingMode>(luaSavingMode));

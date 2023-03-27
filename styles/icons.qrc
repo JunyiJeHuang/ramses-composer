@@ -65,12 +65,8 @@
         <file alias="visibilityOffIcon">_Default/icons/visibility_off_white_24dp.svg</file>
         <file alias="visibilityDisabledIcon">_Default/icons/visibility_disabled_white_24dp.svg</file>
         <file alias="typeZoomIcon">_Default/icons/map_zoomin.png</file>
-        <file alias="typeAnimationNextIcon">_Default/icons/animation_next.png</file>
-        <file alias="typeAnimationPreviousIcon">_Default/icons/animation_previous.png</file>
         <file alias="applicationLogo">_Default/icons/ramses-composer-logo.png</file>
         <file alias="yUp">axes_y_up.png</file>
         <file alias="zUp">axes_z_up.png</file>
-        <file alias="typeAnimationStartIcon">_Default/icons/run_small.png</file>
-        <file alias="typeAnimationStopIcon">_Default/icons/pause-icon.png</file>
     </qresource>
 </RCC>

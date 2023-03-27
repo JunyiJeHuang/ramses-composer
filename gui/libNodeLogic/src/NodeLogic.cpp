@@ -139,12 +139,12 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 				rota.z = tempHandle.get("z").asDouble();
 				node->insertSystemData("rotation", rota);
 
-			} else if (QString::fromStdString(tempHandle.getPropName()).compare("scale") == 0) {
+            } else if (QString::fromStdString(tempHandle.getPropName()).compare("scaling") == 0) {
 				Vec3 scal;
 				scal.x = tempHandle.get("x").asDouble();
 				scal.y = tempHandle.get("y").asDouble();
 				scal.z = tempHandle.get("z").asDouble();
-				node->insertSystemData("scale", scal);
+                node->insertSystemData("scaling", scal);
 
 			}  
             initBasicProperty(valueHandle[i], node);

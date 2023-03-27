@@ -140,12 +140,12 @@ ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* do
 	const auto& viewport = application->activeRaCoProject().project()->settings()->viewport_;
 	const auto& backgroundColor = *application->activeRaCoProject().project()->settings()->backgroundColor_;
 	const auto& axes = application->activeRaCoProject().project()->settings()->axes_;
-	auto* previewWidget = new raco::ramses_widgets::PreviewMainWindow{rendererBackend, application->sceneBackendImpl(), {*viewport->i1_, *viewport->i2_}, application->activeRaCoProject().project(), application->dataChangeDispatcher(),
-		application->activeRaCoProject().commandInterface()};
+    auto* previewWidget = new raco::ramses_widgets::PreviewMainWindow{rendererBackend, application->sceneBackendImpl(), {*viewport->i1_, *viewport->i2_}, application->activeRaCoProject().project(), application->dataChangeDispatcher()
+    ,application->activeRaCoProject().commandInterface()};
 	QObject::connect(mainWindow, &MainWindow::viewportChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setViewport);
-	QObject::connect(mainWindow, &MainWindow::axesChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setAxes);
-	QObject::connect(mainWindow, &MainWindow::displayGridChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setEnableDisplayGrid);
-	QObject::connect(mainWindow, &MainWindow::sceneUpdated, previewWidget, &raco::ramses_widgets::PreviewMainWindow::sceneUpdate);
+    QObject::connect(mainWindow, &MainWindow::axesChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setAxes);
+    QObject::connect(mainWindow, &MainWindow::displayGridChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setEnableDisplayGrid);
+    QObject::connect(mainWindow, &MainWindow::sceneUpdated, previewWidget, &raco::ramses_widgets::PreviewMainWindow::sceneUpdate);
 	previewWidget->displayScene(application->sceneBackendImpl()->currentSceneId(), backgroundColor);
 	previewWidget->setWindowFlags(Qt::Widget);
 
@@ -158,7 +158,7 @@ ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* do
 	QLabel* axesIcon_ = new QLabel(previewWidget);
 	axesIcon_->setScaledContents(true);
 	axesIcon_->setStyleSheet("background:transparent");
-	previewWidget->setAxesIconLabel(axesIcon_);
+    previewWidget->setAxesIconLabel(axesIcon_);
 	mainWindow->setNewPreviewMenuEntryEnabled(false);
 	return dockManager->addDockWidget(ads::CenterDockWidgetArea, dock);
 }
@@ -293,7 +293,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 ads::CDockAreaWidget* createAndAddProjectBrowser(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* racoApplication,
 	ads::CDockAreaWidget* dockArea, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	auto* model = new raco::object_tree::model::ObjectTreeViewExternalProjectModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects());
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
+    return createAndAddObjectTree(MainWindow::DockWidgetTypes::PROPERTY_BROWSER, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, dockArea, nodeDataPro, materialLogic, programManager);
 }
 
@@ -361,7 +361,7 @@ ads::CDockAreaWidget* createAndAddSceneGraphTree(MainWindow* mainWindow, const c
 		Skin::typeDescription.typeName};
 
 	auto* model = new raco::object_tree::model::ObjectTreeViewDefaultModel(racoApplication->activeRaCoProject().commandInterface(), racoApplication->dataChangeDispatcher(), racoApplication->externalProjects(), allowedCreateableUserTypes);
-	return createAndAddObjectTree(MainWindow::DockWidgetTypes::RESOURCES, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
+    return createAndAddObjectTree(MainWindow::DockWidgetTypes::SCENE_GRAPH, dockObjName, model, new raco::object_tree::model::ObjectTreeViewResourceSortFilterProxyModel(mainWindow),
 		ads::BottomDockWidgetArea, mainWindow, dockManager, treeDockManager, racoApplication, nullptr, nodeDataPro, materialLogic, programManager);
 }
 
@@ -650,8 +650,7 @@ void MainWindow::timerEvent(QTimerEvent* event) {
 	const auto& axes = racoApplication_->activeRaCoProject().project()->settings()->axes_.asBool();
 	const auto& enable = racoApplication_->activeRaCoProject().project()->settings()->displayGrid_.asBool();
 
-	Q_EMIT viewportChanged({*viewport->i1_, *viewport->i2_});
-	Q_EMIT axesChanged(axes);
+    Q_EMIT viewportChanged({*viewport->i1_, *viewport->i2_});
 	Q_EMIT displayGridChanged(enable);
 
 	for (auto preview : findChildren<raco::ramses_widgets::PreviewMainWindow*>()) {
@@ -664,7 +663,8 @@ void MainWindow::timerEvent(QTimerEvent* event) {
 	racoApplication_->sceneBackendImpl()->flush();
 
 	rendererBackend_->doOneLoop();
-	Q_EMIT sceneUpdated(axes);
+    Q_EMIT axesChanged(axes);
+    Q_EMIT sceneUpdated(axes);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -725,10 +725,8 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	delete dockManager_;
 	logViewModel_->clear();
 
-
 	killTimer(renderTimerId_);
-	programManager_.readProgramFromJson(file);
-    logViewModel_->clear();
+//    programManager_.readProgramFromJson(file);
 	try {
 		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
 			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
@@ -783,12 +781,12 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	restoreCachedLayout();
 	configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
 
-	programManager_.readProgramFromJson(file);
+    programManager_.readProgramFromJson(file);
 	updateApplicationTitle();
 	updateActiveProjectConnection();
 	updateProjectSavedConnection();
 	updateUpgradeMenu();
-	programManager_.updateUIFromJson(file);
+    programManager_.updateUIFromJson(file);
 }
 
 MainWindow::~MainWindow() {
@@ -856,7 +854,8 @@ bool MainWindow::saveActiveProject() {
 				updateUpgradeMenu();
 				recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
 				updateApplicationTitle();
-				programManager_.writeProgram2Json(QString::fromStdString(racoApplication_->activeProjectPath()));
+                QString path = QString::fromStdString(racoApplication_->activeProjectPath());
+                programManager_.writeProgram2Json(path.section(".", 0, 0));
 				return true;
 			} else {
 				updateApplicationTitle();	
@@ -969,26 +968,18 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 
 		if (!newPath.endsWith(".rca")) newPath += ".rca";
 		std::string errorMsg;
-		if (newID) {
-			if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
-				openProject(QString::fromStdString(racoApplication_->activeProjectPath()), -1, true);
-				if (racoApplication_->activeRaCoProject().save(errorMsg)) {
-					updateActiveProjectConnection();
-					updateProjectSavedConnection();
-					updateUpgradeMenu();
-					programManager_.setOpenedProjectPath(openedProjectPath);
-            		programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
-					programManager_.writeProgram2Json(newPath);
-					return true;
-				} else {
-					updateApplicationTitle();
-					QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
-				}
-			} else {
-				updateApplicationTitle();
-				QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
-			}
-		}
+        if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
+            updateActiveProjectConnection();
+            updateProjectSavedConnection();
+            updateUpgradeMenu();
+            programManager_.setOpenedProjectPath(openedProjectPath);
+            programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
+            programManager_.writeProgram2Json(newPath.section(".", 0, 0));
+            return true;
+        } else {
+            updateApplicationTitle();
+            QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
+        }
 	} else {
 		QMessageBox::warning(this, "Save Error", fmt::format("Can not save project: externally referenced projects not clean.").c_str(), QMessageBox::Ok);
 	}

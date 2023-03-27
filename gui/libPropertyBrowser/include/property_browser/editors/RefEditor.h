@@ -12,7 +12,6 @@
 #include "property_browser/PropertyBrowserRef.h"
 
 #include "PropertyEditor.h"
-#include <QComboBox>
 
 class QPushButton;
 class QLineEdit;
@@ -29,7 +28,6 @@ public:
 		PropertyBrowserItem* item,
 		QWidget* parent = nullptr);
 	bool unexpectedEmptyReference() const noexcept;
-	void setNodeDataMaterialChanged(int index);
 
 protected:
 	bool emptyReference_ = false;
@@ -38,10 +36,8 @@ protected:
 	QLineEdit* currentRef_{nullptr};
 	QPushButton* changeRefButton_{nullptr};
 	QPushButton* goToRefObjectButton_{nullptr};
-    QComboBox* comboBox_{nullptr};
 protected Q_SLOTS:
 	void createCustomContextMenu(const QPoint& p);
-    void updateItems(const PropertyBrowserRef::RefItems& items);
 };
 
 }  // namespace raco::property_browser

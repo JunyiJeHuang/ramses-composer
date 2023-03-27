@@ -68,7 +68,17 @@ void PropertySubtreeView::registerCopyPasteContextMenu(QWidget* widget) {
 			propertyControl_->pasteValue();
 		});
 
-		treeViewMenu->exec(widget->mapToGlobal(p));
+        if (item_->valueHandle().isProperty()) {
+            std::string property = item_->valueHandle().getPropertyPath();
+            QStringList strList = QString::fromStdString(property).split(".");
+            // Determine whether it is a System/Custom Property and whether it is a Float type
+            if (!isValidValueHandle(strList, item_->valueHandle())) {
+                return;
+            }
+            treeViewMenu->addAction(insertKeyFrameAction_);
+        }
+
+        treeViewMenu->exec(widget->mapToGlobal(p));
 	});
 }
 
@@ -172,12 +182,8 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		updateChildrenContainer();
 	}
 
-	insertKeyFrameAction_ = new QAction("insert KeyFrame", this);
-	copyProperty_ = new QAction("copy Property", this);
-	connect(insertKeyFrameAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertKeyFrame);
-	connect(copyProperty_, &QAction::triggered, this, &PropertySubtreeView::slotCopyProperty);
-	// Add right-click menu bar
-	connect(this, &PropertySubtreeView::customContextMenuRequested, this, &PropertySubtreeView::slotTreeMenu);
+    insertKeyFrameAction_ = new QAction("Insert KeyFrame", this);
+    connect(insertKeyFrameAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertKeyFrame);
 }
 
 void PropertySubtreeView::generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents) {
@@ -213,7 +219,7 @@ void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
     core::ValueHandle parent = v.parent();
     if (parent.isProperty()) {
         std::string parentProp = parent.getPropName();
-        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scaling") {
             Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrix(v.rootObject()->objectID());
         }
     }
@@ -229,7 +235,7 @@ void PropertySubtreeView::updateNode(core::ValueHandle &v) {
     core::ValueHandle parent = v.parent();
     if (parent.isProperty()) {
         std::string parentProp = parent.getPropName();
-        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scale") {
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scaling") {
             Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_SubView(v.rootObject()->objectID());
         }
     }
@@ -331,21 +337,6 @@ void PropertySubtreeView::updateError() {
 	}
 }
 
-void PropertySubtreeView::slotTreeMenu(const QPoint& pos) {
-	QMenu menu;
-	if (item_->valueHandle().isProperty()) {
-		std::string property = item_->valueHandle().getPropertyPath();
-		QStringList strList = QString::fromStdString(property).split(".");
-		// Determine whether it is a System/Custom Property and whether it is a Float type
-		if (!isValidValueHandle(strList, item_->valueHandle())) {
-			return;
-		}
-		menu.addAction(insertKeyFrameAction_);
-		menu.addAction(copyProperty_);
-		menu.exec(QCursor::pos());
-	}
-}
-
 QString PropertySubtreeView::setCurveName(QString name) {
 	QStringList list = name.split(".");
 	QString resultName = list[0];
@@ -360,7 +351,7 @@ QString PropertySubtreeView::setPropertyName(QString name) {
 	QStringList list = name.split(".");
 	QString resultName = "";
 	// Set rotation, scaling, displacement attribute parameters
-	if (list.size() > 1 && list.contains("translation") || list.contains("rotation") || list.contains("scale")) {
+    if (list.size() > 1 && list.contains("translation") || list.contains("rotation") || list.contains("scaling")) {
 		resultName = list[list.size() - 2] + "." + list[list.size() - 1];
 		return resultName;
 	} else if (list.size() > 2 && list.contains("uniforms")) {
@@ -627,7 +618,7 @@ bool PropertySubtreeView::isValidValueHandle(QStringList list, core::ValueHandle
 		return true;
 	};
 
-	if (list.contains("translation") || list.contains("rotation") || list.contains("scale")) {
+    if (list.contains("translation") || list.contains("rotation") || list.contains("scaling")) {
 		if (list.contains("x") || list.contains("y") || list.contains("z")) {
 			return true;
 		}

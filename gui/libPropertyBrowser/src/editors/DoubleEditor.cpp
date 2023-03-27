@@ -30,7 +30,7 @@ bool nodeDataSync(std::string propName, double value, std::string parentName = "
 		return false;
 	}
 
-	if (parentName == "translation" || parentName == "scale" || parentName == "rotation") {
+    if (parentName == "translation" || parentName == "scaling" || parentName == "rotation") {
 		Vec3 parent = std::any_cast<Vec3>(pNode->getSystemData(parentName));
 		if (propName == "x") {
 			parent.x = value;

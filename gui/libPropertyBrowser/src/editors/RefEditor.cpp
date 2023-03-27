@@ -128,19 +128,6 @@ RefEditor::RefEditor(
 		currentRef_->setToolTip(ref_->items().at(ref_->currentIndex()).tooltipText);
 	});
 
-	QObject::connect(ref_, &PropertyBrowserRef::indexChanged, comboBox_, &QComboBox::setCurrentIndex);
-	QObject::connect(ref_, &PropertyBrowserRef::itemsChanged, this, &RefEditor::updateItems);
-	QObject::connect(comboBox_, qOverload<int>(&QComboBox::activated), ref_, &PropertyBrowserRef::setIndex);
-	QObject::connect(comboBox_, qOverload<int>(&QComboBox::currentIndexChanged), [this, item](auto index) {
-		emptyReference_ = (index == PropertyBrowserRef::EMPTY_REF_INDEX);
-		goToRefObjectButton_->setDisabled(emptyReference_);
-		if (item->displayName() == "material") {
-			//setNodeDataMaterialChanged(index);
-		}
-
-		comboBox_->setToolTip(comboBox_->itemData(index, Qt::ToolTipRole).toString());
-	});
-
 	// Override the enabled behaviour of the parent class, so that the goto button can remain enabled even though the rest of the control gets disabled.
 	setEnabled(true);
 	currentRef_->setEnabled(item->editable());
@@ -154,26 +141,6 @@ RefEditor::RefEditor(
 	});
 }
 
-void RefEditor::setNodeDataMaterialChanged(int index) {
-	raco::guiData::NodeData* pNode = raco::guiData::NodeDataManager::GetInstance().getActiveNode();
-
-	if ((index > 0) && pNode->getMaterialName() != ref_->items().at(index).objName.toStdString()) {  // is't empty
-		pNode->uniformClear();
-		pNode->setMaterialName(ref_->items().at(index).objName.toStdString());
-		pNode->setMaterialIsChanged(true);
-	}
-}
-
-void RefEditor::updateItems(const PropertyBrowserRef::RefItems &items) {
-	QObject::disconnect(comboBox_, qOverload<int>(&QComboBox::activated), ref_, &PropertyBrowserRef::setIndex);
-	comboBox_->clear();
-	for (const auto& comboItem : items) {
-		comboBox_->addItem(comboItem.objName, comboItem.objId);
-		comboBox_->setItemData(comboBox_->count() - 1, comboItem.tooltipText, Qt::ToolTipRole);
-	}
-	comboBox_->setCurrentIndex(ref_->currentIndex());
-	QObject::connect(comboBox_, qOverload<int>(&QComboBox::activated), ref_, &PropertyBrowserRef::setIndex);
-}
 
 bool RefEditor::unexpectedEmptyReference() const noexcept {
 	return emptyReference_ && !item_->valueHandle().query<core::ExpectEmptyReference>();

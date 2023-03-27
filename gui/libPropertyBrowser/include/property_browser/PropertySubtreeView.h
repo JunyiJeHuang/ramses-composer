@@ -54,8 +54,7 @@ public:
 public Q_SLOTS:
 	void playStructureChangeAnimation();
 	void setLabelAreaWidth(int offset);
-	void updateChildrenContainer();
-    void slotTreeMenu(const QPoint &pos);
+    void updateChildrenContainer();
 	QString setCurveName(QString name);
 	QString setPropertyName(QString name);
     void slotInsertKeyFrame();
@@ -89,7 +88,6 @@ private:
 	PropertyEditor* propertyControl_{nullptr};
 	PropertySubtreeChildrenContainer* childrenContainer_{nullptr};
     QAction* insertKeyFrameAction_{nullptr};
-    QAction* copyProperty_{nullptr};
 
 	int labelWidth_{0};
 	float highlight_{0};

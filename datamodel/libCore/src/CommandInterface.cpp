@@ -576,6 +576,7 @@ SLink CommandInterface::addLink(const ValueHandle& start, const ValueHandle& end
 		undoStack_->push(fmt::format("Create {} link from '{}' to '{}'", isWeak ? "weak" : "strong",
 			start.getPropertyPath(), end.getPropertyPath()));
 		return link;
+	} else {
 		throw std::runtime_error(fmt::format("Create link: link creation not possible"));
 	}
 	return nullptr;

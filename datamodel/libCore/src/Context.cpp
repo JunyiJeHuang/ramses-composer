@@ -1002,20 +1002,12 @@ void BaseContext::moveScenegraphChildren(std::vector<SEditorObject> const& objec
 	});
 }
 
-void BaseContext::insertBMWAssetScenegraph(raco::guiData::NodeData* node, SEditorObject const& parent) {
-	// todo: Add node information
-	LOG_INFO(log_system::CONTEXT, "Add node information");
-}
-
 void BaseContext::insertAssetScenegraph(const raco::core::MeshScenegraph& scenegraph, const std::string& absPath, SEditorObject const& parent) {
 	auto relativeFilePath = raco::utils::u8path(absPath).normalizedRelativePath(project()->currentFolder());
 	std::vector<SEditorObject> meshScenegraphMeshes;
 	std::vector<SEditorObject> meshScenegraphNodes;
 
 	LOG_INFO(log_system::CONTEXT, "Importing all meshes...");
-
-
-	SEditorObject newNode;
 	auto projectMeshes = Queries::filterByTypeName(project()->instances(), {raco::user_types::Mesh::typeDescription.typeName});
 	std::map<std::tuple<bool, int, std::string>, SEditorObject> propertiesToMeshMap;
 	std::map<std::tuple<std::string, int, int>, SEditorObject> propertiesToChannelMap;
@@ -1283,6 +1275,7 @@ void BaseContext::insertAssetScenegraph(const raco::core::MeshScenegraph& sceneg
 				for (auto index = 0; index < targetMeshNodes.size(); index++) {
 					set(ValueHandle(skinObj, &user_types::Skin::targets_)[index], targetMeshNodes[index]);
 				}
+
 				for (auto jointIndex = 0; jointIndex < sceneSkin->jointNodeIndices.size(); jointIndex++) {
 					set(ValueHandle(skinObj, &user_types::Skin::joints_)[jointIndex], meshScenegraphNodes[sceneSkin->jointNodeIndices[jointIndex]]);
 				}
@@ -1311,6 +1304,10 @@ bool BaseContext::exportAssetScenegraph(MeshScenegraph &scenegraph) {
     }
 
     return false;
+}
+
+void BaseContext::insertBMWAssetScenegraph(guiData::NodeData *node, const SEditorObject &parent) {
+
 }
 
 SLink BaseContext::addLink(const ValueHandle& start, const ValueHandle& end, bool isWeak) {

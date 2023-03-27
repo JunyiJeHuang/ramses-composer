@@ -1023,7 +1023,17 @@ void migrateProject(ProjectDeserializationInfoIR& deserializedIR, raco::serializ
 				}
 			}
 		}
-	}
+    }
+
+    // File Version 52: Added z_up to the ProjectSettings.
+    if (deserializedIR.fileVersion < 36) {
+        for (const auto& dynObj : deserializedIR.objects) {
+            auto instanceType = dynObj->serializationTypeName();
+            if (instanceType == "ProjectSettings") {
+                dynObj->addProperty("axes", new data_storage::Property<bool, DisplayNameAnnotation>{false, {"+Z up"}}, -1);
+            }
+        }
+    }
 
 	// File version 36: LuaInterfaces instead of LuaScripts as Prefab/PrefabInstance interfaces
 	if (deserializedIR.fileVersion < 36) {
@@ -1382,15 +1392,6 @@ void migrateProject(ProjectDeserializationInfoIR& deserializedIR, raco::serializ
             }
         }
     }
-	// File Version 52: Added z_up to the ProjectSettings.
-	if (deserializedIR.fileVersion < 52) {
-		for (const auto& dynObj : deserializedIR.objects) {
-			auto instanceType = dynObj->serializationTypeName();
-			if (instanceType == "ProjectSettings") {
-				dynObj->addProperty("axes", new data_storage::Property<bool, DisplayNameAnnotation>{false, {"+Z up"}}, -1);
-			}
-		}
-	}
 }
 
 }  // namespace raco::serialization

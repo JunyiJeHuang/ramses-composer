@@ -98,20 +98,20 @@ void PreviewScrollAreaWidget::wheelEvent(QWheelEvent* event) {
 	auto virtSize = scaledSize();
 	double centreX = static_cast<double>(horizontalScrollBar()->value() + mousePivot_.x()) / virtSize.width();
 	double centerY = static_cast<double>(verticalScrollBar()->value() + mousePivot_.y()) / virtSize.height();
-	// if (sizeMode_ != AutoSizing::OFF) {
-	// 	sizeMode_ = AutoSizing::OFF;
-	// 	s_scaleValue = pow(2, ceil(log(s_scaleValue) / log(2)));
-	// }
-	bool scaleUp = true;
+	if (sizeMode_ != AutoSizing::OFF) {
+		sizeMode_ = AutoSizing::OFF;
+		scaleValue_ = pow(2, ceil(log(scaleValue_) / log(2)));
+	}
+    bool scaleUp{true};
 	if (event->angleDelta().y() > 0) {
-		s_scaleValue *= 1.05;
+		scaleValue_ *= 2.0;
 	} else {
-		s_scaleValue *= 0.95;
+		scaleValue_ *= 0.5;
 		scaleUp = false;
     }
 	Q_EMIT scaleChanged(s_scaleValue, scaleUp);
 
-	scaleValue_ = 1.0;
+//	scaleValue_ = 1.0;
     virtSize = scaledSize();
 
 	updateScrollbarSize(virtSize);
@@ -185,7 +185,7 @@ void PreviewScrollAreaWidget::updateViewport() {
 	const QPoint viewportOffset{horizontalScrollBar()->value(), verticalScrollBar()->value()};
 
 	Q_EMIT viewportRectChanged(areaSize, viewportPosition_, viewportOffset, viewportSize, widgetSize, sceneSize_);
-	// Q_EMIT scaleChanged(scaleValue_);
+    Q_EMIT scaleChanged(scaleValue_, true);
 	Q_EMIT autoSizingChanged(sizeMode_);
 	Q_EMIT autoPreviewOrRoamModeChanged(previewMode_);
 }

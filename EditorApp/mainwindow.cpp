@@ -43,7 +43,6 @@
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertyBrowserWidget.h"
-#include "curve/CurveWindow.h"
 #include "node_logic/NodeLogic.h"
 #include "material_logic/materalLogic.h"
 #include "property/PropertyMainWindow.h"
@@ -196,15 +195,6 @@ ads::CDockAreaWidget* createAndAddAnimation(MainWindow* mainWindow, const char* 
 
     auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::ANIMATION_VIEW, mainWindow);
     dockWidget->setWidget(animationMainWindow);
-    dockWidget->setObjectName(dockObjName);
-    return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
-}
-
-ads::CDockAreaWidget* createAndAddCurve(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::application::RaCoApplication* application, CurveLogic* curveLogic, raco::node_logic::NodeLogic* nodeLogic) {
-	auto* curveWindow = new raco::curve::CurveWindow(application->dataChangeDispatcher(), application->activeRaCoProject().commandInterface(), curveLogic, nodeLogic, mainWindow);
-
-    auto* dockWidget = createDockWidget(MainWindow::DockWidgetTypes::CURVE_VIEW, mainWindow);
-    dockWidget->setWidget(curveWindow);
     dockWidget->setObjectName(dockObjName);
     return dockManager->addDockWidget(ads::RightDockWidgetArea, dockWidget);
 }
@@ -457,7 +447,7 @@ ads::CDockAreaWidget* createAndAddTracePlayer(MainWindow* mainWindow, RaCoDockMa
 	return dockManager->addDockWidget(ads::TopDockWidgetArea, newTraceplayerDock, previewDockArea);
 }
 
-void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::RendererBackend& rendererBackend, raco::application::RaCoApplication* application, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, CurveLogic *curveLogic, raco::dataConvert::ProgramManager& programManager) {
+void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::RendererBackend& rendererBackend, raco::application::RaCoApplication* application, RaCoDockManager* dockManager, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic* materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	createAndAddPreview(mainWindow, "defaultPreview", dockManager, rendererBackend, application);
 
     auto leftDockArea = createAndAddSceneGraphTree(mainWindow, "defaultSceneGraph", dockManager, treeDockManager, application, nodeDataPro, materialLogic, programManager);
@@ -470,7 +460,6 @@ void createInitialWidgets(MainWindow* mainWindow, raco::ramses_widgets::Renderer
 	createAndAddTimeAxis(mainWindow, "defaultTimeAxis", dockManager, treeDockManager, application);
 	createAndAddProperty(mainWindow, "defaultPropertyEditor", dockManager);
     createAndAddAnimation(mainWindow, "defaultAnimation", dockManager);
-	createAndAddCurve(mainWindow, "defaultCurve", dockManager, treeDockManager, application, curveLogic, nodeDataPro);
 }
 
 }  // namespace
@@ -570,11 +559,10 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 	QObject::connect(ui->actionNewPythonRunner, &QAction::triggered, [this]() { createAndAddPythonRunner(this, racoApplication_, EditorObject::normalizedObjectID("").c_str(), pythonScriptCache_, pythonScriptArgumentCache_, dockManager_); });
 	QObject::connect(ui->actionRestoreDefaultLayout, &QAction::triggered, [this]() {
 		resetDockManager();
-        createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, curveLogic_, programManager_);
+        createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, programManager_);
 	});
     QObject::connect(ui->actionNewProperty, &QAction::triggered, [this]() { createAndAddProperty(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
     QObject::connect(ui->actionNewAnimation, &QAction::triggered, [this]() { createAndAddAnimation(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
-    QObject::connect(ui->actionNewCurve, &QAction::triggered, [this]() { createAndAddCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, treeDockManager_, racoApplication_, curveLogic_, nodeLogic_); });
     QObject::connect(ui->actionNewTimeAxisView, &QAction::triggered, [this]() { createAndAddTimeAxis(this, EditorObject::normalizedObjectID("").c_str(), dockManager_, treeDockManager_, racoApplication_); });
 	// QObject::connect(ui->actionNewVisualCurve, &QAction::triggered, [this]() { createAndAddVisualCurve(this, EditorObject::normalizedObjectID("").c_str(), dockManager_); });
 
@@ -781,12 +769,13 @@ void MainWindow::openProject(const QString& file, int featureLevel, bool generat
 	restoreCachedLayout();
 	configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
 
-    programManager_.readProgramFromJson(file);
+    QString jsonPath = file.section(".", 0, -2);
+    programManager_.readProgramFromJson(jsonPath);
 	updateApplicationTitle();
 	updateActiveProjectConnection();
 	updateProjectSavedConnection();
 	updateUpgradeMenu();
-    programManager_.updateUIFromJson(file);
+    programManager_.updateUIFromJson(jsonPath);
 }
 
 MainWindow::~MainWindow() {
@@ -802,13 +791,10 @@ void MainWindow::initLogic() {
     // Node logic
     nodeLogic_ = new raco::node_logic::NodeLogic(racoApplication_->activeRaCoProject().commandInterface(), this);
 
-    // Curve logic
-    curveLogic_ = new CurveLogic(this);
-
     // Material logic
     materialLogic_ = new raco::material_logic::MateralLogic(this);
 
-    gltfAnimationMgr_ = new GltfAnimationManager(racoApplication_->activeRaCoProject().commandInterface(), this);
+    convertEditorAnimation_ = new ConvertEditorAnimation(racoApplication_->activeRaCoProject().commandInterface(), this);
 }
 
 void MainWindow::updateApplicationTitle() {
@@ -1043,10 +1029,10 @@ QString MainWindow::getActiveProjectFolder() {
 void MainWindow::restoreCachedLayout() {
 	auto cachedLayoutInfo = dockManager_->getCachedLayoutInfo();
     nodeLogic_->setCommandInterface(racoApplication_->activeRaCoProject().commandInterface());
-    gltfAnimationMgr_->commandInterface(racoApplication_->activeRaCoProject().commandInterface());
+    convertEditorAnimation_->commandInterface(racoApplication_->activeRaCoProject().commandInterface());
 
 	if (cachedLayoutInfo.empty()) {
-        createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, curveLogic_, programManager_);
+        createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, programManager_);
 
 #ifdef Q_OS_WIN
 		// explicit maximization of docks needed or else RaCo will not look properly maximized on Windows
@@ -1105,8 +1091,6 @@ void MainWindow::regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks
 		} else if (savedDockType == DockWidgetTypes::PYTHON_RUNNER) {
 			createAndAddPythonRunner(this, racoApplication_, dockNameCString, pythonScriptCache_, pythonScriptArgumentCache_, dockManager_);
         } else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
-        }else if(savedDockType == DockWidgetTypes::CURVE_VIEW) {
-            createAndAddCurve(this, dockNameCString, dockManager_, treeDockManager_, racoApplication_, curveLogic_, nodeLogic_);
         }else if (savedDockType == DockWidgetTypes::PROPERTY_VIEW) {
             createAndAddProperty(this, dockNameCString, dockManager_);
         }else if (savedDockType == DockWidgetTypes::ANIMATION_VIEW) {
@@ -1147,7 +1131,7 @@ void MainWindow::convert2LuaAnimation() {
     // copy lua animation
     QDir dir(luaPath);
     QFileInfo fileInfo(luaPath);
-    if (!fileInfo.isDir() || QFile::exists(luaPath)) {
+    if (!fileInfo.isDir() || !QFile::exists(luaPath)) {
         QMessageBox::warning(this, "convert Error", fmt::format("Can not convert lua animation.").c_str(), QMessageBox::Ok);
         return;
     }

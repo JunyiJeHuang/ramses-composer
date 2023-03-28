@@ -71,7 +71,7 @@ TimeAxisMainWindow::TimeAxisMainWindow(raco::components::SDataChangeDispatcher d
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintAfterUndoOpreation, this, &TimeAxisMainWindow::slotRefreshTimeAxisAfterUndo);
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintTimeAxis_From_NodeUI, this, &TimeAxisMainWindow::slotRefreshTimeAxis);
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintTimeAixs_From_CurveUI, this, &TimeAxisMainWindow::slotRefreshTimeAxis);
-    connect(&signalProxy::GetInstance(), &signalProxy::sigInsertKeyFrame_From_NodeUI, this, &TimeAxisMainWindow::slotCreateKeyFrame);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigInsertCurve_From_NodeUI, this, &TimeAxisMainWindow::slotInsertCurve);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateAnimation_From_AnimationUI, this, &TimeAxisMainWindow::slotUpdateAnimation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateAnimationKey_From_AnimationUI, this, &TimeAxisMainWindow::slotUpdateAnimationKey);
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &TimeAxisMainWindow::slotResetAnimation);
@@ -342,7 +342,29 @@ void TimeAxisMainWindow::slotInitAnimationMgr() {
     }
 }
 
-void TimeAxisMainWindow::slotCreateKeyFrame(QString curve) {
+void TimeAxisMainWindow::slotInsertCurve(QString property, QString curve, QVariant value) {
+    int curFrame = timeAxisWidget_->getCurrentKeyFrame();
+    if (CurveManager::GetInstance().getCurve(curve.toStdString())) {
+        Curve* curveData = CurveManager::GetInstance().getCurve(curve.toStdString());
+        Point* point = new Point();
+        if (value.type() == QVariant::Type::Double) {
+            point->setDataValue(value.toDouble());
+        }
+        point->setKeyFrame(curFrame);
+        curveData->insertPoint(point);
+    } else {
+        Curve* curveData = new Curve();
+        curveData->setCurveName(curve.toStdString());
+        Point* point = new Point();
+        if (value.type() == QVariant::Type::Double) {
+            point->setDataValue(value.toDouble());
+        }
+        point->setKeyFrame(curFrame);
+        curveData->insertPoint(point);
+        CurveManager::GetInstance().addCurve(curveData);
+        Q_EMIT signalProxy::GetInstance().sigInsertCurve_To_VisualCurve(property, curve, value);
+        Q_EMIT signalProxy::GetInstance().sigCheckCurveBindingValid_From_CurveUI();
+    }
     timeAxisWidget_->createKeyFrame();
     visualCurveWidget_->createKeyFrame(curve);
 }

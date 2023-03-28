@@ -45,8 +45,6 @@ Q_SIGNALS:
     //
     void sigInsertCurveBinding_From_NodeUI(QString property, QString curve);
     //
-    void sigInsertKeyFrame_From_NodeUI(QString curve);
-    //
     void sigUpdateAnimation_From_AnimationUI();
     //
     void sigUpdateAnimationKey_From_AnimationUI(QString oldKey, QString newKey);

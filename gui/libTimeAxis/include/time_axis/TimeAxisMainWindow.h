@@ -46,7 +46,7 @@ public:
 public Q_SLOTS:
     void slotInitAnimationMgr();
     //
-    void slotCreateKeyFrame(QString curve);
+    void slotInsertCurve(QString property, QString curve, QVariant value);
     void slotRefreshTimeAxis();
     void slotRefreshTimeAxisAfterUndo();
     void slotInitCurves();

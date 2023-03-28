@@ -337,6 +337,7 @@ void PreviewMainWindow::updateAxesIconLabel() {
 
 void PreviewMainWindow::setAxesIcon(const bool& z_up) {
     if (sceneSize_.height() != 0 && sceneSize_.width() != 0) {
+        // to be doing
 //        previewWidget_->setMask({0, 0, 1, 1});
         previewWidget_->update();
         if (z_up) {

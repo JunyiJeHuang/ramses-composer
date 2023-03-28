@@ -251,8 +251,8 @@ QString wrapMode2String(WrapMode wMode) {
 
 void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
 	QJsonObject translation;
-    if(node.hasSystemData("translation")) {
-        Vec3 tran = std::any_cast<Vec3>(node.getSystemData("translation"));
+    if(node.hasSystemData(JSON_TRANSLATION)) {
+        Vec3 tran = std::any_cast<Vec3>(node.getSystemData(JSON_TRANSLATION));
         translation.insert(JSON_X, tran.x);
         translation.insert(JSON_Y, tran.y);
         translation.insert(JSON_Z, tran.z);
@@ -260,8 +260,8 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
     jsonObj.insert(JSON_TRANSLATION, translation);
 
 	QJsonObject rotation;
-	if (node.hasSystemData("rotation")) {
-		Vec3 rota = std::any_cast<Vec3>(node.getSystemData("rotation"));
+    if (node.hasSystemData(JSON_ROTATION)) {
+        Vec3 rota = std::any_cast<Vec3>(node.getSystemData(JSON_ROTATION));
 		rotation.insert(JSON_X, rota.x);
 		rotation.insert(JSON_Y, rota.y);
 		rotation.insert(JSON_Z, rota.z);
@@ -269,8 +269,8 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
     jsonObj.insert(JSON_ROTATION, rotation);
 
 	QJsonObject scale;
-    if (node.hasSystemData("scale")) {
-        Vec3 scal = std::any_cast<Vec3>(node.getSystemData("scale"));
+    if (node.hasSystemData("scaling")) {
+        Vec3 scal = std::any_cast<Vec3>(node.getSystemData("scaling"));
 		scale.insert(JSON_X, scal.x);
 		scale.insert(JSON_Y, scal.y);
 		scale.insert(JSON_Z, scal.z);
@@ -909,7 +909,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     if (translation.contains(JSON_Z)) {
         vec3.z = translation.value(JSON_Z).toDouble();
     }
-    node.insertSystemData("translation", vec3);
+    node.insertSystemData(JSON_TRANSLATION, vec3);
 
     QJsonObject rotation = jsonObj.value(JSON_ROTATION).toObject();
     if (rotation.contains(JSON_X)) {
@@ -921,7 +921,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     if (rotation.contains(JSON_Z)) {
         vec3.z = rotation.value(JSON_Z).toDouble();
     }
-    node.insertSystemData("rotation", vec3);
+    node.insertSystemData(JSON_ROTATION, vec3);
 
     QJsonObject scale = jsonObj.value(JSON_SCALE).toObject();
     if (scale.contains(JSON_X)) {
@@ -933,7 +933,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     if (scale.contains(JSON_Z)) {
         vec3.z = scale.value(JSON_Z).toDouble();
     }
-    node.insertSystemData("scale", vec3);
+    node.insertSystemData("scaling", vec3);
 }
 
 void readUniforms2NodeData(QJsonObject JsonUniform, Uniform &un) {
@@ -1140,29 +1140,6 @@ void readJsonFillPropertyData(QJsonObject jsonObj) {
 }
 
 namespace raco::dataConvert {
-
-bool ProgramManager::writeProgram(QString filePath) {
-	bool result = true;
-    // Output Json file
-	if (!writeProgram2Json(filePath)) {
-		qDebug() << "Write Json file ERROR!";
-		result = false;
-    }
-
-	// Output Ptx file
-	if (!outputPtx_.writeProgram2Ptx(filePath.toStdString(), openedProjectPath_)) {
-		qDebug() << "Write Ptx file ERROR!";
-		result = false;
-    }
-
-    // Output Asset file
-	outputPtw_.WriteAsset(filePath.toStdString());
-
-    // Output ctm file
-	writeCTMFile(filePath.toStdString());
-
-	return result;
-}
 
 bool ProgramManager::writeBMWAssets(QString filePath) {
 	bool result = true;

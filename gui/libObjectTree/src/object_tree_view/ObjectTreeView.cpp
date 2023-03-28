@@ -297,13 +297,13 @@ void ObjectTreeView::getOnehandle(QModelIndex index, NodeData *parent, raco::gui
 	str = tempHandle[0].getPropertyPath();
 	tempNode.setName(str);
 	str = tempHandle[0].asString();
-	NodeNameHandleReMap.emplace(str, tempHandle);
+    NodeNameHandleReMap.emplace(str, tempHandle);
 	tempNode.setObjectID(str);
-	if (tempHandle.get("mesh")) {
-		auto materials = tempHandle.get("materials");
+    if (tempHandle.get("mesh")) {
+        auto materials = tempHandle.get("materials");
 		auto material = materials[0];
 		if (material) {
-			auto uniforms = material.get("uniforms");
+            auto uniforms = material.get("uniforms");
 			if (uniforms) {
 				for (int i = 0; i < uniforms.size(); i++) {
 					Uniform un;
@@ -657,7 +657,7 @@ void ObjectTreeView::getMaterialResHandles() {
 }
 
 void ObjectTreeView::getTextureResHandles() {
-	if (viewTitle_.compare("Resources") != 0) {
+    if (viewTitle_.compare("Resources") != 0) {
 		return;
 	}
 	std::map<std::string, core::ValueHandle> handleMap = updateTexture();
@@ -779,9 +779,9 @@ void ObjectTreeView::bindLuaScriptOutput(const QModelIndex &index) {
     };
 
     if (index.isValid()) {
-        raco::core::ValueHandle handle = indexToSEditorObject(index);
+        raco::core::ValueHandle handle = treeModel_->indexToSEditorObject(index);
         if (handle.isObject()) {
-            raco::core::ValueHandle outputHandle = handle.get("luaOutputs");
+            raco::core::ValueHandle outputHandle = handle.get("outputs");
             if (outputHandle) {
                 for (int i = 0; i < outputHandle.size(); i++) {
                     raco::core::ValueHandle valueHandle = outputHandle[i];
@@ -1120,7 +1120,7 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 		extrefPasteAction->setEnabled(treeModel_->canPasteIntoIndex({}, pasteObjects, sourceProjectTopLevelObjectIds, true));
 	}
 
-    auto selectedIndices = getSelectedIndices();
+    auto selectedIndices = getSelectedIndices(true);
     if (selectedIndices.size() != 0) {
         if (selectedIndices.front().data().compare("LuaScript") == 0) {
             auto selectedIndex = selectedIndices.front();

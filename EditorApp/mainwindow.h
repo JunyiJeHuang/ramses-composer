@@ -19,8 +19,7 @@
 #include "curve/CurveNameWidget.h"
 #include "material_logic/materalLogic.h"
 #include "data_Convert/ProgramManager.h"
-#include "curve/CurveLogic.h"
-#include "gltf_Animation/GltfAnimationManager.h"
+#include "animation_editor/ConvertEditorAnimation.h"
 
 #include <QListWidget>
 #include <QMainWindow>
@@ -57,8 +56,7 @@ public:
 		static inline const char* UNDO_STACK{"Undo Stack"};
 		static inline const char* ERROR_VIEW{"Error View"};
 		static inline const char* LOG_VIEW{"Log View"};
-		static inline const char* ANIMATION_VIEW{"animation View"};
-		static inline const char* CURVE_VIEW{"Curve View"};
+        static inline const char* ANIMATION_VIEW{"animation View"};
 		static inline const char* PYTHON_RUNNER{"Python Runner"};
 		static inline const char* TRACE_PLAYER{"Trace Player"};
 		static inline const char* PROPERTY_VIEW{"property View"};
@@ -146,11 +144,10 @@ private:
 	raco::common_widgets::LogViewModel* logViewModel_;
 	std::map<QString, qint64> pythonScriptCache_;
 	std::map<QString, qint64> pythonScriptArgumentCache_;
-	raco::node_logic::NodeLogic* nodeLogic_{nullptr};
-    CurveLogic *curveLogic_{nullptr};
+    raco::node_logic::NodeLogic* nodeLogic_{nullptr};
 	CurveNameWidget* curveNameWidget_{nullptr};
 	raco::material_logic::MateralLogic* materialLogic_{nullptr};
-    GltfAnimationManager *gltfAnimationMgr_{nullptr};
+    ConvertEditorAnimation *convertEditorAnimation_{nullptr};
 
 	int renderTimerId_ = 0;
 };

@@ -62,15 +62,15 @@ set(RESOURCE_FILES
 	shaders/uniform-array.vert
 	shaders/uniform-array.frag
 	shaders/simple_texture.vert
-#        scripts/luaAnimation/build.bat
-#        scripts/luaAnimation/build.sh
-#        scripts/luaAnimation/CurveModule.lua
-#        scripts/luaAnimation/DataModule.lua
-#        scripts/luaAnimation/json.lua
-#        scripts/luaAnimation/json2lua.lua
-#        scripts/luaAnimation/LuaScript.lua
-#        scripts/luaAnimation/SharedModule.lua
-#        scripts/luaAnimation/UtilModule.lua
+        scripts/luaAnimation/build.bat
+        scripts/luaAnimation/build.sh
+        scripts/luaAnimation/CurveModule.lua
+        scripts/luaAnimation/DataModule.lua
+        scripts/luaAnimation/json.lua
+        scripts/luaAnimation/json2lua.lua
+        scripts/luaAnimation/LuaScript.lua
+        scripts/luaAnimation/SharedModule.lua
+        scripts/luaAnimation/UtilModule.lua
 	example_scene.rca
 )
 

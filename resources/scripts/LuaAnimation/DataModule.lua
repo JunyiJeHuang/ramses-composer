@@ -49,7 +49,7 @@ function DataModule.getOutputNameMapping()
                         type = valueType
                     }
                 elseif G.UtilModule.startWith(bindItem.property, 'rotation')
-                    or G.UtilModule.startWith(bindItem.property, 'scale')
+                    or G.UtilModule.startWith(bindItem.property, 'scaling')
                     or G.UtilModule.startWith(bindItem.property, 'translation') then
                     local n = G.UtilModule.split(bindItem.curve, '.')
                     local outputName = G.UtilModule.join(G.UtilModule.slice(n, 1, #n - 1), '.')
@@ -161,7 +161,7 @@ local defaultValuesCache = nil
 function DataModule.getNodeDefaultValues()
     local result = {}
     local activeAnimaName = DataModule.getActiveAnimationName()
-    -- local basicPropertyNames = {'rotation', 'scale', 'translation'}
+    -- local basicPropertyNames = {'rotation', 'scaling', 'translation'}
     -- 递归解析节点
     function DataModule.recursionNode(node)
         if type(node.child) == 'table' and #node.child > 0 then
@@ -208,7 +208,7 @@ function DataModule.getNodeDefaultValues()
                         type = valueType
                     }
                 elseif G.UtilModule.startWith(bindItem.property, 'rotation')
-                    or G.UtilModule.startWith(bindItem.property, 'scale')
+                    or G.UtilModule.startWith(bindItem.property, 'scaling')
                     or G.UtilModule.startWith(bindItem.property, 'translation') then
                     local n = G.UtilModule.split(bindItem.curve, '.')
                     local outputName = G.UtilModule.join(G.UtilModule.slice(n, 1, #n - 1), '.')

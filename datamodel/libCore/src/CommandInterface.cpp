@@ -93,7 +93,8 @@ bool CommandInterface::checkHandleForSet(ValueHandle const& handle) {
 		throw std::runtime_error(fmt::format("Property {} inaccessible at feature level {}", handle.getPropertyPath(), project()->featureLevel()));
 	}
 
-	if (Queries::isReadOnly(*project(), handle, false)) {
+    if (Queries::isReadOnly(*project(), handle, false)) {
+        return false;
         throw std::runtime_error(fmt::format("Property '{}' is read-only", handle.getPropertyPath()));
 	}
 	if (Queries::currentLinkState(*project(), handle) != Queries::CurrentLinkState::NOT_LINKED) {

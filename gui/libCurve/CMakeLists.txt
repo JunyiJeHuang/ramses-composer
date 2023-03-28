@@ -8,11 +8,7 @@ This file is part of Ramses Composer
 raco_find_qt_components(Widgets)
 
 add_library(libCurve
-    include/curve/CurveWindow.h src/CurveWindow.cpp
-    include/curve/CurveTree.h src/CurveTree.cpp
-    include/curve/PointPropertyView.h src/PointPropertyView.cpp
     include/curve/CurveNameWidget.h src/CurveNameWidget.cpp
-    include/curve/CurveLogic.h src/CurveLogic.cpp
     )
 
 target_include_directories(libCurve

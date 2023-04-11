@@ -16,6 +16,7 @@
 #include "signal/SignalProxy.h"
 #include "MeshData/MeshDataManager.h"
 #include "data_Convert/AssetsFunction.h"
+#include "data_Convert/ExternalInterface.h"
 
 #include "proto/Numeric.pb.h"
 #include "proto/Common.pb.h"
@@ -149,7 +150,6 @@ private:
 	void multiCurveBindingSinglePropSwitch(HmiWidget::TWidget* widget, std::string propName, std::vector<std::map<std::string, CurvesSingleProp>> curves);
 
 	void proExVarMapping(HmiWidget::TWidget* widget);
-	void addEx2GasStation(HmiWidget::TWidget* widget);
 	bool getAnimationInteral(std::string curveName, std::string& animationInteral);
 	//void externalDotbackground(HmiWidget::TWidget* widget);
 	void externalDotOpacity(HmiWidget::TWidget* widget);
@@ -168,6 +168,7 @@ private:
 	bool addTrigger_{false};
 	bool isSingleAnimation_{false};
 	AssetsFunction assetsFun_;
+	ExternalInterface externalInterface_;
 };
 }
 

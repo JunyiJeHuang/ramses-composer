@@ -16,6 +16,17 @@ TVariant* AssetsFunction::VariantNumeric(float Num) {
 	return variant;
 }
 
+TVariant* AssetsFunction::VariantNumericVec2(float x,float y) {
+	TVariant* variant = new TVariant;
+	TNumericValue* numeric = new TNumericValue;
+	TVector2f* value = new TVector2f;
+	value->set_x(x);
+	value->set_y(y);
+	numeric->set_allocated_vec2f(value);
+	variant->set_allocated_numeric(numeric);
+	return variant;
+}
+
 TVariant* AssetsFunction::VariantNumericInt(int Num) {
 	TVariant* variant = new TVariant;
 	TNumericValue* numeric = new TNumericValue;
@@ -132,6 +143,10 @@ void AssetsFunction::OperandNumeric(TDataBinding& Operand, float num) {
 	Operand.set_allocated_provider(ProviderNumeric(num));
 }
 
+void AssetsFunction::OperandNumericUint(TDataBinding& Operand, unsigned int num) {
+	Operand.set_allocated_provider(ProviderNumericUInt(num));
+}
+
 void AssetsFunction::OperandKeySrc(TDataBinding& Operand, std::string keyStr, TEProviderSource src) {
 	Operand.set_allocated_key(Key(keyStr));
 	Operand.set_allocated_provider(ProviderSrc(src));
@@ -220,7 +235,28 @@ TDataBinding* AssetsFunction::BindingValueStrNumericOperatorType(std::string Val
 	binding->set_allocated_provider(provider);
 	return binding;
 }
-// convert <typ2-->type1> (Operand)
+// Float(StrSrc1) op Float(StrSrc2)
+TDataBinding* AssetsFunction::BindingFloatStrSrcStrSrcOpType(std::string str1, TEProviderSource src1, std::string str2, TEProviderSource src2, TEOperatorType op) {
+	TDataBinding* binding = new TDataBinding;
+	TDataProvider* provider = new TDataProvider;
+	TOperation* operation = new TOperation;
+
+	operation->set_operator_(op);
+	operation->add_datatype(TEDataType_Float);
+	operation->add_datatype(TEDataType_Float);
+
+	auto operand1 = operation->add_operand();
+	operand1->set_allocated_key(Key(str1));
+	operand1->set_allocated_provider(ProviderSrc(src1));
+
+	auto operand2 = operation->add_operand();
+	operand2->set_allocated_key(Key(str2));
+	operand2->set_allocated_provider(ProviderSrc(src2));
+	provider->set_allocated_operation(operation);
+	binding->set_allocated_provider(provider);
+	return binding;
+}
+	// convert <typ2-->type1> (Operand)
 TDataBinding* AssetsFunction::BindingTypeConvert(TDataBinding& Operand, TEDataType type1, TEDataType type2) {
 	TDataBinding* binding = new TDataBinding;
 	TDataProvider* provider = new TDataProvider;
@@ -252,6 +288,24 @@ TDataBinding* AssetsFunction::BindingTypeMix(TDataBinding& Operand1, TDataBindin
 	*it = Operand2;
 	it = operation->add_operand();
 	*it = Operand3;
+
+	provider->set_allocated_operation(operation);
+	binding->set_allocated_provider(provider);
+	return binding;
+}
+
+TDataBinding* AssetsFunction::BindingTypeDemuxVec(TDataBinding& Operand1, TDataBinding& Operand2, TEDataType type1, TEDataType type2) {
+	TDataBinding* binding = new TDataBinding;
+	TDataProvider* provider = new TDataProvider;
+	TOperation* operation = new TOperation;
+
+	operation->set_operator_(TEOperatorType_DemuxVec);
+	operation->add_datatype(type1);
+	operation->add_datatype(type2);
+	auto it = operation->add_operand();
+	*it = Operand1;
+	it = operation->add_operand();
+	*it = Operand2;
 
 	provider->set_allocated_operation(operation);
 	binding->set_allocated_provider(provider);
@@ -581,6 +635,27 @@ void AssetsFunction::addPlayDomain(HmiWidget::TWidget* widget) {
 void AssetsFunction::externalKeyVariant(HmiWidget::TExternalModelParameter* external, std::string keyStr, TVariant* var) {
 	external->set_allocated_key(Key(keyStr));
 	external->set_allocated_variant(var);
+}
+
+TDataBinding* AssetsFunction::createTransRotaScale(TDataBinding& Operand1, TDataBinding& Operand2, TDataBinding& Operand3) {
+	TDataBinding* TransRotaScale = new TDataBinding;
+	TDataProvider* provider = new TDataProvider;
+	TOperation* operation = new TOperation;
+	operation->set_operator_(TEOperatorType_MuxVec3);
+	operation->add_datatype(TEDataType_Float);
+	operation->add_datatype(TEDataType_Float);
+	operation->add_datatype(TEDataType_Float);
+
+	auto operand = operation->add_operand();
+	*operand = Operand1;
+	operand = operation->add_operand();
+	*operand = Operand2;
+	operand = operation->add_operand();
+	*operand = Operand3;
+
+	provider->set_allocated_operation(operation);
+	TransRotaScale->set_allocated_provider(provider);
+	return TransRotaScale;
 }
 
 }  // namespace raco::dataConvert

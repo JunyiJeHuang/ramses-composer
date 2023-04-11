@@ -10,7 +10,6 @@
 #include "proto/HmiBase.pb.h"
 #include <google/protobuf/text_format.h>
 
-
 namespace raco::dataConvert {
 
 struct PTWSwitch {
@@ -26,6 +25,8 @@ public:
 	TIdentifier* Key(const std::string valueStr);
 	// Variant Num Float
 	TVariant* VariantNumeric(float Num);
+	// Variant Num Vec2 Float
+	TVariant* VariantNumericVec2(float x, float y);
 	// Variant Num Int
 	TVariant* VariantNumericInt(int Num);
 	// Variant Num UInt
@@ -59,6 +60,9 @@ public:
 	void OperandCurveRef(TDataBinding& Operand, std::string curveName);
 	// Operand{Float}
 	void OperandNumeric(TDataBinding& Operand, float num);
+	// Oprand{Uint}
+	void OperandNumericUint(TDataBinding& Operand, unsigned int num);
+	// key src
 	void OperandKeySrc(TDataBinding& Operand, std::string keyStr, TEProviderSource src);
 	void OperandProVarIdentAndType(TDataBinding& Operand, std::string Identifier, TEIdentifierType Idtype);
 	// nodeParamName
@@ -70,10 +74,14 @@ public:
 
 	// binding = float(ValueStr) op float(num)
 	TDataBinding* BindingValueStrNumericOperatorType(std::string ValueStr, TEProviderSource src, float num, TEOperatorType op);
+	// Float(StrSrc1) op Float(StrSrc2)
+	TDataBinding* BindingFloatStrSrcStrSrcOpType(std::string str1, TEProviderSource src1, std::string str2, TEProviderSource src2, TEOperatorType op);
 	// convert <typ2-->type1> (Operand)
 	TDataBinding* BindingTypeConvert(TDataBinding& Operand, TEDataType type1, TEDataType type2);
 	// Mix (Operand1, Operand2, Operand3)
 	TDataBinding* BindingTypeMix(TDataBinding& Operand1, TDataBinding& Operand2, TDataBinding& Operand3, TEDataType type1, TEDataType type2, TEDataType type3);
+	// Operand2[Operand1]:Take Operand2 the value Operand1 direction
+	TDataBinding* BindingTypeDemuxVec(TDataBinding& Operand1, TDataBinding& Operand2, TEDataType type1, TEDataType type2);
 
 	void TransformCreateScale(HmiWidget::TNodeTransform* transform, TDataBinding& operandX, TDataBinding& operandY, TDataBinding& operandZ);
 
@@ -106,6 +114,9 @@ public:
 
 
 	void externalKeyVariant(HmiWidget::TExternalModelParameter* external, std::string keyStr, TVariant* var);
+
+	// translation(Operand1, Operand2, Operand3) / rotation  scale
+	TDataBinding* createTransRotaScale(TDataBinding& Operand1, TDataBinding& Operand2, TDataBinding& Operand3);
 
 private:
 

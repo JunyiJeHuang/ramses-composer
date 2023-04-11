@@ -46,6 +46,11 @@ std::string ptwExTriggleAnimation = PTW_EX_TRIGGLE_ANIMATION;
 bool hasSysOpacity_{false};
 bool hasSysDotOpacity_{false};
 bool hasSysDotSize_{false};
+bool hasSysSlide_{false};
+bool hasSysTarOffset_{false};
+bool hasSysStartOffset_{false};
+bool hasCompositionAnimation_{false};
+bool hasLoopAnimation_{false};
 
 //static EInterPolationType PrePointType;
 static Point PrePoint;
@@ -248,6 +253,10 @@ bool Vec4Equal(Vec4 left, Vec4 right) {
 }
 
 bool isCorrectUColor(int index, std::any value) {
+	if (value.type() != typeid(Vec4)) {
+		DEBUG(__FILE__, __FUNCTION__, __LINE__, "u_color's type is error!");
+		exit(1);
+	}
 	Vec4 u_colorX = std::any_cast<Vec4>(value);
 	Vec4 u_color1 = {1, 0.960784316, 0.909803927, 1};
 	Vec4 u_color2 = {1, 0.850980401, 0.65882355, 1};
@@ -274,6 +283,14 @@ bool isCorrectUColor(int index, std::any value) {
 	return false;
 }
 
+void checkUColorName(std::string name) {
+	std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+	int index = name.rfind("u_color");
+	if (-1 != index) {
+		DEBUG(__FILE__, __FUNCTION__, __LINE__, "u_color's name is error!");
+	}
+}
+
 void updateNodeIDUColors(std::string NodeID, std::vector<Uniform> uniforms) {
 	for (auto& un : uniforms) {
 		int index = un.getName().rfind("u_color");
@@ -293,6 +310,8 @@ void updateNodeIDUColors(std::string NodeID, std::vector<Uniform> uniforms) {
 				uColorNums.emplace(n);
 				NodeIDUColorNums_.emplace(NodeID, uColorNums);
 			}
+		} else {
+			checkUColorName(un.getName());
 		}
 	}
 }
@@ -1178,7 +1197,18 @@ bool updateHasSysMaterial(std::vector<Uniform> uniforms, std::string materialNam
 				hasSysDotOpacity_ = true;
 			} else if (uniform.getName() == PTW_FRAG_SYS_DOT_SIZE) {
 				hasSysDotSize_ = true;
-			} else {
+			} else if (uniform.getName() == PTW_FRAG_SYS_SLIDE) {
+				hasSysSlide_ = true;
+			} else if (uniform.getName() == PTW_FRAG_SYS_TARGETOFFSET) {
+				hasSysTarOffset_ = true;
+			} else if (uniform.getName() == PTW_FRAG_SYS_STARTOFFSET) {
+				hasSysStartOffset_ = true;
+			} else if (uniform.getName() == PTW_FRAG_SYS_LOOPANIMATION) {
+				hasLoopAnimation_ = true;
+			} else if (uniform.getName() == PTW_FRAG_SYS_COMPOSITIONANIMATION) {
+				hasCompositionAnimation_ = true;
+			}
+			else {
 				DEBUG(__FILE__, __FUNCTION__, __LINE__, "unknow system uniform!");
 			}
 		}
@@ -1188,6 +1218,14 @@ bool updateHasSysMaterial(std::vector<Uniform> uniforms, std::string materialNam
 		}
 	}
 	HasResUniformMaterials_.emplace(materialName, sysUniforms);
+	return true;
+}
+
+bool isSysUniformAddToPtxNode(std::string uniformName) {
+	if (uniformName.substr(0, 4) == PTW_FRAG_SYS) {
+		DEBUG(__FILE__, __FUNCTION__, __LINE__, "Sys_xxx Uniform add to meshNode in ptx!");
+		return false;
+	}
 	return true;
 }
 
@@ -1240,8 +1278,8 @@ void OutputPtx::writeMaterial2MaterialLib(HmiScenegraph::TMaterialLib* materialL
 		}
 		// uniforms
 		for (auto& uniform : data.getUniforms()) {
+			isSysUniformAddToPtxNode(uniform.getName());
 			HmiScenegraph::TUniform tUniform;
-
 			uniformTypeValue(uniform, tUniform);
 			HmiScenegraph::TUniform* tUniformIt = tMaterial.add_uniform();
 			*tUniformIt = tUniform;
@@ -1349,6 +1387,11 @@ bool OutputPtx::writeProgram2Ptx(std::string filePathStr, QString oldPath) {
 	hasSysOpacity_ = false;
 	hasSysDotOpacity_ = false;
 	hasSysDotSize_ = false;
+	hasSysSlide_ = false;
+	hasSysTarOffset_ = false;
+	hasSysStartOffset_ = false;
+	hasCompositionAnimation_ = false;
+	hasLoopAnimation_ = false;
 	changeExNamePrefixInit();
 
 	// root
@@ -1735,6 +1778,10 @@ bool isBindingCurveExist(std::string CurveName, std::string aniName, std::string
 
 void OutputPtw::ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData& node) {
 	if (0 != node.getBindingySize() || hasUColorUniform(node.objectID())) {
+		if (ProjectName_ == PRO_ELLIE && node.getName() == PTW_EX_SLIDENODE_MOVE) {
+			DEBUG(__FILE__, __FUNCTION__, __LINE__, "SlideNode property can't binding curves!");
+			return;
+		}
 		HmiWidget::TNodeParam* nodeParam = widget->add_nodeparam();
 		TIdentifier* identifier = new TIdentifier;
 		NodeMaterial nodeMaterial;
@@ -1851,25 +1898,6 @@ void OutputPtw::ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData&
 	}
 }
 
-void OutputPtw::addEx2GasStation(HmiWidget::TWidget* widget) {
-	// eParam_ScrollAreaDirection
-	HmiWidget::TExternalModelParameter* externalModel = widget->add_externalmodelvalue();
-	assetsFun_.externalKeyVariant(externalModel, "eParam_ScrollAreaDirection", assetsFun_.VariantScrollAreaDirection(TEScrollAreaDirection::TEScrollAreaDirection_Disabled));
-
-	// eParam_ScrollAreaFadeParameters
-	externalModel = widget->add_externalmodelvalue();
-	assetsFun_.externalKeyVariant(externalModel, "eParam_ScrollAreaFadeParameters", assetsFun_.VariantNumericVec4f(-10000, 1, 1, 10000));
-
-	// eParam_ScrollAreaInverseWorldTransformation
-	externalModel = widget->add_externalmodelvalue();
-	TMatrix4x4f* mat4x4f = new TMatrix4x4f;
-	mat4x4f->set_m11(1);
-	mat4x4f->set_m22(1);
-	mat4x4f->set_m33(1);
-	mat4x4f->set_m44(1);
-	assetsFun_.externalKeyVariant(externalModel, "eParam_ScrollAreaInverseWorldTransformation", assetsFun_.VariantNumericFloatMatrix4(mat4x4f));
-}
-
 void OutputPtw::addEx2Ellie(HmiWidget::TWidget* widget) {
 	// Right
 	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
@@ -1920,12 +1948,11 @@ void OutputPtw::addEx2Ellie(HmiWidget::TWidget* widget) {
 }
 
 void OutputPtw::proExVarMapping(HmiWidget::TWidget* widget) {
-	if (ProjectName_ == PRO_GASSTATION) {
-		addEx2GasStation(widget);
+	if (externalInterface_.isFunctionIcon(ProjectName_)) {
+		externalInterface_.addEx2FuncitonIcon(widget);
 	} else if (ProjectName_ == PRO_ELLIE) {
 		addEx2Ellie(widget);
 	}
-
 }
 
 void OutputPtw::triggerTest() {
@@ -1980,7 +2007,12 @@ void OutputPtw::WriteAsset(std::string filePath) {
 	externalScaleData(widget);
 	std::string animation_interal = "";
 	ConvertCurveInfo(widget, animation_interal);
+	if (ProjectName_ == PRO_ELLIE) {
+		externalInterface_.createSlideNode(widget);
+	}
 	ConvertBind(widget, NodeDataManager::GetInstance().root());
+
+	//externalInterface_.slideTargetStartOffset(widget);  // 需要修改的地方，需要删除其中一个
 	externalSysUniformData(widget);
 	proExVarMapping(widget);
 	externalColorData(widget);
@@ -2299,7 +2331,6 @@ void OutputPtw::ModifyTranslation(std::pair<std::string, std::string> curveProP,
 		curveReference->set_valuestring(curveProP.second);
 		provide->MutableExtension(HmiWidget::curve)->set_allocated_curvereference(curveReference);
 	}
-
 }
 
 void OutputPtw::CreateTranslation(std::pair<std::string, std::string> curveProP, HmiWidget::TNodeTransform* transform , raco::guiData::NodeData& node) {
@@ -3227,7 +3258,7 @@ void OutputPtw::createResourceParam(HmiWidget::TWidget* widget) {
 	for (auto materialSysUnifroms : HasResUniformMaterials_) {
 		// identifier
 		HmiWidget::TResourceParam* resParam = widget->add_resourceparam();
-		assetsFun_.ResourceParamAddIdentifier(resParam, materialSysUnifroms.first + "_Sys");  // test
+		assetsFun_.ResourceParamAddIdentifier(resParam, PTW_FRAG_SYS + materialSysUnifroms.first);
 		// resource
 		assetsFun_.ResourceParamAddResource(resParam, materialSysUnifroms.first);
 		// appearance
@@ -3236,7 +3267,7 @@ void OutputPtw::createResourceParam(HmiWidget::TWidget* widget) {
 			std::string strPri = SysUniformName.substr(0,4);
 			if (strPri == PTW_FRAG_SYS) {
 				std::string UniformName = SysUniformName.substr(4, SysUniformName.length());
-				if (addTrigger_) {
+				if (addTrigger_ && UniformName != PTW_EX_SLIDE_MOVE && UniformName != PTW_EX_TARGETOFFSET_MOVE && UniformName != PTW_EX_STARTOFFSET_MOVE) {
 					UniformName = "i" + UniformName;
 				}
 				assetsFun_.AddUniform2Appearance(appearance, SysUniformName, UniformName, TEProviderSource_ExtModelValue);
@@ -3266,11 +3297,24 @@ void OutputPtw::externalSysUniformData(HmiWidget::TWidget* widget) {
 		// external Opacity
 		externalDotSize(widget);
 	}
+	if (hasSysSlide_ ) {
+		if (hasSysTarOffset_ && hasSysStartOffset_) {
+			// external slide
+			externalInterface_.slideTargetStartOffset(widget);
+		}
+		else {
+			DEBUG(__FILE__, __FUNCTION__, __LINE__, " TargetOffset or StartOffset is not have!");
+		}
+	}
+	if (hasCompositionAnimation_) {
+		externalInterface_.addExCompositionAnimation(widget, addTrigger_);
+	}
+	if (hasLoopAnimation_) {
+		externalInterface_.addExLoopAnimation(widget, addTrigger_);
+	}
 
 	// resource Param
-	//for (auto materialName : HasResUniformMaterials_) {
 	createResourceParam(widget);
-	//}
 }
 
 void OutputPtw::externalAnimation(HmiWidget::TWidget* widget) {

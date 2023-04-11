@@ -112,6 +112,13 @@
 #define PTW_FRAG_SYS_OPACITY		std::string("Sys_Opacity")
 #define PTW_FRAG_SYS_DOT_OPACITY	std::string("Sys_DotOpacity")
 #define PTW_FRAG_SYS_DOT_SIZE		std::string("Sys_DotSize")
+#define PTW_FRAG_SYS_SLIDE			std::string("Sys_Slide")
+#define PTW_FRAG_SYS_TARGETOFFSET	std::string("Sys_TargetOffset")
+#define PTW_FRAG_SYS_STARTOFFSET	std::string("Sys_StartOffset")
+#define PTW_FRAG_SYS_COMPOSITIONANIMATION	std::string("Sys_CompositionAnimation")
+#define PTW_FRAG_SYS_LOOPANIMATION std::string("Sys_LoopAnimation")
+
+
 #define PTW_FRAG_SYS				std::string("Sys_")
 
 
@@ -123,6 +130,12 @@
 #define PTW_EX_HUD_CON_IPA_ICON_C	std::string("HUD_Content_IPAIconTransformation_C")
 #define PTW_EX_TRIGGLE_ANIMATION	std::string("Animation")
 #define PTW_EX_RIGHT_MIRROR			std::string("Right")
+#define PTW_EX_SLIDE_MOVE			std::string("Slide")
+#define PTW_EX_TARGETOFFSET_MOVE	std::string("TargetOffset")
+#define PTW_EX_STARTOFFSET_MOVE		std::string("StartOffset")
+#define PTW_EX_SLIDENODE_MOVE		std::string("SlideNode")
+#define PTW_EX_COMPOSITIONANIMATION std::string("CompositionAnimation")
+#define PTW_EX_LOOPANIMATION		std::string("LoopAnimation")
 
 // Sys
 #define PTW_EX_SCALE_NAME			std::string("Scale")
@@ -138,6 +151,7 @@
 // projectName
 #define PRO_ELLIE					std::string("Ellie")
 #define PRO_GASSTATION				std::string("GasStation")
+#define PRO_SNOOZING				std::string("Snoozing")
 
 
 #define PI (3.14159265358979323846)

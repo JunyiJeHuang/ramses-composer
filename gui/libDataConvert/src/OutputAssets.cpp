@@ -1898,60 +1898,12 @@ void OutputPtw::ConvertBind(HmiWidget::TWidget* widget, raco::guiData::NodeData&
 	}
 }
 
-void OutputPtw::addEx2Ellie(HmiWidget::TWidget* widget) {
-	// Right
-	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
-	externalModelValue->set_allocated_key(assetsFun_.Key(ptwExRightMirror));
-	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(0.0));
-
-	// RightGreater0
-	{
-		HmiWidget::TInternalModelParameter* internalModelCompare = widget->add_internalmodelvalue();
-		TDataBinding Operand1;
-		Operand1.set_allocated_key(assetsFun_.Key(ptwExRightMirror));
-		Operand1.set_allocated_provider(assetsFun_.ProviderSrc(TEProviderSource_ExtModelValue));
-		TDataBinding Operand2;
-		Operand2.set_allocated_provider(assetsFun_.ProviderNumeric(0));
-		assetsFun_.CompareOperation(internalModelCompare, ptwExRightMirror + "Greater0", Operand1, TEDataType_Float, Operand2, TEDataType_Float, TEOperatorType_Greater);
-	}
-	// RightValue
-	{
-		HmiWidget::TInternalModelParameter* internalModelIfThenElse = widget->add_internalmodelvalue();
-		TDataBinding Operand1;
-		Operand1.set_allocated_key(assetsFun_.Key(ptwExRightMirror + "Greater0"));
-		Operand1.set_allocated_provider(assetsFun_.ProviderSrc(TEProviderSource_IntModelValue));
-		TDataBinding Operand2;
-		Operand2.set_allocated_provider(assetsFun_.ProviderNumeric(-1));
-		TDataBinding Operand3;
-		Operand3.set_allocated_provider(assetsFun_.ProviderNumeric(1));
-		assetsFun_.IfThenElse(internalModelIfThenElse, ptwExRightMirror + "Value", Operand1, TEDataType_Bool, Operand2, TEDataType_Float, Operand3, TEDataType_Float);
-	}
-	// scale * RightValue
-	{
-		std::vector<TDataBinding> Operands;
-		HmiWidget::TInternalModelParameter* internalModelMul = widget->add_internalmodelvalue();
-		TDataBinding Operand1;
-		if (NodeScaleSize_ != 1) {
-			Operand1.set_allocated_key(assetsFun_.Key(PTW_SCALE_DIV_MUL_VALUE));
-		} else {
-			Operand1.set_allocated_key(assetsFun_.Key(PTW_SCALE_DIVIDE_VALUE));
-		}
-
-		Operand1.set_allocated_provider(assetsFun_.ProviderSrc(TEProviderSource_IntModelValue));
-		Operands.push_back(Operand1);
-		TDataBinding Operand2;
-		Operand2.set_allocated_key(assetsFun_.Key(ptwExRightMirror + "Value"));
-		Operand2.set_allocated_provider(assetsFun_.ProviderSrc(TEProviderSource_IntModelValue));
-		Operands.push_back(Operand2);
-		assetsFun_.operatorOperands(internalModelMul, PTW_SCALE_DIVIDE_MIRROR, TEDataType_Float, Operands, TEOperatorType_Mul);
-	}
-}
-
+// Unable to judge by uniform, additional interface that needs special handling
 void OutputPtw::proExVarMapping(HmiWidget::TWidget* widget) {
 	if (externalInterface_.isFunctionIcon(ProjectName_)) {
 		externalInterface_.addEx2FunctionIcon(widget);
 	} else if (ProjectName_ == PRO_ELLIE) {
-		addEx2Ellie(widget);
+		externalInterface_.addExMirror(widget, NodeScaleSize_, addTrigger_);
 	}
 }
 
@@ -3181,9 +3133,6 @@ void OutputPtw::switchAnimations(HmiWidget::TWidget* widget) {
 		HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
 		externalModelValue->set_allocated_key(assetsFun_.Key(animationName));
 		externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(1.0));
-
-		//HmiWidget::TExternalModelParameter* externalModel = widget->add_externalmodelvalue();
-		//assetsFun_.externalKeyVariant(externalModel, "UsedAnimationName", assetsFun_.VariantAsciiString(animationName));
 	}
 }
 
@@ -3235,25 +3184,6 @@ void OutputPtw::externalScaleData(HmiWidget::TWidget* widget) {
 	assetsFun_.TransformCreateScale(transform, operandX, operandY, operandZ);
 }
 
-// add exteral Opacity
-void OutputPtw::externalOpacity(HmiWidget::TWidget* widget) {
-	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
-	externalModelValue->set_allocated_key(assetsFun_.Key(ptwExOpacityName));
-	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(1.0));
-}
-
-void OutputPtw::externalDotOpacity(HmiWidget::TWidget* widget) {
-	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
-	externalModelValue->set_allocated_key(assetsFun_.Key(ptwExDotOpacity));
-	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(1.0));
-}
-
-void OutputPtw::externalDotSize(HmiWidget::TWidget* widget) {
-	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
-	externalModelValue->set_allocated_key(assetsFun_.Key(ptwExDotSize));
-	externalModelValue->set_allocated_variant(assetsFun_.VariantNumeric(1.0));
-}
-
 void OutputPtw::createResourceParam(HmiWidget::TWidget* widget) {
 	for (auto materialSysUnifroms : HasResUniformMaterials_) {
 		// identifier
@@ -3287,15 +3217,15 @@ void OutputPtw::externalSysUniformData(HmiWidget::TWidget* widget) {
 	}
 	if (hasSysOpacity_) {
 		// external Opacity
-		externalOpacity(widget);
+		externalInterface_.externalOpacity(widget, addTrigger_);
 	}
 	if (hasSysDotOpacity_) {
-		// external Opacity
-		externalDotOpacity(widget);
+		// external Dot Opacity
+		externalInterface_.externalDotOpacity(widget, addTrigger_);
 	}
 	if (hasSysDotSize_) {
-		// external Opacity
-		externalDotSize(widget);
+		// external Dot Size
+		externalInterface_.externalDotSize(widget, addTrigger_);
 	}
 	if (hasSysSlide_ ) {
 		if (hasSysTarOffset_ && hasSysStartOffset_) {

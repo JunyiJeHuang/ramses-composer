@@ -133,7 +133,7 @@ private:
 
 	void externalSysUniformData(HmiWidget::TWidget* widget);
 	void externalAnimation(HmiWidget::TWidget* widget);
-	void externalOpacity(HmiWidget::TWidget* widget);
+	//void externalOpacity(HmiWidget::TWidget* widget);
 	void createResourceParam(HmiWidget::TWidget* widget);
 
 	void externalColorData(HmiWidget::TWidget* widget);
@@ -152,12 +152,12 @@ private:
 	void proExVarMapping(HmiWidget::TWidget* widget);
 	bool getAnimationInteral(std::string curveName, std::string& animationInteral);
 	//void externalDotbackground(HmiWidget::TWidget* widget);
-	void externalDotOpacity(HmiWidget::TWidget* widget);
+	//void externalDotOpacity(HmiWidget::TWidget* widget);
 
-	void externalDotSize(HmiWidget::TWidget* widget);
+	//void externalDotSize(HmiWidget::TWidget* widget);
 	void triggerTest();
 
-	void addEx2Ellie(HmiWidget::TWidget* widget);
+	//void addExMirror(HmiWidget::TWidget* widget);
 
 	void triggerByExMultiAnimation(HmiWidget::TWidget* widget);
 	void setUniformOperation(guiData::Uniform& vecUniform, TOperation* operation, std::string* curveNameArr, std::string* multiCurveOrAnimationName);

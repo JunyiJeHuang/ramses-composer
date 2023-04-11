@@ -38,6 +38,11 @@ public:
 	void addExCompositionAnimation(HmiWidget::TWidget* widget,bool addTrigger);
 	void addExLoopAnimation(HmiWidget::TWidget* widget,bool addTrigger);
 
+	void externalOpacity(HmiWidget::TWidget* widget, bool addTrigger);
+	void externalDotOpacity(HmiWidget::TWidget* widget, bool addTrigger);
+	void externalDotSize(HmiWidget::TWidget* widget, bool addTrigger);
+	void addExMirror(HmiWidget::TWidget* widget, int NodeScaleSize_, bool addTrigger);
+
 private:
 	AssetsFunction assetFunction_;
 };

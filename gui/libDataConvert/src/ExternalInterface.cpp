@@ -47,7 +47,7 @@ void ExternalInterface::addExLoopAnimation(HmiWidget::TWidget* widget, bool addT
 	externalModelValue->set_allocated_key(assetFunction_.Key(ptwExLoopAnimation));
 	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(0.0));
 }
-
+// External interface for controlling uniform properties
 void ExternalInterface::addEx2FunctionIcon(HmiWidget::TWidget* widget) {
 	// eParam_ScrollAreaDirection
 	HmiWidget::TExternalModelParameter* externalModel = widget->add_externalmodelvalue();
@@ -179,5 +179,98 @@ HmiWidget::TUniform ExternalInterface::createSlideUniform() {
 	assetFunction_.CreateHmiWidgetUniform(&uniform, name, value, src);
 	return uniform;
 }
+
+// add exteral Opacity
+void ExternalInterface::externalOpacity(HmiWidget::TWidget* widget, bool addTrigger) {
+	std::string ptwExOpacityName;
+	if (addTrigger) {
+		ptwExOpacityName = "i" + PTW_EX_OPACITY_NAME;
+	} else {
+		ptwExOpacityName = PTW_EX_OPACITY_NAME;
+	}
+	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
+	externalModelValue->set_allocated_key(assetFunction_.Key(ptwExOpacityName));
+	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(1.0));
+}
+
+void ExternalInterface::externalDotOpacity(HmiWidget::TWidget* widget, bool addTrigger) {
+	std::string ptwExDotOpacity;
+	if (addTrigger) {
+		ptwExDotOpacity = "i" + PTW_EX_DOT_OPACITY;
+	} else {
+		ptwExDotOpacity = PTW_EX_DOT_OPACITY;
+	}
+	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
+	externalModelValue->set_allocated_key(assetFunction_.Key(ptwExDotOpacity));
+	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(1.0));
+}
+
+void ExternalInterface::externalDotSize(HmiWidget::TWidget* widget, bool addTrigger) {
+	std::string ptwExDotSize;
+	if (addTrigger) {
+		ptwExDotSize = "i" + PTW_EX_DOT_SIZE;
+	} else {
+		ptwExDotSize = PTW_EX_DOT_SIZE;
+	}
+	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
+	externalModelValue->set_allocated_key(assetFunction_.Key(ptwExDotSize));
+	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(1.0));
+}
+
+void ExternalInterface::addExMirror(HmiWidget::TWidget* widget, int NodeScaleSize, bool addTrigger) {
+	std::string ptwExRightMirror;
+	if (addTrigger) {
+		ptwExRightMirror = "i" + PTW_EX_RIGHT_MIRROR;
+	} else {
+		ptwExRightMirror = PTW_EX_RIGHT_MIRROR;
+	}
+	// Right
+	HmiWidget::TExternalModelParameter* externalModelValue = widget->add_externalmodelvalue();
+	externalModelValue->set_allocated_key(assetFunction_.Key(ptwExRightMirror));
+	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(0.0));
+
+	// RightGreater0
+	{
+		HmiWidget::TInternalModelParameter* internalModelCompare = widget->add_internalmodelvalue();
+		TDataBinding Operand1;
+		Operand1.set_allocated_key(assetFunction_.Key(ptwExRightMirror));
+		Operand1.set_allocated_provider(assetFunction_.ProviderSrc(TEProviderSource_ExtModelValue));
+		TDataBinding Operand2;
+		Operand2.set_allocated_provider(assetFunction_.ProviderNumeric(0));
+		assetFunction_.CompareOperation(internalModelCompare, ptwExRightMirror + "Greater0", Operand1, TEDataType_Float, Operand2, TEDataType_Float, TEOperatorType_Greater);
+	}
+	// RightValue
+	{
+		HmiWidget::TInternalModelParameter* internalModelIfThenElse = widget->add_internalmodelvalue();
+		TDataBinding Operand1;
+		Operand1.set_allocated_key(assetFunction_.Key(ptwExRightMirror + "Greater0"));
+		Operand1.set_allocated_provider(assetFunction_.ProviderSrc(TEProviderSource_IntModelValue));
+		TDataBinding Operand2;
+		Operand2.set_allocated_provider(assetFunction_.ProviderNumeric(-1));
+		TDataBinding Operand3;
+		Operand3.set_allocated_provider(assetFunction_.ProviderNumeric(1));
+		assetFunction_.IfThenElse(internalModelIfThenElse, ptwExRightMirror + "Value", Operand1, TEDataType_Bool, Operand2, TEDataType_Float, Operand3, TEDataType_Float);
+	}
+	// scale * RightValue
+	{
+		std::vector<TDataBinding> Operands;
+		HmiWidget::TInternalModelParameter* internalModelMul = widget->add_internalmodelvalue();
+		TDataBinding Operand1;
+		if (NodeScaleSize != 1) {
+			Operand1.set_allocated_key(assetFunction_.Key(PTW_SCALE_DIV_MUL_VALUE));
+		} else {
+			Operand1.set_allocated_key(assetFunction_.Key(PTW_SCALE_DIVIDE_VALUE));
+		}
+
+		Operand1.set_allocated_provider(assetFunction_.ProviderSrc(TEProviderSource_IntModelValue));
+		Operands.push_back(Operand1);
+		TDataBinding Operand2;
+		Operand2.set_allocated_key(assetFunction_.Key(ptwExRightMirror + "Value"));
+		Operand2.set_allocated_provider(assetFunction_.ProviderSrc(TEProviderSource_IntModelValue));
+		Operands.push_back(Operand2);
+		assetFunction_.operatorOperands(internalModelMul, PTW_SCALE_DIVIDE_MIRROR, TEDataType_Float, Operands, TEOperatorType_Mul);
+	}
+}
+
 
 }  // namespace raco::dataConvert

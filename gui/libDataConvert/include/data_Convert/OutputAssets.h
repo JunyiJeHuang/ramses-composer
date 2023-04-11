@@ -83,7 +83,7 @@ public:
 	void writeMaterial2MaterialLib(HmiScenegraph::TMaterialLib* materialLibrary);
 	void writeMaterialLib2Ptx(QString& filePath, QString& oldPath, HmiScenegraph::TMaterialLib* materialLibrary);
 	void isNotAddedAttribute(std::string name);
-	void GasStation(Uniform data, HmiScenegraph::TUniform& tUniform);
+	void functionIconUniform(Uniform data, HmiScenegraph::TUniform& tUniform);
 
 private:
 	bool isPtxOutputError_{false};

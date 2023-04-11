@@ -32,7 +32,7 @@ public:
 	void createSlideNode(HmiWidget::TWidget* widget);
 	HmiWidget::TUniform createSlideUniform();
 	bool isFunctionIcon(std::string proName);
-	void addEx2FuncitonIcon(HmiWidget::TWidget* widget);
+	void addEx2FunctionIcon(HmiWidget::TWidget* widget);
 
 	void SnoozingUniqueExInterface(HmiWidget::TWidget* widget, bool addTrigger);
 	void addExCompositionAnimation(HmiWidget::TWidget* widget,bool addTrigger);

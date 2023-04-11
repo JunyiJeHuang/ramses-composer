@@ -970,7 +970,7 @@ void OutputPtx::setMaterialRenderMode(RenderMode& renderMode, HmiScenegraph::TRe
 }
 
 // special case
-void OutputPtx::GasStation(Uniform data, HmiScenegraph::TUniform& tUniform) {
+void OutputPtx::functionIconUniform(Uniform data, HmiScenegraph::TUniform& tUniform) {
 	tUniform.set_name(data.getName());
 	TNumericValue* tNumericValue = new TNumericValue();
 	TMatrix4x4f* tMat4f = new TMatrix4x4f();
@@ -986,7 +986,7 @@ void OutputPtx::GasStation(Uniform data, HmiScenegraph::TUniform& tUniform) {
 
 void OutputPtx::uniformTypeValue(Uniform data, HmiScenegraph::TUniform& tUniform) {
 	if (data.getName() == "u_ScrollAreaInverseWorldTransformation") {
-		GasStation(data, tUniform);
+		functionIconUniform(data, tUniform);
 		return;
 	}
 	tUniform.set_name(data.getName());
@@ -1949,7 +1949,7 @@ void OutputPtw::addEx2Ellie(HmiWidget::TWidget* widget) {
 
 void OutputPtw::proExVarMapping(HmiWidget::TWidget* widget) {
 	if (externalInterface_.isFunctionIcon(ProjectName_)) {
-		externalInterface_.addEx2FuncitonIcon(widget);
+		externalInterface_.addEx2FunctionIcon(widget);
 	} else if (ProjectName_ == PRO_ELLIE) {
 		addEx2Ellie(widget);
 	}

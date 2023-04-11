@@ -48,7 +48,7 @@ void ExternalInterface::addExLoopAnimation(HmiWidget::TWidget* widget, bool addT
 	externalModelValue->set_allocated_variant(assetFunction_.VariantNumeric(0.0));
 }
 
-void ExternalInterface::addEx2FuncitonIcon(HmiWidget::TWidget* widget) {
+void ExternalInterface::addEx2FunctionIcon(HmiWidget::TWidget* widget) {
 	// eParam_ScrollAreaDirection
 	HmiWidget::TExternalModelParameter* externalModel = widget->add_externalmodelvalue();
 	assetFunction_.externalKeyVariant(externalModel, "eParam_ScrollAreaDirection", assetFunction_.VariantScrollAreaDirection(TEScrollAreaDirection::TEScrollAreaDirection_Disabled));

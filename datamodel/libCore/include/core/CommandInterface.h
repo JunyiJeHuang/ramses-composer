@@ -98,7 +98,7 @@ public:
 	// Delete set of objects
 	// Returns number of actually deleted objects which may be larger than the passed in vector
 	// since dependent objects may need to be included.
-	size_t deleteObjects(std::vector<SEditorObject> const& objects);
+    size_t deleteObjects(std::vector<SEditorObject> const& objects, bool deleteSource = false);
 
 	// Move scenegraph nodes to new parent at a position before the specified index.
 	// - If ValueHandle is invalid/empty the scenegraph parent is removed.
@@ -159,6 +159,7 @@ private:
 
 	bool checkHandleForSet(ValueHandle const& handle);
 	bool checkScalarHandleForSet(ValueHandle const& handle, PrimitiveType type);
+    void deleteUsedResource(const ValueHandle &handle);
 
 	BaseContext* context_;
 	UndoStack* undoStack_;

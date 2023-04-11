@@ -130,6 +130,9 @@ protected Q_SLOTS:
 	void restoreItemExpansionStates();
 	void restoreItemSelectionStates();
 	void expandAllParentsOfObject(const QModelIndex &index);
+    void requestExamples(SEditorObject object, std::string mesh, std::string material);
+    void createResources(const QString path, const QSet<QString> files);
+    void deleteResources(const QString path, const QSet<QString> files);
 
 private:
     void computeWorldMatrix(ValueHandle handle, QMatrix4x4 &chainMatrix);

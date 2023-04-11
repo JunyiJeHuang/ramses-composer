@@ -297,18 +297,20 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
                 QVector3D ray = (QVector3D(ray_world.x(), ray_world.y(), ray_world.z()) - position).normalized();
 
                 // caculate Ray Intersection; return: node objectID
-                std::string objectID = caculateRayIntersection(ray, position);
+                selModelID_ = caculateRayIntersection(ray, position);
 
                 // select node
-                if (!objectID.empty()) {
-                    Q_EMIT signal::signalProxy::GetInstance().sigSwitchObjectNode(QString::fromStdString(objectID));
-                }
+                Q_EMIT signal::signalProxy::GetInstance().sigSwitchObjectNode(QString::fromStdString(selModelID_));
             }
         }
     }
 }
 
 void PreviewMainWindow::mouseReleaseEvent(QMouseEvent *event) {
+
+}
+
+void PreviewMainWindow::mouseMoveEvent(QMouseEvent *event) {
 
 }
 

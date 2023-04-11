@@ -48,44 +48,86 @@ std::array<double, 3> eulerAngle(double lastX, double lastY, double lastZ, doubl
     return {eulerX, eulerY, eulerZ};
 }
 
+std::array<double, 3> quaternionToZYXDegrees(double qX, double qY, double qZ, double qW) {
+    // Compute 3x3 rotation matrix as intermediate representation
+    const float x2 = qX + qX;
+    const float y2 = qY + qY;
+    const float z2 = qZ + qZ;
+    const float xx = qX * x2;
+    const float xy = qX * y2;
+    const float xz = qX * z2;
+    const float yy = qY * y2;
+    const float yz = qY * z2;
+    const float zz = qZ * z2;
+    const float wx = qW * x2;
+    const float wy = qW * y2;
+    const float wz = qW * z2;
+
+    const float m11 = (1 - (yy + zz));
+//      const float m12 = (xy - wz);
+    const float m21 = (xy + wz);
+    const float m22 = (1 - (xx + zz));
+    const float m31 = (xz - wy);
+    const float m32 = (yz + wx);
+//      const float m13 = (xz + wy);
+    const float m23 = (yz - wx);
+    const float m33 = (1 - (xx + yy));
+
+    float eulerX = 0.f;
+    float eulerY = 0.f;
+    float eulerZ = 0.f;
+    double cy = sqrtf(m11 * m11 + m21 * m21);
+    if (cy > 16 * FLT_EPSILON) {
+        eulerX = atan2f(m32, m33);
+        eulerY = atan2f(-m31, cy);
+        eulerZ = atan2f(m21, m11);
+    } else {
+        eulerX = atan2f(-m23, m22);
+        eulerY = atan2f(-m31, cy);
+        eulerZ = 0;
+    }
+
+    return {glm::degrees(eulerX), glm::degrees(eulerY), glm::degrees(eulerZ)};
+}
+
 std::array<double, 3> quaternionToXYZDegrees(double qX, double qY, double qZ, double qW) {
-    qW = keepFourPrecision(qW);
-	// algorithm copied from ramses-logic (RotationUtils.cpp)
-	// to align our quaternion calculation with ramses-logic's when using quaternion links
+    // algorithm copied from ramses-logic (RotationUtils.cpp)
+    // to align our quaternion calculation with ramses-logic's when using quaternion links
 
     // Compute 3x3 rotation matrix as intermediate representation
-	const float x2 = qX + qX;
-	const float y2 = qY + qY;
-	const float z2 = qZ + qZ;
-	const float xx = qX * x2;
-	const float xy = qX * y2;
-	const float xz = qX * z2;
-	const float yy = qY * y2;
-	const float yz = qY * z2;
-	const float zz = qZ * z2;
-	const float wx = qW * x2;
-	const float wy = qW * y2;
-	const float wz = qW * z2;
+    const float x2 = qX + qX;
+    const float y2 = qY + qY;
+    const float z2 = qZ + qZ;
+    const float xx = qX * x2;
+    const float xy = qX * y2;
+    const float xz = qX * z2;
+    const float yy = qY * y2;
+    const float yz = qY * z2;
+    const float zz = qZ * z2;
+    const float wx = qW * x2;
+    const float wy = qW * y2;
+    const float wz = qW * z2;
 
-	const float m11 = (1 - (yy + zz));
+    const float m11 = (1 - (yy + zz));
     const float m12 = (xy - wz);
     const float m22 = (1 - (xx + zz));
-	const float m32 = (yz + wx);
+    const float m32 = (yz + wx);
     const float m13 = (xz + wy);
     const float m23 = (yz - wx);
-	const float m33 = (1 - (xx + yy));
+    const float m33 = (1 - (xx + yy));
 
-	// Compute euler XYZ angles from matrix values
-	float eulerX = 0.f;
-    const float eulerY = std::asin(std::clamp(m13, -1.f, 1.f)); // eulerY = asin(2xz + 2wy)
-	float eulerZ = 0.f;
+    // Compute euler XYZ angles from matrix values
+    float eulerX = 0.f;
+    const float eulerY = std::asin(std::clamp(m13, -1.f, 1.f));
+    float eulerZ = 0.f;
     if (std::abs(m13) < 1.f) {
-        eulerX = std::atan2(-m23, m33); // eulerX = atan2(2xw - 2yz, 1 - 2xx - 2yy)
-        eulerZ = std::atan2(-m12, m11); // eulerZ = atan2(2wz - 2xy, 1 - 2yy - 2zz)
+        eulerX = std::atan2(-m23, m33);
+        eulerZ = std::atan2(-m12, m11);
     } else {
-        eulerX = std::atan2(m32, m22);  // eulerX = atan2(2yz + 2xw, 1 - 2xx - 2zz)
+        eulerX = std::atan2(m32, m22);
     }
-    return {keepFourPrecision(glm::degrees(eulerX)), keepFourPrecision(glm::degrees(eulerY)), keepFourPrecision(glm::degrees(eulerZ))};
+
+    return {glm::degrees(eulerX), glm::degrees(eulerY), glm::degrees(eulerZ)};
 }
 
 uint16_t twoBytesToHalfFloat(unsigned char firstByte, unsigned char secondByte) {

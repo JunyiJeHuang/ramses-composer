@@ -135,7 +135,9 @@ void RaCoApplication::switchActiveRaCoProject(const QString& file, std::function
 		throw std::runtime_error(fmt::format("RamsesLogic feature level {} outside valid range ({} ... {})", featureLevel, static_cast<int>(raco::ramses_base::BaseEngineBackend::minFeatureLevel), static_cast<int>(raco::ramses_base::BaseEngineBackend::maxFeatureLevel)));
 	}
 	if (file.isEmpty()) {
-		activeProject_ = RaCoProject::createNew(this, createDefaultScene, static_cast<int>(featureLevel == -1 ? applicationFeatureLevel_ : featureLevel));
+        QString path = components::RaCoPreferences::instance().userProjectsDirectory + "/StandardProject.rca";
+        activeProject_ = RaCoProject::loadFromFile(path, this, loadContext, false, featureLevel, generateNewObjectIDs);
+//		activeProject_ = RaCoProject::createNew(this, createDefaultScene, static_cast<int>(featureLevel == -1 ? applicationFeatureLevel_ : featureLevel));
 	} else {
 		activeProject_ = RaCoProject::loadFromFile(file, this, loadContext, false, featureLevel, generateNewObjectIDs);
 	}

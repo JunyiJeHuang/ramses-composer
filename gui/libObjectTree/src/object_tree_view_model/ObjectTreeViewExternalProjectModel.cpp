@@ -237,7 +237,7 @@ bool ObjectTreeViewExternalProjectModel::isObjectAllowedIntoIndex(const QModelIn
 	return false;
 }
 
-size_t ObjectTreeViewExternalProjectModel::deleteObjectsAtIndices(const QModelIndexList& index) {
+size_t ObjectTreeViewExternalProjectModel::deleteObjectsAtIndices(const QModelIndexList& index, bool isDelete) {
 	// Don't modify external project structure.
 	return 0;
 }

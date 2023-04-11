@@ -16,6 +16,27 @@ set(RESOURCE_FILES
 	images/text-left.png
 	images/text-right.png
 	images/DuckCM.png
+        images/6_side_map/Default_Cube/nx.png
+        images/6_side_map/Default_Cube/ny.png
+        images/6_side_map/Default_Cube/nz.png
+        images/6_side_map/Default_Cube/px.png
+        images/6_side_map/Default_Cube/py.png
+        images/6_side_map/Default_Cube/pz.png
+        images/6_side_map/Mountain_Cube/nx.png
+        images/6_side_map/Mountain_Cube/ny.png
+        images/6_side_map/Mountain_Cube/nz.png
+        images/6_side_map/Mountain_Cube/px.png
+        images/6_side_map/Mountain_Cube/py.png
+        images/6_side_map/Mountain_Cube/pz.png
+        images/6_side_map/Night_Cube/negx.png
+        images/6_side_map/Night_Cube/negy.png
+        images/6_side_map/Night_Cube/negz.png
+        images/6_side_map/Night_Cube/posx.png
+        images/6_side_map/Night_Cube/posy.png
+        images/6_side_map/Night_Cube/posz.png
+        images/DefaultMap/black.png
+        images/DefaultMap/bump.png
+        images/DefaultMap/white.png
 	meshes/Duck.glb
 	meshes/meshless.gltf
 	meshes/README.md
@@ -29,6 +50,14 @@ set(RESOURCE_FILES
 	meshes/ToyCar/ToyCar_emissive.png
 	meshes/ToyCar/ToyCar_normal.png
 	meshes/ToyCar/ToyCar_occlusion_roughness_metallic.png
+        meshes/Cube.bin
+        meshes/Cube.gltf
+        meshes/Plane.bin
+        meshes/Plane.gltf
+        meshes/Skybox.bin
+        meshes/Skybox.gltf
+        meshes/Sphere.bin
+        meshes/Sphere.gltf
 	scripts/array.lua
 	scripts/compile-error.lua
 	scripts/Heavy.lua
@@ -62,6 +91,12 @@ set(RESOURCE_FILES
 	shaders/uniform-array.vert
 	shaders/uniform-array.frag
 	shaders/simple_texture.vert
+        shaders/base.frag
+        shaders/base.vert
+        shaders/glsl_pbr_zxj.frag
+        shaders/glsl_pbr_zxj.vert
+        shaders/skybox.frag
+        shaders/skybox.vert
         scripts/luaAnimation/build.bat
         scripts/luaAnimation/build.sh
         scripts/luaAnimation/CurveModule.lua
@@ -72,6 +107,7 @@ set(RESOURCE_FILES
         scripts/luaAnimation/SharedModule.lua
         scripts/luaAnimation/UtilModule.lua
 	example_scene.rca
+        StandardProject.rca
 )
 
 foreach(relpath ${RESOURCE_FILES})

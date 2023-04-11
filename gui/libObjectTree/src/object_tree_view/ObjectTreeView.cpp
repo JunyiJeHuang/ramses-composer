@@ -25,8 +25,10 @@
 #include "object_tree_view_model/ObjectTreeViewResourceModel.h"
 #include "object_tree_view_model/ObjectTreeViewSortProxyModels.h"
 #include "MeshData/MeshDataManager.h"
+#include "user_types/MeshNode.h"
 #include "utils/u8path.h"
 #include "user_types/Texture.h"
+#include "user_types/CubeMap.h"
 #include "user_types/Node.h"
 
 #include <QContextMenuEvent>
@@ -74,7 +76,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 
 	connect(this, &QTreeView::customContextMenuRequested, this, &ObjectTreeView::showContextMenu);
 	connect(this, &QTreeView::expanded, this, &ObjectTreeView::expanded);
-	connect(this, &QTreeView::collapsed, this, &ObjectTreeView::collapsed);
+    connect(this, &QTreeView::collapsed, this, &ObjectTreeView::collapsed);
 
 	connect(this->selectionModel(), &QItemSelectionModel::selectionChanged, [this](const auto &selectedItemList, const auto &deselectedItemList) {
 		if (auto externalProjectModel = (dynamic_cast<ObjectTreeViewExternalProjectModel *>(treeModel_))) {
@@ -103,6 +105,9 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshModelMatrix, this, &ObjectTreeView::updateMeshModelMatrix);
     connect(&signalProxy::GetInstance(), &signalProxy::sigSetVisibleMeshNode, this, &ObjectTreeView::updateMeshNodeVisible);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateNodeProp_From_SubView, this, &ObjectTreeView::updateNodeProperty);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigCreateExamples, this, &ObjectTreeView::requestExamples);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigCreateResources, this, &ObjectTreeView::createResources);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigDeleteResources, this, &ObjectTreeView::deleteResources);
 
 	setColumnWidth(ObjectTreeViewDefaultModel::COLUMNINDEX_NAME, width() / 3);
 
@@ -856,7 +861,7 @@ void ObjectTreeView::globalPasteCallback(const QModelIndex &index, bool asExtRef
 void ObjectTreeView::shortcutDelete() {
 	auto selectedIndices = getSelectedIndices();
 	if (!selectedIndices.empty()) {
-		auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices);
+        auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices);
 
 		if (delObjAmount > 0) {
 			selectionModel()->Q_EMIT selectionChanged({}, {});
@@ -1017,6 +1022,49 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 		}
 	}
 
+    if (viewTitle_.compare("Scene Graph") == 0) {
+
+        auto actionCreateCube = treeViewMenu->addAction(QString::fromStdString("Create Cube"), [this, insertionTargetIndex]() {
+            Q_EMIT dockSelectionFocusRequested(this);
+
+            selectedItemIDs_.clear();
+            auto createdObject = treeModel_->createNewObject("MeshNode", "Cube", insertionTargetIndex);
+            selectedItemIDs_.insert(createdObject->objectID());
+
+            Q_EMIT signal::signalProxy::GetInstance().sigCreateExamples(createdObject, "Cube", "Unlit");
+        });
+
+        auto actionCreateSphere = treeViewMenu->addAction(QString::fromStdString("Create Sphere"), [this, insertionTargetIndex]() {
+            Q_EMIT dockSelectionFocusRequested(this);
+
+            selectedItemIDs_.clear();
+            auto createdObject = treeModel_->createNewObject("MeshNode", "Sphere", insertionTargetIndex);
+            selectedItemIDs_.insert(createdObject->objectID());
+
+            Q_EMIT signal::signalProxy::GetInstance().sigCreateExamples(createdObject, "Sphere", "Lit");
+        });
+
+        auto actionCreateSkybox = treeViewMenu->addAction(QString::fromStdString("Create Skybox"), [this, insertionTargetIndex]() {
+            Q_EMIT dockSelectionFocusRequested(this);
+
+            selectedItemIDs_.clear();
+            auto createdObject = treeModel_->createNewObject("MeshNode", "Skybox", insertionTargetIndex);
+            selectedItemIDs_.insert(createdObject->objectID());
+
+            Q_EMIT signal::signalProxy::GetInstance().sigCreateExamples(createdObject, "Skybox", "Skybox");
+        });
+
+        auto actionCreatePlane = treeViewMenu->addAction(QString::fromStdString("Create Plane"), [this, insertionTargetIndex]() {
+            Q_EMIT dockSelectionFocusRequested(this);
+
+            selectedItemIDs_.clear();
+            auto createdObject = treeModel_->createNewObject("MeshNode", "Plane", insertionTargetIndex);
+            selectedItemIDs_.insert(createdObject->objectID());
+
+            Q_EMIT signal::signalProxy::GetInstance().sigCreateExamples(createdObject, "Plane", "Unlit");
+        });
+    }
+
 	if (canInsertMeshAsset) {
 		treeViewMenu->addSeparator();
 
@@ -1042,7 +1090,27 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 
 	auto actionDelete = treeViewMenu->addAction(
 		"Delete", [this, selectedItemIndices]() {
-			treeModel_->deleteObjectsAtIndices(selectedItemIndices);
+            bool isResource = false;
+            std::vector<core::SEditorObject> editorObjects = treeModel_->indicesToSEditorObjects(selectedItemIndices);
+            for (const auto &obj : editorObjects) {
+                std::string typeName = obj.get()->getTypeDescription().typeName;
+                if (typeName == raco::user_types::Texture::typeDescription.typeName || typeName == raco::user_types::Material::typeDescription.typeName ||
+                        typeName == raco::user_types::CubeMap::typeDescription.typeName) {
+                    isResource = true;
+                }
+            }
+            bool isDelete = false;
+            if (isResource) {
+                QMessageBox::StandardButton resBtn = QMessageBox::question(this, "Ramses Composer",
+                    tr("Delete source file?\n"),
+                    QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+                    QMessageBox::Yes);
+                if (resBtn == QMessageBox::Cancel) {
+                    return;
+                }
+                isDelete = resBtn == QMessageBox::Yes ? true : false;
+            }
+            treeModel_->deleteObjectsAtIndices(selectedItemIndices, isDelete);
 			selectionModel()->Q_EMIT selectionChanged({}, {});
 		},
 		QKeySequence::Delete);
@@ -1306,6 +1374,128 @@ void ObjectTreeView::expandAllParentsOfObject(const QModelIndex &index) {
 		if (!isExpanded(parentIndex)) {
 			expand(parentIndex);
 		}
+    }
+}
+
+void ObjectTreeView::requestExamples(SEditorObject object, std::string mesh, std::string material) {
+    auto findObject = [&, this](std::string type, std::string objectName)->core::SEditorObject {
+        int row = model()->rowCount();
+        for (int i{0}; i < row; ++i) {
+            // set mesh
+            QModelIndex index = model()->index(i, 0);
+            if (proxyModel_) {
+                QModelIndex itemIndex = index;
+                itemIndex = proxyModel_->mapToSource(index);
+                ObjectTreeNode *node = treeModel_->indexToTreeNode(itemIndex);
+                if (node) {
+                    if (node->getTypeName().compare(type) == 0) {
+                        for (int j{0}; j < node->childCount(); ++j) {
+                            QModelIndex childIndex = model()->index(j, 0, index);
+                            auto handle = indexToSEditorObject(childIndex);
+                            if (handle) {
+                                if (handle->objectName().compare(objectName) == 0) {
+                                    return handle;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return core::SEditorObject();
+    };
+
+    if (viewTitle_.compare("Resources") == 0 && object) {
+        raco::core::ValueHandle valueHandle(object);
+
+        if (valueHandle) {
+            if (valueHandle.hasProperty("mesh")) {
+                auto meshObject = findObject("Mesh", mesh);
+                if (!meshObject) {
+                    return;
+                    // TBD
+                }
+                raco::core::ValueHandle meshHandle = valueHandle.get("mesh");
+                commandInterface_->set(meshHandle, meshObject);
+
+                auto meterialObject = findObject("Material", material);
+                if (!meterialObject) {
+                    return;
+                    // TBD
+                }
+                raco::core::ValueHandle materialsHandle = valueHandle.get("materials");
+                raco::core::ValueHandle materialHandle = materialsHandle.get("material").get("material");
+                commandInterface_->set(materialHandle, meterialObject);
+            }
+        }
+    }
+}
+
+void ObjectTreeView::createResources(const QString path, const QSet<QString> files) {
+    if (viewTitle_.compare("Resources") == 0) {
+        for (const auto &file : files) {
+            if (file.contains(".png")) {
+                QString name = file.section(".png", 0, 0);
+                auto object = treeModel_->createNewObject("Texture", name.toStdString());
+                raco::core::ValueHandle handle(object);
+                if (handle.hasProperty("uri")) {
+                    raco::core::ValueHandle uriHandle = handle.get("uri");
+                    std::string uri = path.toStdString() + "/" + file.toStdString();
+                    commandInterface_->set(uriHandle, uri);
+                }
+            }
+        }
+    }
+}
+
+void ObjectTreeView::deleteResources(const QString path, const QSet<QString> files) {
+    auto findResource = [&, this](QString name, QModelIndex &tIndex)->raco::core::ValueHandle {
+        int row = model()->rowCount();
+        for (int i{0}; i < row; ++i) {
+            QModelIndex index = model()->index(i, 0);
+            if (proxyModel_) {
+                QModelIndex itemIndex = index;
+                itemIndex = proxyModel_->mapToSource(index);
+                ObjectTreeNode *node = treeModel_->indexToTreeNode(itemIndex);
+                if (node) {
+                    if (node->getTypeName().compare("Texture") == 0) {
+                        for (int j{0}; j < node->childCount(); ++j) {
+                            QModelIndex childIndex = model()->index(j, 0, index);
+                            auto handle = indexToSEditorObject(childIndex);
+                            if (handle) {
+                                if (handle->objectName().compare(name.toStdString()) == 0) {
+                                    tIndex = childIndex;
+                                    return handle;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return raco::core::ValueHandle();
+    };
+
+    if (viewTitle_.compare("Resources") == 0) {
+        for (const auto &file : files) {
+            if (file.contains(".png")) {
+                QString name = file.section(".png", 0, 0);
+                QModelIndex index;
+                auto handle = findResource(name, index);
+                if (handle) {
+                    if (handle.hasProperty("uri")) {
+                        raco::core::ValueHandle uriHandle = handle.get("uri");
+                        std::string uri = path.toStdString() + "/" + file.toStdString();
+                        if (uriHandle.asString().compare(uri) == 0) {
+                            if (proxyModel_) {
+                                index = proxyModel_->mapToSource(index);
+                                treeModel_->deleteObjectsAtIndices(QModelIndexList() << index);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

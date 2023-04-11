@@ -17,7 +17,7 @@
 #define PROP_Z              std::string(".z")
 #define GLTF_OBJECT_NAME            std::string("objectName")
 #define GLTF_ANIMATION_CHANNELS     std::string("animationChannels")
-#define GLTF_ANIMATION_OUTPUTS      std::string("animationOutputs")
+#define GLTF_ANIMATION_OUTPUTS      std::string("outputs")
 #define ROTATION_X          0
 #define ROTATION_Y          1
 #define ROTATION_Z          2

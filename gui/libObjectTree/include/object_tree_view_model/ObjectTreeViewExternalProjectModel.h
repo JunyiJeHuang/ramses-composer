@@ -37,7 +37,7 @@ public:
 	bool canPasteIntoIndex(const QModelIndex& index, const std::vector<core::SEditorObject>& objects, const std::set<std::string>& sourceProjectTopLevelObjectIds, bool asExtRef = false) const override;
 	
 public Q_SLOTS:
-	size_t deleteObjectsAtIndices(const QModelIndexList& index) override;
+    size_t deleteObjectsAtIndices(const QModelIndexList& index, bool isDelete = false) override;
 	void copyObjectsAtIndices(const QModelIndexList& indices, bool deepCopy) override;
 	void cutObjectsAtIndices(const QModelIndexList& indices, bool deepCut) override;
 	bool pasteObjectAtIndex(const QModelIndex& index, bool pasteAsExtref = false, std::string* outError = nullptr, const std::string& serializedObjects = RaCoClipboard::get()) override;

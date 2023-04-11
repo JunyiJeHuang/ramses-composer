@@ -2,26 +2,24 @@ local SharedModule = {}
 
 local G = {}
 
--- 初始化当前Module
 function SharedModule.init(n, v)
     G[n] = v
 end
 
--- 查找前后的兄弟关键帧
 function SharedModule.findSiblingKeyFrames(pointList, currentFrame)
     local firstPoint = pointList[1]
     local res = {}
 
     for pointIndex, point in ipairs(pointList) do
         if currentFrame < firstPoint.keyFrame then
-            -- 第一个点之前
+            -- Before the first point
             res[1] = firstPoint
             res[2] = firstPoint
             break
         end
         local nextPointe = pointList[pointIndex + 1]
         if nextPointe == nil then
-            -- 取最后一个点(当前点为最后一个点)
+            -- Take the last point (the current point is the last point)
             if currentFrame >= point.keyFrame then
                 res[1] = point
                 res[2] = point
@@ -38,8 +36,7 @@ function SharedModule.findSiblingKeyFrames(pointList, currentFrame)
     return res
 end
 
--- 获取默认值
-function SharedModule.getDefaultValue(name, key)
+function SharedModule.getDefaultValue(name, key, activeAnimaName)
     local item = G.defaultValues[name]
     if key == nil then
         error('get default val, key is null.')
@@ -50,39 +47,47 @@ function SharedModule.getDefaultValue(name, key)
         return 0
     end
 
-    return item.value[key]
+    local currentDefault = item.value[activeAnimaName]
+    -- print('--', type(currentDefault), activeAnimaName)
+    if currentDefault == nil then
+        return item.value.__default__[key]
+    end
+
+    return currentDefault[key]
 end
 
--- 获取当前帧前后关键帧列表
--- TODO: 获取默认值和x,y,z分别所在的关键帧值, 如果获取不到返回一个空的列表
-function SharedModule.getCurrentPoints(curve, currentFrame)
+-- Obtain a list of keyframes before and after the current frame
+-- Obtain the default value and the keyframe values where x, y, and z are located. If not, return an empty list
+function SharedModule.getCurrentPoints(curve, currentFrame, activeAnimaName)
+    -- print(activeAnimaName, currentFrame)
     local res = {}
     for outputName, curveItem in pairs(curve) do
         -- res[outputName] = {x = [], y = [], z=[]}
-        res[outputName] = {
-            type = curveItem.type,
-            value = {}
-        }
+        if curveItem.type ~= 'null' then
+            res[outputName] = {
+                type = curveItem.type,
+                value = {}
+            }
 
-        for key, pointList in pairs(curveItem.value) do
-            if #pointList == 0 then
-                -- TODO: 这里应该可以获取默认值
-                res[outputName].value[key] = {
-                    default = SharedModule.getDefaultValue(outputName, key)
-                }
-            else
-                local siblings = SharedModule.findSiblingKeyFrames(pointList, currentFrame)
-                if #siblings == 0 then
-                    -- TODO: 这里应该可以获取默认值
+            for key, pointList in pairs(curveItem.value) do
+                if #pointList == 0 then
+                    -- print('---', outputName , key, SharedModule.getDefaultValue(outputName, key))
                     res[outputName].value[key] = {
-                        default = SharedModule.getDefaultValue(outputName, key)
+                        default = SharedModule.getDefaultValue(outputName, key, activeAnimaName)
                     }
                 else
-                    --  prev  next
-                    res[outputName].value[key] = {
-                        prev = siblings[1],
-                        next = siblings[2]
-                    }
+                    local siblings = SharedModule.findSiblingKeyFrames(pointList, currentFrame)
+                    if #siblings == 0 then
+                        res[outputName].value[key] = {
+                            default = SharedModule.getDefaultValue(outputName, key, activeAnimaName)
+                        }
+                    else
+                        --  prev  next
+                        res[outputName].value[key] = {
+                            prev = siblings[1],
+                            next = siblings[2]
+                        }
+                    end
                 end
             end
         end
@@ -91,7 +96,6 @@ function SharedModule.getCurrentPoints(curve, currentFrame)
     return res
 end
 
--- 获取接口列表
 function SharedModule.getIngerfaceActions(curve)
     local res = {}
     for index, curveItem in ipairs(curve) do

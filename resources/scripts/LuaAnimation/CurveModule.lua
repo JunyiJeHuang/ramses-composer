@@ -10,7 +10,7 @@ end
 
 function CurveModule.calculateLiner(curKeyFrame, keyFrame1, keyValue1, keyFrame2, keyValue2)
     local offsetKeyFrame = keyFrame2 - keyFrame1;
-    local offsetValue = keyValue2 - keyValue1;
+    -- local offsetValue = keyValue2 - keyValue1;
     if offsetKeyFrame == 0 then
         return keyValue1
     end

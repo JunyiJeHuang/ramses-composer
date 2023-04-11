@@ -75,9 +75,9 @@ ObjectTreeViewDefaultModel::ObjectTreeViewDefaultModel(raco::core::CommandInterf
 
 	nodeSubscriptions_["children"].emplace_back(dispatcher_->registerOnPropertyChange("children", [this](ValueHandle handle) {
 		dirty_ = true;
-	}));
+    }));
 
-	extProjectChangedSubscription_ = dispatcher_->registerOnExternalProjectMapChanged([this]() { dirty_ = true; });
+    extProjectChangedSubscription_ = dispatcher_->registerOnExternalProjectMapChanged([this]() { dirty_ = true; });
 
 	dirty_ = true;
 }
@@ -589,8 +589,8 @@ bool ObjectTreeViewDefaultModel::canDuplicateAtIndices(const QModelIndexList& in
 	return Queries::canDuplicateObjects(objs, *project());
 }
 
-size_t ObjectTreeViewDefaultModel::deleteObjectsAtIndices(const QModelIndexList& indices) {
-    size_t t = commandInterface_->deleteObjects(indicesToSEditorObjects(indices));
+size_t ObjectTreeViewDefaultModel::deleteObjectsAtIndices(const QModelIndexList& indices, bool isDelete) {
+    size_t t = commandInterface_->deleteObjects(indicesToSEditorObjects(indices), isDelete);
     Q_EMIT editNodeOpreations();
     return t;
 }
@@ -668,16 +668,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
             ValueHandle rotation_x{selectedObject, &user_types::Node::rotation_, &core::Vec3f::x};
 			float y = translation_y.as<float>();
 			float z = translation_z.as<float>();
-			float rot_x = rotation_x.as<float>();
-            if (!projectZup) {
-                commandInterface_->set(translation_y, -z);
-                commandInterface_->set(translation_z, y);
-                commandInterface_->set(rotation_x, rot_x + 90.0);
-            } else if (projectZup) {
-                commandInterface_->set(translation_y, z);
-                commandInterface_->set(translation_z, -y);
-                commandInterface_->set(rotation_x, rot_x - 90.0);
-            }
+            float rot_x = rotation_x.as<float>();
             commandInterface_->insertAssetScenegraph(sceneGraph, absPath, selectedObject);
 		}
 	} else {

@@ -88,6 +88,12 @@ Q_SIGNALS:
     void sigUpdateNodeProp_From_SubView(const std::string &objectID);
     //
     void sigUpdateNodeProp_From_ObjectView(const std::string &objectID, const raco::core::ValueHandle &handle);
+    //
+    void sigCreateExamples(core::SEditorObject object, std::string mesh, std::string material);
+    //
+    void sigCreateResources(const QString path, const QSet<QString> files);
+    //
+    void sigDeleteResources(const QString path, const QSet<QString> files);
 };
 
 }

@@ -232,7 +232,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	raco::node_logic::NodeLogic* nodeDataPro, raco::material_logic::MateralLogic *materialLogic, raco::dataConvert::ProgramManager& programManager) {
 	auto* dockObjectView = new raco::object_tree::view::ObjectTreeDock(title, mainWindow);
 	QObject::connect(dockModel, &raco::object_tree::model::ObjectTreeViewDefaultModel::meshImportFailed, mainWindow, &MainWindow::showMeshImportErrorMessage);
-	dockModel->buildObjectTree();
+    dockModel->buildObjectTree();
 
 	auto newTreeView = new raco::object_tree::view::ObjectTreeView(title, dockModel, sortFilterModel, racoApplication->activeRaCoProject().commandInterface());
 	if (sortFilterModel && sortFilterModel->sortingEnabled()) {
@@ -241,7 +241,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 				? raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_NAME
 				: raco::object_tree::model::ObjectTreeViewDefaultModel::COLUMNINDEX_TYPE,
 			Qt::SortOrder::AscendingOrder);
-	}
+    }
 
 	QObject::connect(mainWindow, &MainWindow::getNodeDataResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::globalOpreations);
 	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
@@ -602,10 +602,12 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 
 	QObject::connect(this, &MainWindow::objectFocusRequestedForTreeDock, &treeDockManager_, &raco::object_tree::view::ObjectTreeDockManager::selectObjectAcrossAllTreeDocks);
 
+    connect(&fileWatcher_, &QFileSystemWatcher::directoryChanged, this, &MainWindow::directoryChanged);
+
 	updateProjectSavedConnection();
 
-	restoreSettings();
-	restoreCachedLayout();
+    restoreSettings();
+    restoreCachedLayout();
 
 	// Setup
 	updateApplicationTitle();
@@ -616,6 +618,9 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	renderTimerId_ = startTimer(timerInterval60Fps);
+//    QString projectPath = QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string());
+//    projectPath += "/StandardProject.rca";
+//    openProject(projectPath);
 }
 
 void MainWindow::saveDockManagerCustomLayouts() {
@@ -639,6 +644,7 @@ void MainWindow::timerEvent(QTimerEvent* event) {
 	const auto& enable = racoApplication_->activeRaCoProject().project()->settings()->displayGrid_.asBool();
 
     Q_EMIT viewportChanged({*viewport->i1_, *viewport->i2_});
+    Q_EMIT axesChanged(axes);
 	Q_EMIT displayGridChanged(enable);
 
 	for (auto preview : findChildren<raco::ramses_widgets::PreviewMainWindow*>()) {
@@ -648,11 +654,10 @@ void MainWindow::timerEvent(QTimerEvent* event) {
 	racoApplication_->rendererDirty_ = false;
 	auto logicEngineExecutionEnd = std::chrono::high_resolution_clock::now();
 	timingsModel_.addLogicEngineTotalExecutionDuration(std::chrono::duration_cast<std::chrono::microseconds>(logicEngineExecutionEnd - startLoop).count());
-	racoApplication_->sceneBackendImpl()->flush();
+    racoApplication_->sceneBackendImpl()->flush();
 
-	rendererBackend_->doOneLoop();
-    Q_EMIT axesChanged(axes);
-    Q_EMIT sceneUpdated(axes);
+    rendererBackend_->doOneLoop();
+//    Q_EMIT sceneUpdated(axes);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -1030,6 +1035,9 @@ void MainWindow::restoreCachedLayout() {
 	auto cachedLayoutInfo = dockManager_->getCachedLayoutInfo();
     nodeLogic_->setCommandInterface(racoApplication_->activeRaCoProject().commandInterface());
     convertEditorAnimation_->commandInterface(racoApplication_->activeRaCoProject().commandInterface());
+    fileWatcher_.addPath(QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string()) + "/images");
+    const QDir dir(QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string()) + "/images");
+    currentFileContents_ = dir.entryList(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
 
 	if (cachedLayoutInfo.empty()) {
         createInitialWidgets(this, *rendererBackend_, racoApplication_, dockManager_, treeDockManager_, nodeLogic_, materialLogic_, programManager_);
@@ -1038,12 +1046,12 @@ void MainWindow::restoreCachedLayout() {
 		// explicit maximization of docks needed or else RaCo will not look properly maximized on Windows
 		dockManager_->showMaximized();
 #endif
-		showMaximized();
+        showMaximized();
 	} else {
 		regenerateLayoutDocks(cachedLayoutInfo);
 
 		dockManager_->restoreCachedLayoutState();
-	}
+    }
 }
 
 void MainWindow::restoreCustomLayout(const QString& layoutName) {
@@ -1179,6 +1187,40 @@ void MainWindow::convert2LuaAnimation() {
             const auto sLuaModule{racoApplication_->activeRaCoProject().commandInterface()->createObject(raco::user_types::LuaScriptModule::typeDescription.typeName, childFileInfo.fileName().section(".", 0, 0).toStdString())};
             racoApplication_->activeRaCoProject().commandInterface()->set(raco::core::ValueHandle{sLuaModule, {"uri"}}, uri);
         }
+    }
+}
+
+void MainWindow::directoryChanged(const QString &path) {
+    auto toSet = [=](QStringList list)->QSet<QString> {
+        QSet<QString> set;
+        for (auto string : list) {
+            set.insert(string);
+        }
+        return set;
+    };
+
+    const QDir dir(path);
+
+    QStringList newEntryList = dir.entryList(QDir::NoDotAndDotDot  | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
+
+    QSet<QString> newDirSet = toSet(newEntryList);
+    QSet<QString> currentDirSet = toSet(currentFileContents_);
+
+    // new files
+    QSet<QString> newFiles = newDirSet - currentDirSet;
+
+    // delete files
+    QSet<QString> deletedFiles = currentDirSet - newDirSet;
+
+    // update current file list
+    currentFileContents_ = newEntryList;
+
+    if (!newFiles.isEmpty()) {
+        Q_EMIT signalProxy::GetInstance().sigCreateResources(path, newFiles);
+    }
+
+    if (!deletedFiles.isEmpty()) {
+        Q_EMIT signalProxy::GetInstance().sigDeleteResources(path, deletedFiles);
     }
 }
 

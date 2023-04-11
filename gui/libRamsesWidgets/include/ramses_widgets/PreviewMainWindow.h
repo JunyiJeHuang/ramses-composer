@@ -68,6 +68,7 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 
 public Q_SLOTS:
 	void setViewport(const QSize& sceneSize);
@@ -99,6 +100,7 @@ private:
 	int mode_;
 	bool haveInited_;
     QLabel *upLabel_{nullptr};
+    std::string selModelID_;
 };
 
 }  // namespace raco::ramses_widgets

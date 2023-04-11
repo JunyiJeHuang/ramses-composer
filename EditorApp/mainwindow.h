@@ -25,6 +25,7 @@
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QProcess>
+#include <QFileSystemWatcher>
 
 namespace Ui {
 class MainWindow;
@@ -113,6 +114,7 @@ protected Q_SLOTS:
 	void updateActiveProjectConnection();
 	void updateProjectSavedConnection();
     void convert2LuaAnimation();
+    void directoryChanged(const QString &path);
 
 Q_SIGNALS:
     void getMaterialResHandles();
@@ -148,6 +150,8 @@ private:
 	CurveNameWidget* curveNameWidget_{nullptr};
 	raco::material_logic::MateralLogic* materialLogic_{nullptr};
     ConvertEditorAnimation *convertEditorAnimation_{nullptr};
+    QFileSystemWatcher fileWatcher_;
+    QStringList currentFileContents_;
 
 	int renderTimerId_ = 0;
 };

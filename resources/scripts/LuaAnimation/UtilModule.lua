@@ -4,7 +4,7 @@
 
 local UtilModule = {}
 
--- 字符串分割为数组
+-- Splitting strings into arrays
 function UtilModule.split(str, reps)
     local res = {}
     string.gsub(str, '[^' .. reps .. ']+', function(w)
@@ -13,7 +13,7 @@ function UtilModule.split(str, reps)
     return res
 end
 
--- 数组转字符串
+-- Array to String
 function UtilModule.join(tab, reps)
     if reps == nil then
         reps = ''
@@ -21,12 +21,12 @@ function UtilModule.join(tab, reps)
     return table.concat(tab, reps)
 end
 
--- 删除数组最后一个元素, 并返回最后一个元素的值(原数组被修改)
+-- Delete the last element of the array and return the value of the last element (the original array has been modified)
 function UtilModule.pop(arr)
     return table.remove(arr, #arr)
 end
 
--- 数组截取, 返回一个新的数组
+-- Array truncation, returns a new array
 function UtilModule.slice(arr, first, last, step)
     local sliced = {}
     for i = first or 1, last or #arr, step or 1 do
@@ -35,13 +35,13 @@ function UtilModule.slice(arr, first, last, step)
     return sliced
 end
 
--- 数组向后追加数据
+-- Append data backwards to an array
 function UtilModule.push(arr, item)
     arr[#arr + 1] = item
     return arr
 end
 
--- 数组包含
+-- Array contains
 function UtilModule.includes(arr, item)
     for i = 1, #arr do
         if arr[i] == item then
@@ -51,7 +51,6 @@ function UtilModule.includes(arr, item)
     return false
 end
 
--- 序列化lua
 function UtilModule.serialize(obj)
     local lua = ''
     local t = type(obj)
@@ -81,7 +80,7 @@ function UtilModule.serialize(obj)
     return lua
 end
 
--- 判断字符串开头
+-- Start of string
 function UtilModule.startWith(str, substr)
     if str == nil or substr == nil then
         return nil, 'The string or the sub-stirng parameter is nil'
@@ -93,7 +92,7 @@ function UtilModule.startWith(str, substr)
     end
 end
 
--- 判断字符串结尾
+-- End of string
 function UtilModule.endWith(str, substr)
     if str == nil or substr == nil then
         return nil, 'The string or the sub-string parameter is nil'

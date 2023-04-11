@@ -18,6 +18,10 @@
 #include "core/Queries_Tags.h"
 #include "core/Undo.h"
 #include "core/UserObjectFactoryInterface.h"
+#include "qfile.h"
+#include "user_types/Material.h"
+#include "user_types/Texture.h"
+#include "user_types/CubeMap.h"
 #include "utils/u8path.h"
 
 #include "NodeData/nodeManager.h"
@@ -109,9 +113,65 @@ bool CommandInterface::checkScalarHandleForSet(ValueHandle const& handle, Primit
 			throw std::runtime_error(fmt::format("Property '{}' is a '{}' and not a '{}'", handle.getPropertyPath(), handle.type(), getTypeName(type)));
 		}
 	}
-	return true;
+    return true;
 }
 
+void CommandInterface::deleteUsedResource(const ValueHandle &handle) {
+    auto levelUri = [=](raco::core::ValueHandle valueHandle, std::string uri, int level) {
+        std::string strLevel;
+        switch (level) {
+        case 1: {
+            strLevel = "";
+            break;
+        }
+        case 2:{
+            strLevel = "level2";
+            break;
+        }
+        case 3:{
+            strLevel = "level3";
+            break;
+        }
+        case 4:{
+            strLevel = "level4";
+            break;
+        }
+        }
+        uri += strLevel;
+        std::string openProjectPath = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string();
+        if (valueHandle.hasProperty(uri)) {
+            std::string refUri = openProjectPath + "/" + handle.get(uri).asString();
+            QFile::remove(QString::fromStdString(refUri));
+        }
+    };
+
+    std::string openProjectPath = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string();
+    if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::Material::typeDescription.typeName) == 0) {
+        if (handle.hasProperty("uriVertex")) {
+            std::string uri = openProjectPath + "/" + handle.get("uriVertex").asString();
+            QFile::remove(QString::fromStdString(uri));
+        }
+        if (handle.hasProperty("uriFragment")) {
+            std::string uri = openProjectPath + "/" + handle.get("uriFragment").asString();
+            QFile::remove(QString::fromStdString(uri));
+        }
+    }
+    if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::Texture::typeDescription.typeName) == 0) {
+        for (int i = 1; i <= 4; i++) {
+            levelUri(handle, "uri", i);
+        }
+    }
+    if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::CubeMap::typeDescription.typeName) == 0) {
+        for (int i = 1; i <= 4; i++) {
+            levelUri(handle, "uriRight", i);
+            levelUri(handle, "uriLeft", i);
+            levelUri(handle, "uriTop", i);
+            levelUri(handle, "uriBottom", i);
+            levelUri(handle, "uriFront", i);
+            levelUri(handle, "uriBack", i);
+        }
+    }
+}
 
 void CommandInterface::set(ValueHandle const& handle, bool const& value) {
 	if (checkScalarHandleForSet(handle, PrimitiveType::Bool) && handle.asBool() != value) {
@@ -397,12 +457,17 @@ SEditorObject CommandInterface::createObject(std::string type, std::string name,
 	return nullptr;
 }
 
-size_t CommandInterface::deleteObjects(std::vector<SEditorObject> const& objects) {
+size_t CommandInterface::deleteObjects(std::vector<SEditorObject> const& objects, bool deleteSource) {
 	for (auto obj : objects) {
 		if (!project()->isInstance(obj)) {
 			throw std::runtime_error(fmt::format("Trying to delete object '{}': not in project", obj->objectName()));
 		}
 	}
+    if (deleteSource) {
+        for (const auto &obj : objects) {
+            deleteUsedResource(obj);
+        }
+    }
 
 	auto deletableObjects = Queries::filterForDeleteableObjects(*project(), objects);
 	if (!deletableObjects.empty()) {

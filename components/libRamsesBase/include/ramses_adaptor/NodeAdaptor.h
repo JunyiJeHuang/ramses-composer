@@ -40,7 +40,7 @@ public:
 				  if (link.end == rotation) {
 					  setupLinkStartSubscription();
 						auto oldRotationType = this->rotationType_;
-						this->rotationType_ = this->newRotationType(link);
+                        this->rotationType_ = this->newRotationType(link);
 						if (this->rotationType_ != oldRotationType) {
 							this->tagDirty();
 						}
@@ -204,7 +204,8 @@ private:
 		return DEFAULT_VEC3_ROTATION_TYPE;
 	}
 
-	constexpr static inline rlogic::ERotationType DEFAULT_VEC3_ROTATION_TYPE = rlogic::ERotationType::Euler_ZYX;
+    // for same as IDC
+    constexpr static inline rlogic::ERotationType DEFAULT_VEC3_ROTATION_TYPE = rlogic::ERotationType::Euler_XYZ; // Euler_ZYX
 
 	rlogic::ERotationType rotationType_;
 	raco::ramses_base::RamsesNodeBinding nodeBinding_;

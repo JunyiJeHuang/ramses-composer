@@ -146,7 +146,7 @@ std::array<double, 3> Eul_FromQuat(float x, float y, float z, float w) {
 	M[X][X] = 1.f - (yy + zz);
 	M[X][Y] = xy - wz;
 	M[X][Z] = xz + wy;
-	M[Y][X] = xy + wz;
+    M[Y][X] = xy + wz;
 	M[Y][Y] = 1.f - (xx + zz);
 	M[Y][Z] = yz - wx;
 	M[Z][X] = xz - wy;

@@ -9,13 +9,13 @@ If a copy of the MPL was not distributed with this file, You can obtain one at h
 ]]
 
 set(RESOURCE_FILES
-	images/text-back.png
-    images/text-bottom.png
-	images/text-front.png
-	images/text-top.png
-	images/text-left.png
-	images/text-right.png
-	images/DuckCM.png
+#	images/text-back.png
+#       images/text-bottom.png
+#	images/text-front.png
+#	images/text-top.png
+#	images/text-left.png
+#	images/text-right.png
+#	images/DuckCM.png
         images/6_side_map/Default_Cube/nx.png
         images/6_side_map/Default_Cube/ny.png
         images/6_side_map/Default_Cube/nz.png
@@ -37,19 +37,19 @@ set(RESOURCE_FILES
         images/DefaultMap/black.png
         images/DefaultMap/bump.png
         images/DefaultMap/white.png
-	meshes/Duck.glb
-	meshes/meshless.gltf
+#        meshes/Duck.glb
+#        meshes/meshless.gltf
 	meshes/README.md
-	meshes/ToyCar/Fabric_baseColor.png
-	meshes/ToyCar/Fabric_normal.png
-	meshes/ToyCar/Fabric_occlusion.png
-	meshes/ToyCar/ToyCar.bin
-	meshes/ToyCar/ToyCar.gltf
-	meshes/ToyCar/ToyCar_basecolor.png
-	meshes/ToyCar/ToyCar_clearcoat.png
-	meshes/ToyCar/ToyCar_emissive.png
-	meshes/ToyCar/ToyCar_normal.png
-	meshes/ToyCar/ToyCar_occlusion_roughness_metallic.png
+#        meshes/ToyCar/Fabric_baseColor.png
+#        meshes/ToyCar/Fabric_normal.png
+#        meshes/ToyCar/Fabric_occlusion.png
+#        meshes/ToyCar/ToyCar.bin
+#        meshes/ToyCar/ToyCar.gltf
+#        meshes/ToyCar/ToyCar_basecolor.png
+#        meshes/ToyCar/ToyCar_clearcoat.png
+#        meshes/ToyCar/ToyCar_emissive.png
+#        meshes/ToyCar/ToyCar_normal.png
+#        meshes/ToyCar/ToyCar_occlusion_roughness_metallic.png
         meshes/Cube.bin
         meshes/Cube.gltf
         meshes/Plane.bin
@@ -58,39 +58,39 @@ set(RESOURCE_FILES
         meshes/Skybox.gltf
         meshes/Sphere.bin
         meshes/Sphere.gltf
-	scripts/array.lua
-	scripts/compile-error.lua
-	scripts/Heavy.lua
-	scripts/moduleDefinition.lua
-	scripts/moduleDependency.lua
-	scripts/order.lua
-	scripts/runtime-error.lua
-	scripts/SimpleScript.lua
-	scripts/struct.lua
-	scripts/struct-nested.lua
-	scripts/struct-simple.lua
-	scripts/types-scalar.lua
-	shaders/basic.frag
-	shaders/basic.vert
-	shaders/color.frag
-	shaders/color.vert
-	shaders/cubemap.frag
-	shaders/cubemap.vert
-	shaders/default.frag
-	shaders/default.vert
-	shaders/morphing-template.vert
-	shaders/morphing-template.frag
-	shaders/multisampler.frag
-	shaders/multisampler.vert
-	shaders/simple_texture.frag
-	shaders/simple_texture.vert
-	shaders/skinning-template.vert
-	shaders/skinning-template.frag
-	shaders/tangent.vert
-	shaders/tangent.frag
-	shaders/uniform-array.vert
-	shaders/uniform-array.frag
-	shaders/simple_texture.vert
+#	scripts/array.lua
+#	scripts/compile-error.lua
+#	scripts/Heavy.lua
+#	scripts/moduleDefinition.lua
+#	scripts/moduleDependency.lua
+#	scripts/order.lua
+#	scripts/runtime-error.lua
+#	scripts/SimpleScript.lua
+#	scripts/struct.lua
+#	scripts/struct-nested.lua
+#	scripts/struct-simple.lua
+#	scripts/types-scalar.lua
+#	shaders/basic.frag
+#	shaders/basic.vert
+#	shaders/color.frag
+#	shaders/color.vert
+#	shaders/cubemap.frag
+#	shaders/cubemap.vert
+#	shaders/default.frag
+#	shaders/default.vert
+#	shaders/morphing-template.vert
+#	shaders/morphing-template.frag
+#	shaders/multisampler.frag
+#	shaders/multisampler.vert
+#	shaders/simple_texture.frag
+#	shaders/simple_texture.vert
+#	shaders/skinning-template.vert
+#	shaders/skinning-template.frag
+#	shaders/tangent.vert
+#	shaders/tangent.frag
+#	shaders/uniform-array.vert
+#	shaders/uniform-array.frag
+#	shaders/simple_texture.vert
         shaders/base.frag
         shaders/base.vert
         shaders/glsl_pbr_zxj.frag
@@ -106,7 +106,7 @@ set(RESOURCE_FILES
         scripts/luaAnimation/LuaScript.lua
         scripts/luaAnimation/SharedModule.lua
         scripts/luaAnimation/UtilModule.lua
-	example_scene.rca
+#	example_scene.rca
         StandardProject.rca
 )
 
@@ -121,13 +121,13 @@ foreach(relpath ${RESOURCE_FILES})
 endforeach(relpath)
 
 set(RACO_PYTHON_EXAMPLE_SCRIPTS
-	python/demo.py
-	python/print_objects.py
-	python/print_scenegraph.py
-	python/purge_links.py
-	python/use_pip_to_install_module.py
-	python/use_pip_to_uninstall_module.py
-	python/migrate_recursive.py
+        python/demo.py
+        python/print_objects.py
+        python/print_scenegraph.py
+        python/purge_links.py
+        python/use_pip_to_install_module.py
+        python/use_pip_to_uninstall_module.py
+        python/migrate_recursive.py
 )
 
 foreach(relpath ${RACO_PYTHON_EXAMPLE_SCRIPTS})

@@ -77,6 +77,8 @@ void ObjectTreeDock::setTreeView(ObjectTreeView *treeView) {
 	filterLineEdit_->setVisible(treeView->hasProxyModel());
 	filterByComboBox_->setVisible(treeView->hasProxyModel());
 
+    connect(this, &ObjectTreeDock::selectObject, treeView, &ObjectTreeView::selectObject);
+
 	connect(treeView, &ObjectTreeView::newObjectTreeItemsSelected, [this](const auto &handles) {
 		Q_EMIT newObjectTreeItemsSelected(handles, this);
 	});
@@ -96,7 +98,7 @@ ObjectTreeView *ObjectTreeDock::getActiveTreeView() const {
 }
 
 void ObjectTreeDock::resetSelection() {
-	getActiveTreeView()->resetSelection();
+    getActiveTreeView()->resetSelection();
 }
 
 void ObjectTreeDock::filterTreeViewObjects() {

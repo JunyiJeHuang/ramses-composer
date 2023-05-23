@@ -236,7 +236,19 @@ const raco::core::MeshScenegraph* glTFFileLoader::getScenegraph(const std::strin
 	if (!importglTFScene(absPath)) {
 		return nullptr;
 	}
-	return sceneGraph_.get();
+    return sceneGraph_.get();
+}
+
+bool glTFFileLoader::writeScenegraphGltf(const core::MeshScenegraph &sceneGraph, const std::string &absPath) {
+    if (!importer_) {
+        LOG_DEBUG(log_system::MESH_LOADER, "Create importer for: {}", absPath);
+        importer_ = std::make_unique<tinygltf::TinyGLTF>();
+    }
+    // fill TinyGLTF
+
+    int size = scene_.get()->bufferViews.size();
+    int size2 = scene_.get()->buffers.size();
+    return importer_->WriteGltfSceneToFile(&*scene_, absPath);
 }
 
 int glTFFileLoader::getTotalMeshCount() {

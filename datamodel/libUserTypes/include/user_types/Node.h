@@ -71,6 +71,7 @@ public:
 	Property<Vec3f, DisplayNameAnnotation, LinkEndAnnotation> translation_{Vec3f(0.0, 1.0, -100, 100), DisplayNameAnnotation("Translation"), {}};
 	Property<Vec3f, DisplayNameAnnotation, LinkEndAnnotation> scaling_{Vec3f(1.0, 0.1, 0.1, 100), DisplayNameAnnotation("Scaling"), {}};
 	Property<Vec3f, DisplayNameAnnotation, LinkEndAnnotation> rotation_{Vec3f(0.0, 5.0, -360.0, 360.0), DisplayNameAnnotation("Rotation"), {}};
+
 };
 
 }  // namespace raco::user_types

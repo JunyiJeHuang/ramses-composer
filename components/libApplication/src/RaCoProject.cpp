@@ -248,9 +248,9 @@ RaCoProject::~RaCoProject() {
 }
 
 std::unique_ptr<RaCoProject> RaCoProject::createNew(RaCoApplication* app, bool createDefaultScene, int featureLevel) {
-	LOG_INFO(raco::log_system::PROJECT, "Creating new project.");
-	Project p{};
-	p.setCurrentPath(components::RaCoPreferences::instance().userProjectsDirectory.toStdString());
+    LOG_INFO(raco::log_system::PROJECT, "Creating new project.");
+    Project p{};
+    p.setCurrentPath(components::RaCoPreferences::instance().userProjectsDirectory.toStdString());
 
 	if (featureLevel == -1) {
 		featureLevel = static_cast<int>(raco::ramses_base::BaseEngineBackend::maxFeatureLevel);

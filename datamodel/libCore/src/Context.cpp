@@ -36,6 +36,8 @@
 #include "user_types/PrefabInstance.h"
 #include "user_types/Skin.h"
 
+#include "NodeData/nodeManager.h"
+
 #include <core/PathManager.h>
 #include <spdlog/fmt/fmt.h>
 
@@ -124,13 +126,13 @@ void BaseContext::performExternalFileReload(const std::vector<SEditorObject>& ob
 template <typename T>
 void BaseContext::setT(ValueHandle const& handle, T const& value) {
 	ValueBase* v = handle.valueRef();
-	v->set(value);
+    v->set(value);
 
-	handle.object_->onAfterValueChanged(*this, handle);
+    handle.object_->onAfterValueChanged(*this, handle);
 
-	callReferencedObjectChangedHandlers(handle.object_);
+    callReferencedObjectChangedHandlers(handle.object_);
 
-	changeMultiplexer_.recordValueChanged(handle);
+    changeMultiplexer_.recordValueChanged(handle);
 }
 
 template <>
@@ -1273,12 +1275,39 @@ void BaseContext::insertAssetScenegraph(const raco::core::MeshScenegraph& sceneg
 				for (auto index = 0; index < targetMeshNodes.size(); index++) {
 					set(ValueHandle(skinObj, &user_types::Skin::targets_)[index], targetMeshNodes[index]);
 				}
+
 				for (auto jointIndex = 0; jointIndex < sceneSkin->jointNodeIndices.size(); jointIndex++) {
 					set(ValueHandle(skinObj, &user_types::Skin::joints_)[jointIndex], meshScenegraphNodes[sceneSkin->jointNodeIndices[jointIndex]]);
 				}
 			}
 		}
 	}
+    LOG_INFO(log_system::CONTEXT, "Animations imported.");
+}
+
+bool BaseContext::exportAssetScenegraph(MeshScenegraph &scenegraph) {
+    // TBD
+    std::map<std::tuple<std::string, int, bool>, SharedMeshData> propertiesToMeshMap;
+    for (const auto& instance : project()->instances()) {
+        if (instance->as<raco::user_types::Node>() && !instance->query<raco::core::ExternalReferenceAnnotation>()) {
+            raco::user_types::Node *node = instance->as<raco::user_types::Node>().get();
+
+        } else if (instance->as<raco::user_types::Mesh>() && !instance->query<raco::core::ExternalReferenceAnnotation>()) {
+            raco::user_types::Mesh *mesh = instance->as<raco::user_types::Mesh>().get();
+            propertiesToMeshMap[{instance->get("uri")->asString(), mesh->meshIndex_.asInt(), mesh->bakeMeshes_.asBool()}] = mesh->meshData();
+
+        } else if (instance->as<raco::user_types::Animation>() && !instance->query<raco::core::ExternalReferenceAnnotation>()) {
+            raco::user_types::Animation *animation = instance->as<raco::user_types::Animation>().get();
+        } else if (instance->as<raco::user_types::AnimationChannel>() && !instance->query<raco::core::ExternalReferenceAnnotation>()) {
+            raco::user_types::AnimationChannel *animationChannel = instance->as<raco::user_types::AnimationChannel>().get();
+        }
+    }
+
+    return false;
+}
+
+void BaseContext::insertBMWAssetScenegraph(guiData::NodeData *node, const SEditorObject &parent) {
+
 }
 
 SLink BaseContext::addLink(const ValueHandle& start, const ValueHandle& end, bool isWeak) {
@@ -1289,9 +1318,9 @@ SLink BaseContext::addLink(const ValueHandle& start, const ValueHandle& end, boo
 
 	auto link = std::make_shared<Link>(start.getDescriptor(), end.getDescriptor(), true, isWeak);
 
-	project_->addLink(link);
-	changeMultiplexer_.recordAddLink(link->descriptor());
-	updateBrokenLinkErrors(*link->endObject_);
+    project_->addLink(link);
+    changeMultiplexer_.recordAddLink(link->descriptor());
+    updateBrokenLinkErrors(*link->endObject_);
 	return link;
 }
 

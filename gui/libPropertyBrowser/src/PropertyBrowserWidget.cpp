@@ -19,6 +19,8 @@
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertySubtreeView.h"
 #include "core/ProjectSettings.h"
+#include "NodeData/nodeManager.h"
+#include "node_logic/NodeLogic.h"
 #include "style/Icons.h"
 #include <QApplication>
 #include <QDebug>
@@ -28,10 +30,13 @@
 #include <QScrollBar>
 #include <QSequentialAnimationGroup>
 #include <QTime>
+#include <QMouseEvent>
 
 namespace raco::property_browser {
 
 using namespace raco::style;
+using namespace raco::guiData;
+using namespace raco::node_logic;
 
 using SDataChangeDispatcher = raco::components::SDataChangeDispatcher;
 
@@ -70,8 +75,24 @@ constexpr QLabel* createNotificationWidget(PropertyBrowserModel* model, QWidget*
 	return widget;
 }
 
+bool getObjId(raco::core::ValueHandle valueHandle, std::string& objId, std::string& nodeName) {
+    for (int i{0}; i < valueHandle.size(); i++) {
+        if (!valueHandle[i].isObject()) {
+            if (valueHandle[i].getPropName().compare("objectID") == 0) {
+                objId = valueHandle[i].asString();
+                nodeName = valueHandle[i].getPropertyPath();
+                return true;
+            }
+        }
+        return getObjId(valueHandle, objId, nodeName);
+    }
+    return false;
+}
+
 PropertyBrowserView::PropertyBrowserView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserItem* item, PropertyBrowserModel* model, QWidget* parent)
 	: currentObjectID_(item->valueHandle().rootObject()->objectID()), sceneBackend_{sceneBackend}, QWidget{parent} {
+	NodeData* pNode  =	raco::guiData::NodeDataManager::GetInstance().searchNodeByID(currentObjectID_);
+	raco::guiData::NodeDataManager::GetInstance().setActiveNode(pNode);
 	item->setParent(this);
 	auto* layout = new PropertyBrowserGridLayout{this};
 	auto* content = new QWidget{this};
@@ -152,10 +173,116 @@ PropertyBrowserWidget::PropertyBrowserWidget(
 	layout_.addWidget(emptyLabel_, 1, 0, Qt::AlignCenter);
 	layout_.setColumnStretch(0, 1);
 	layout_.setRowStretch(1, 1);
+    initPropertyBrowserWidget();
+
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &PropertyBrowserWidget::slotRefreshPropertyBrowser);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigInsertCurveBinding_From_NodeUI, this, &PropertyBrowserWidget::slotInsertCurveBinding);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &PropertyBrowserWidget::slotRefreshPropertyBrowser);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigInitPropertyBrowserView, this, &PropertyBrowserWidget::slotInitPropertyBrowser);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintPropertyBrowserAfterUndo, this, &PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo);
 }
 
 void PropertyBrowserWidget::setLockable(bool lockable) {
 	layout_.itemAtPosition(0, 0)->widget()->setVisible(lockable);
+}
+
+void PropertyBrowserWidget::slotInsertCurveBinding(QString property, QString curve) {
+    std::string stdstrCurve = curve.toStdString();
+    std::string stdstrProperty = property.toStdString();
+
+    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    if (sampleProperty == std::string()) {
+        return;
+    }
+    NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().insertBindingDataItem(sampleProperty, stdstrProperty, stdstrCurve);
+    curveBindingWidget_->insertCurveBinding(QString::fromStdString(sampleProperty), property, curve);
+}
+
+void PropertyBrowserWidget::slotTreeMenu(const QPoint &pos) {
+    QMenu menu;
+    QAction* action = new QAction("insert KeyFrame");
+    menu.addAction(action);
+
+    menu.exec(QCursor::pos());
+}
+
+void PropertyBrowserWidget::slotInitPropertyBrowser() {
+    commandInterface_->undoStack().resetUndoState(raco::guiData::NodeDataManager::GetInstance().convertCurveData());
+    if (curveBindingWidget_) {
+        curveBindingWidget_->initCurveBindingWidget();
+    }
+    if (meshWidget_) {
+        meshWidget_->initPropertyBrowserMeshWidget();
+    }
+    if (customWidget_) {
+        customWidget_->initPropertyBrowserCustomWidget();
+    }
+}
+
+void PropertyBrowserWidget::slotRefreshPropertyBrowser() {
+    if (curveBindingWidget_) {
+        curveBindingWidget_->initCurveBindingWidget();
+    }
+    if (meshWidget_) {
+        meshWidget_->initPropertyBrowserMeshWidget();
+    }
+    if (customWidget_) {
+        customWidget_->initPropertyBrowserCustomWidget();
+    }
+}
+
+void PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo(raco::core::ValueHandle valueHandle) {
+    // refresh curvebinding widget
+    if (curveBindingWidget_) {
+        curveBindingWidget_->initCurveBindingWidget();
+    }
+    if (meshWidget_) {
+        meshWidget_->initPropertyBrowserMeshWidget();
+    }
+    if (customWidget_) {
+        customWidget_->initPropertyBrowserCustomWidget();
+    }
+
+    // refresh propertyBrowser widget
+    if (propertyBrowser_ && propertyBrowser_->getCurrentObjectID() == valueHandle.rootObject()->objectID()) {
+        // No need to update the Value Handle if we still are referencing to the same object.
+        // This happens for example when the display name changes, thus the tree view will update and then restore the selected item in the property browser.
+        return;
+    }
+    if (!locked_) {
+        emptyLabel_->setVisible(false);
+        subscription_ = dispatcher_->registerOnObjectsLifeCycle([](auto) {}, [this, valueHandle](core::SEditorObject obj) {
+            if (valueHandle.rootObject() == obj) {
+                if (locked_) {
+                    setLocked(false);
+                }
+                clearValueHandle(true);
+            }
+        });
+        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, sceneBackend_, model_}, model_, this});
+        layout_.addWidget(propertyBrowser_.get(), 1, 0);
+    }
+}
+
+void PropertyBrowserWidget::switchNode(std::string objectID) {
+	NodeData* nodeData = NodeDataManager::GetInstance().searchNodeByID(objectID);
+    if (!nodeData) {
+        return;
+    }
+	NodeDataManager::GetInstance().setActiveNode(nodeData);
+    if (curveBindingWidget_) {
+        curveBindingWidget_->initCurveBindingWidget();
+    }
+    if (meshWidget_) {
+		meshWidget_->initPropertyBrowserMeshWidget();
+    }
+    if (customWidget_) {
+		customWidget_->initPropertyBrowserCustomWidget();
+    }
+    raco::core::UndoState undoState;
+    undoState.saveCurrentUndoState();
+    std::string description = fmt::format("switch active node to '{}'", nodeData->getName());
+    commandInterface_->undoStack().push(description, undoState);
 }
 
 void PropertyBrowserWidget::clear() {
@@ -193,7 +320,7 @@ void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
 		// No need to update the Value Handle if we still are referencing to the same object.
 		// This happens for example when the display name changes, thus the tree view will update and then restore the selected item in the property browser.
 		return;	
-	}
+    }
 
 	if (!locked_) {
 		emptyLabel_->setVisible(false);
@@ -206,8 +333,15 @@ void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
 				clearValueHandle(true);
 			}
 		});
+
 		propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, sceneBackend_, model_}, model_, this});
 		layout_.addWidget(propertyBrowser_.get(), 1, 0);
+
+        std::string objectID;
+        std::string nodeName;
+        if (getObjId(valueHandle, objectID, nodeName)) {
+            switchNode(objectID);
+        }
 	} else {
 		LOG_DEBUG(log_system::PROPERTY_BROWSER, "locked! ignore value handle set {}", valueHandle);
 	}
@@ -217,15 +351,40 @@ PropertyBrowserModel* PropertyBrowserWidget::model() const {
 	return model_;
 }
 
+void PropertyBrowserWidget::slotRefreshCurveBindingWidget() {
+	curveBindingWidget_->initCurveBindingWidget();
+}
+
+void PropertyBrowserWidget::initPropertyBrowserWidget() {
+    meshNodeWidget_ = new PropertyBrowserNodeWidget(QString("Mesh"), this);
+    meshWidget_ = new PropertyBrowserMeshWidget(meshNodeWidget_);
+    meshNodeWidget_->setShowWidget(meshWidget_);
+    layout_.addWidget(meshNodeWidget_, 2, 0, Qt::AlignTop);
+
+    customNodeWidget_ = new PropertyBrowserNodeWidget(QString("CustomProperty"), this, true);
+    customWidget_ = new PropertyBrowserCustomWidget(customNodeWidget_);
+    QObject::connect(customNodeWidget_, &PropertyBrowserNodeWidget::insertData, customWidget_, &PropertyBrowserCustomWidget::insertData);
+    QObject::connect(customNodeWidget_, &PropertyBrowserNodeWidget::removeData, customWidget_, &PropertyBrowserCustomWidget::removeData);
+    customNodeWidget_->setShowWidget(customWidget_);
+    layout_.addWidget(customNodeWidget_, 3, 0, Qt::AlignTop);
+
+    curveBindingNodeWidget_ = new PropertyBrowserNodeWidget(QString("CurveBinding"), this, true);
+    curveBindingWidget_ = new PropertyBrowserCurveBindingWidget(commandInterface_ ,curveBindingNodeWidget_);
+    QObject::connect(curveBindingNodeWidget_, &PropertyBrowserNodeWidget::insertData, curveBindingWidget_, &PropertyBrowserCurveBindingWidget::insertData);
+    QObject::connect(curveBindingNodeWidget_, &PropertyBrowserNodeWidget::removeData, curveBindingWidget_, &PropertyBrowserCurveBindingWidget::removeData);
+    curveBindingNodeWidget_->setShowWidget(curveBindingWidget_);
+    layout_.addWidget(curveBindingNodeWidget_, 4, 0, Qt::AlignTop);
+}
+
 void PropertyBrowserWidget::setValueHandles(const std::set<raco::core::ValueHandle>& valueHandles) {
-	//QTime t;
-	//t.start();
-	if (valueHandles.size() > 1) {
-		clearValueHandle(false);
-	} else {
-		setValueHandle(*valueHandles.begin());
-	}
-	//LOG_DEBUG(log_system::PROPERTY_BROWSER, "ms for setting values handles: {}", t.elapsed() );
+
+    if (valueHandles.size() > 1) {
+        clearValueHandle(false);
+    } else {
+        auto handle = *valueHandles.begin();
+        setValueHandle(*valueHandles.begin());
+        Q_EMIT signalProxy::GetInstance().sigSwitchCurrentNode(handle);
+    }
 }
 
 }  // namespace raco::property_browser

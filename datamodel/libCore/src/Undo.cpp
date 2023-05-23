@@ -20,11 +20,13 @@
 #include "data_storage/ReflectionInterface.h"
 #include "data_storage/Table.h"
 #include "data_storage/Value.h"
-
+#include "VisualCurveData/VisualCurvePosManager.h"
+#include "FolderData/FolderDataManager.h"
+#include "CurveData/CurveManager.h"
+#include "signal/SignalProxy.h"
 #include <cassert>
 
 namespace raco::core {
-
 using namespace raco::data_storage;
 
 void UndoHelpers::updateSingleValue(const ValueBase *src, ValueBase *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler) {
@@ -207,7 +209,6 @@ void UndoHelpers::updateEditorObject(const EditorObject *src, SEditorObject dest
 	}
 }
 
-
 void UndoStack::saveProjectState(const Project *src, Project *dest, Project *ref, const DataChangeRecorder &changes, UserObjectFactoryInterface &factory) {
 	assert(dest->links().size() == 0);
 	assert(dest->linkStartPoints().empty());
@@ -295,7 +296,7 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 
 	// Remove dest objects not present in src
 	SEditorObjectSet toRemove;
-	for (auto destObj : dest->instances()) {
+    for (const auto &destObj : dest->instances()) {
 		if (!src->getInstanceByID(destObj->objectID())) {
 			toRemove.insert(destObj);
 			changes.recordDeleteObject(destObj);
@@ -340,7 +341,6 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 	};
 	extrefDirty = extrefDirty || findExtref(changes.getChangedValues());
 
-
 	for (const auto &srcLink : srcLinks) {
 		auto foundDestLink = dest->findLinkByObjectID(srcLink);
 		if (!foundDestLink) {
@@ -374,22 +374,22 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 	}
 
 	// Update volatile data for new or changed objects
-	for (const auto &destObj : changes.getAllChangedObjects()) {
-		destObj->onAfterDeserialization();
-	}
+    for (const auto &destObj : changes.getAllChangedObjects()) {
+        destObj->onAfterDeserialization();
+    }
 
-	// Use the change recorder in the context from here on
-	context_->uiChanges().mergeChanges(changes);
+    // Use the change recorder in the context from here on
+    context_->uiChanges().mergeChanges(changes);
 
 	// Reset model changes here to make sure the next undo stack push will see 
-	// all changes relative to the last undo stack entry
-	context_->modelChanges().reset();
+    // all changes relative to the last undo stack entry
+    context_->modelChanges().reset();
 
 	// Sync from external files for new or changed objects.
 	// Also update broken link error messages in Node::onAfterContextActivated, so we need to include
 	//   the link endpoints in the changed object set.
-	auto changedObjects = changes.getAllChangedObjects(false, false, true);
-	context_->performExternalFileReload({changedObjects.begin(), changedObjects.end()});
+    auto changedObjects = changes.getAllChangedObjects(false, false, true);
+    context_->performExternalFileReload({changedObjects.begin(), changedObjects.end()});
 
 	if (extrefDirty) {
 		LoadContext loadContext;
@@ -407,21 +407,57 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 			// updateExternalReferences will create an error message that will be shown in the Error View in addition
 			// to throwing this exception.
 		}
-	}
+    }
+}
+
+void UndoStack::restoreAnimationState(UndoState state) {
+    QVariant nodeData;
+    nodeData.setValue(state.nodeData());
+    guiData::NodeDataManager::GetInstance().merge(nodeData);
+
+    QVariant curveData;
+    curveData.setValue(state.curveData());
+    guiData::CurveManager::GetInstance().merge(curveData);
+
+    QVariant folderData;
+    folderData.setValue(state.folderData());
+    guiData::FolderDataManager::GetInstance().merge(folderData);
+
+    QVariant posData;
+    posData.setValue(state.visualPosData());
+    guiData::VisualCurvePosManager::GetInstance().merge(posData);
+    Q_EMIT raco::signal::signalProxy::GetInstance().sigRepaintAfterUndoOpreation();
 }
 
 UndoStack::UndoStack(BaseContext* context, const Callback& onChange) : context_(context), onChange_ { onChange } {
 	auto initialState = &stack_.emplace_back(new Entry("Initial"))->state;
-	saveProjectState(context_->project(), initialState, nullptr, context_->modelChanges(), *context_->objectFactory());
+    saveProjectState(context_->project(), initialState, nullptr, context_->modelChanges(), *context_->objectFactory());
 }
 
 void UndoStack::reset() {
 	stack_.clear();
-	index_ = 0;
+    index_ = 0;
 	auto initialState = &stack_.emplace_back(new Entry("Initial"))->state;
 	context_->modelChanges().reset();
 	saveProjectState(context_->project(), initialState, nullptr, context_->modelChanges(), *context_->objectFactory());
-	onChange_();
+
+    raco::core::UndoState undoState;
+    undoState.saveCurrentUndoState();
+    stack_.back()->undoState = undoState;
+    onChange_();
+}
+
+void UndoStack::resetUndoState(STRUCT_VISUAL_CURVE_POS pos) {
+    stack_.front()->undoState.push(pos);
+}
+
+void UndoStack::resetUndoState(STRUCT_NODE node) {
+    stack_.front()->undoState.push(node);
+}
+
+bool UndoStack::curIndexIsOpreatObject() {
+    bool isObject = stack_[index_]->description.find("object") == std::string::npos ? false : true;
+    return isObject;
 }
 
 bool UndoStack::canMerge(const DataChangeRecorder &changes) {
@@ -436,13 +472,28 @@ void UndoStack::push(const std::string &description, std::string mergeId) {
 		stack_.back()->description = description;
 	} else {
 		// not mergable -> create and fill new state
+        UndoState undoState = stack_.back()->undoState;
 		auto nextState = &stack_.emplace_back(new Entry(description, mergeId))->state;
-		++index_;
-		saveProjectState(context_->project(), nextState, &stack_[index_ - 1]->state, context_->modelChanges(), *context_->objectFactory());
+        stack_.back()->undoState = undoState;
+        ++index_;
+        saveProjectState(context_->project(), nextState, &stack_[index_ - 1]->state, context_->modelChanges(), *context_->objectFactory());
 	}
 
 	onChange_();
-	context_->modelChanges().reset();
+    context_->modelChanges().reset();
+}
+
+void UndoStack::push(const std::string &description, UndoState state) {
+    if (description == stack_.back()->description) {
+        return;
+    }
+    Entry *entry = new Entry(description);
+    entry->state = stack_.back()->state;
+    stack_.resize(index_ + 1);
+    entry->undoState = state;
+    stack_.emplace_back(std::unique_ptr<Entry>(entry));
+    ++index_;
+    onChange_();
 }
 
 size_t UndoStack::size() const {
@@ -455,11 +506,12 @@ size_t UndoStack::getIndex() const {
 
 size_t UndoStack::setIndex(size_t newIndex, bool force) {
 	if (newIndex < size() && (newIndex != index_ || force)) {
-		index_ = newIndex;
-		restoreProjectState(&stack_[index_]->state, context_->project(), *context_, *context_->objectFactory());
-		onChange_();
+        index_ = newIndex;
+        restoreProjectState(&stack_[index_]->state, context_->project(), *context_, *context_->objectFactory());
+        restoreAnimationState(stack_[index_]->undoState);
+        onChange_();
 	}
-	return index_;
+    return index_;
 }
 
 void UndoStack::undo() {
@@ -486,7 +538,7 @@ bool UndoStack::canUndo() const noexcept {
 }
 
 bool UndoStack::canRedo() const noexcept {
-	return getIndex() < (size()-1);
+    return getIndex() < (size()-1);
 }
 
 }  // namespace raco::core

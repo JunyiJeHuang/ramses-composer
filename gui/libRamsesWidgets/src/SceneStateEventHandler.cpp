@@ -95,7 +95,7 @@ bool SceneStateEventHandler::waitUntilOrTimeout(const std::function<bool()>& con
 	const std::chrono::steady_clock::time_point timeoutTS = std::chrono::steady_clock::now() + std::chrono::seconds{5};
 	while (!conditionFunction()) {
 		if (std::chrono::steady_clock::now() > timeoutTS) {
-			throw std::runtime_error{"Something went wrong"};
+            throw std::runtime_error{"Something went wrong"};
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds{5});
 		renderer_.doOneLoop();

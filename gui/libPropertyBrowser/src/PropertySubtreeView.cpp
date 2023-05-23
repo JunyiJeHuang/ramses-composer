@@ -20,14 +20,24 @@
 #include "user_types/LuaScript.h"
 #include "user_types/LuaScriptModule.h"
 
+#include "MaterialData/materialManager.h"
+#include "NodeData/nodeManager.h"
+#include "material_logic/materalLogic.h"
+#include "data_Convert/ProgramDefine.h"
+
+#include "data_storage/Table.h"
+#include "data_storage/Value.h"
+#include "user_types/Material.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFormLayout>
 #include <QFrame>
+#include <QMessageBox>
 #include <QPainter>
 #include <QPropertyAnimation>
 #include <QResizeEvent>
-
+#include <QStandardItemModel>
+#include <set>
 namespace raco::property_browser {
 
 void drawHighlight(QWidget* widget, float intensity) {
@@ -45,6 +55,8 @@ EmbeddedPropertyBrowserView::EmbeddedPropertyBrowserView(PropertyBrowserItem* it
 	: QFrame{parent} {
 }
 
+static std::set<std::string> checkUniformName_;
+
 void PropertySubtreeView::registerCopyPasteContextMenu(QWidget* widget) {
 	widget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
 	connect(widget, &PropertyEditor::customContextMenuRequested, [this, widget](const QPoint& p) {
@@ -56,14 +68,28 @@ void PropertySubtreeView::registerCopyPasteContextMenu(QWidget* widget) {
 			propertyControl_->pasteValue();
 		});
 
-		treeViewMenu->exec(widget->mapToGlobal(p));
+        if (item_->valueHandle().isProperty()) {
+            std::string property = item_->valueHandle().getPropertyPath();
+            QStringList strList = QString::fromStdString(property).split(".");
+            // Determine whether it is a System/Custom Property and whether it is a Float type
+            if (!isValidValueHandle(strList, item_->valueHandle())) {
+                return;
+            }
+            treeViewMenu->addAction(insertKeyFrameAction_);
+        }
+
+        treeViewMenu->exec(widget->mapToGlobal(p));
 	});
 }
+
+PropertyBrowserItem* unifromItem_;// Get all items of uniform
+QList<PropertyBrowserItem*> showedUniforChildren_;// Displayed Uniform Properties
+QList<PropertySubtreeView*> uniformSubtreeViewList_;//Uniform child window displayed
 
 PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserModel* model, PropertyBrowserItem* item, QWidget* parent)
 	: QWidget{parent}, item_{item}, model_{model}, sceneBackend_{sceneBackend}, layout_{this} {
 	layout_.setAlignment(Qt::AlignTop);
-
+	setContextMenuPolicy(Qt::CustomContextMenu);
 	// .PropertySubtreeView--------------------------------------------------------------.
 	// | expand button |  label + margin       | link control | property / value control |
 	// .PropertySubtreeChildrenContainer-------------------------------------------------.
@@ -71,15 +97,23 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 	// | button margin | PropertySubtreeView                                             |
 	// |               | PropertySubtreeView                                             |
 	// .---------------------------------------------------------------------------------.
-	auto* labelContainer = new QWidget{this};
-	auto* labelLayout = new PropertyBrowserHBoxLayout{labelContainer};
+
+	labelContainer_ = new QWidget{this};
+	auto* labelLayout = new PropertyBrowserHBoxLayout{labelContainer_};
+
 	labelLayout->setAlignment(Qt::AlignLeft);
+
 	if (!item->valueHandle().isObject()) {
-		label_ = WidgetFactory::createPropertyLabel(item, labelContainer);
+		if (item->parentItem() && item->parentItem()->parentItem() && item->parentItem()->displayName() == "uniforms") {
+			palette_ = labelContainer_->palette();
+			isUniform_ = true;
+		}
+
+		label_ = WidgetFactory::createPropertyLabel(item, labelContainer_);
 		label_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
 		if (item->expandable()) {
-			decorationWidget_ = new ExpandButton(item, labelContainer);
+			decorationWidget_ = new ExpandButton(item, labelContainer_);
 		} else {
 			// Easier to make a dummy spacer widget than figuring out how to move everything else at the right place without it
 			decorationWidget_ = new QWidget(this);
@@ -87,9 +121,8 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		}
 		decorationWidget_->setFixedWidth(28);
 
-		auto* linkControl = WidgetFactory::createLinkControl(item, labelContainer);
-
-		propertyControl_ = WidgetFactory::createPropertyEditor(item, labelContainer);
+		auto* linkControl = WidgetFactory::createLinkControl(item, labelContainer_);
+		propertyControl_ = WidgetFactory::createPropertyEditor(item, labelContainer_);
 
 		if (propertyControl_ != nullptr) {
 			registerCopyPasteContextMenu(label_);
@@ -101,6 +134,24 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 
 		if (!item->valueHandle().isObject()) {
 			generateItemTooltip(item, true);
+		}
+		if (item->displayName() == "uniforms") {
+            setUniformControls(item, labelLayout);
+			std::vector<Uniform> uniforms = Item2Uniform(item);
+			raco::guiData::MaterialManager::GetInstance().curUniformClear();
+			NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+			pNode->uniformClear();
+			for (auto& un : uniforms) {
+				raco::guiData::MaterialManager::GetInstance().addCurUniform(un);
+				pNode->insertUniformData(un);
+			}
+			updateUniformCombox();
+		}
+        QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateMesh);
+        QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateNode);
+
+		if (item->displayName() == "uniforms") {
+			setUniformControls(item, labelLayout);
 		}
 
 		linkControl->setControl(propertyControl_);
@@ -115,13 +166,13 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		label_->setFixedWidth(0);
 		label_->setFixedHeight(0);
 		labelLayout->addWidget(decorationWidget_, 0);
-		labelLayout->addWidget(label_, 0);
+        labelLayout->addWidget(label_, 0);
 	}
 
 	QObject::connect(item, &PropertyBrowserItem::errorChanged, this, &PropertySubtreeView::updateError);
-	updateError();
+    updateError();
 
-	layout_.addWidget(labelContainer, 1, 0);
+    layout_.addWidget(labelContainer_, 1, 0);
 
 	if (item->expandable()) {
 		// Events which can cause a build or destroy of the childrenContainer_
@@ -130,6 +181,9 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		QObject::connect(item, &PropertyBrowserItem::childrenChangedOrCollapsedChildChanged, this, &PropertySubtreeView::playStructureChangeAnimation);
 		updateChildrenContainer();
 	}
+
+    insertKeyFrameAction_ = new QAction("Insert KeyFrame", this);
+    connect(insertKeyFrameAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertKeyFrame);
 }
 
 void PropertySubtreeView::generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents) {
@@ -155,6 +209,116 @@ void PropertySubtreeView::generateItemTooltip(PropertyBrowserItem* item, bool co
 	}
 }
 
+void PropertySubtreeView::updateMaterial(raco::core::ValueHandle& v) {
+	NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+	pNode->uniformClear();
+    updateUniformCombox();
+}
+
+void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
+    core::ValueHandle parent = v.parent();
+    if (parent.isProperty()) {
+        std::string parentProp = parent.getPropName();
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scaling") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrix(v.rootObject()->objectID());
+        }
+    }
+    if (v.isProperty()) {
+        std::string prop = v.getPropName();
+        if (prop == "visible") {
+            Q_EMIT signalProxy::GetInstance().sigSetVisibleMeshNode(v.asBool(), v.rootObject()->objectID());
+        }
+    }
+}
+
+void PropertySubtreeView::updateNode(core::ValueHandle &v) {
+    core::ValueHandle parent = v.parent();
+    if (parent.isProperty()) {
+        std::string parentProp = parent.getPropName();
+        if (parentProp == "translation" || parentProp == "rotation" || parentProp == "scaling") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_SubView(v.rootObject()->objectID());
+        }
+    }
+    if (v.isProperty()) {
+        std::string prop = v.getPropName();
+        if (prop == "objectName") {
+            Q_EMIT signalProxy::GetInstance().sigUpdateNodeProp_From_SubView(v.rootObject()->objectID());
+        }
+    }
+}
+
+std::vector<Uniform> PropertySubtreeView::Item2Uniform(PropertyBrowserItem* item) {
+	raco::core::ValueHandle handle = item->valueHandle();
+	std::vector<Uniform> uniforms;
+	MaterialData materialData;
+	raco::material_logic::MateralLogic materialLogic;
+	materialLogic.setUniformsProperty(item->valueHandle(), materialData);
+	uniforms.clear();
+	for (auto& un : materialData.getUniforms()) {
+		uniforms.push_back(un);
+	}
+	for (auto& it : materialData.getTextures()) {
+		Uniform unifor;
+		unifor.setName(it.getUniformName());
+		unifor.setType(UniformType::String);
+		unifor.setValue(it.getName());
+		uniforms.push_back(unifor);
+	}
+	return uniforms;
+}
+
+void PropertySubtreeView::setUniformControls(PropertyBrowserItem* item, PropertyBrowserHBoxLayout* labelLayout) {
+	std::vector<Uniform> uniforms = Item2Uniform(item);
+	// Add all uniform properties to curUniform in MaterialManager
+	raco::guiData::MaterialManager::GetInstance().curUniformClear();
+	for (auto& un : uniforms) {
+		raco::guiData::MaterialManager::GetInstance().addCurUniform(un);
+	}
+	uniformComBox_ = new QComboBox(labelContainer_);
+	uniformDelButton_ = new QPushButton{QString("del"), labelContainer_};
+	uniformDelButton_->setStyleSheet(
+		"QPushButton{background-color:#141414; border-radius:7px;} \
+		 QPushButton:hover{background-color:#5a5a5a; border-radius:7px;}");
+	uniformComBox_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+	uniformDelButton_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+	labelLayout->addStretch(1);
+	labelLayout->addWidget(uniformDelButton_, Qt::AlignRight);
+	labelLayout->addWidget(uniformComBox_, Qt::AlignRight);
+	QObject::connect(uniformComBox_, &QComboBox::textActivated, this, &PropertySubtreeView::slotUniformNameChanged);
+	QObject::connect(uniformDelButton_, &QPushButton::clicked, this, &PropertySubtreeView::delUniformButtonClicked);
+
+	for (auto& child : item->children()) {
+		bool isShowed = false;
+		NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+		for (auto& un : pNode->getUniforms()) {
+			if (child->displayName() == un.getName()) {
+				isShowed = true;
+				break;
+			}
+		}
+		if (!isShowed && child->displayName() != PTW_FRAG_SYS_OPACITY) {
+			uniformComBox_->addItem(QString::fromStdString(child->displayName()));
+		}
+	}
+
+	// Display content centered
+	QLineEdit* lineEdit = new QLineEdit;
+	lineEdit->setReadOnly(true);
+	lineEdit->setAlignment(Qt::AlignCenter);
+
+	lineEdit->setStyleSheet("QLineEdit{background-color:#14141400;}");
+	uniformComBox_->setLineEdit(lineEdit);
+
+	// Drop-down menu content centered
+	QStandardItemModel* model = qobject_cast<QStandardItemModel*>(uniformComBox_->model());
+	for (int i = 0; i < model->rowCount(); ++i) {
+		QStandardItem* item = model->item(i);
+		item->setTextAlignment(Qt::AlignCenter);
+		item->setSizeHint({0, 25});
+	}
+	uniformComBox_->setCurrentText("add");
+}
+
 void PropertySubtreeView::updateError() {
 	if (layout_.itemAtPosition(0, 0) && layout_.itemAtPosition(0, 0)->widget()) {
 		auto* widget = layout_.itemAtPosition(0, 0)->widget();
@@ -173,6 +337,305 @@ void PropertySubtreeView::updateError() {
 	}
 }
 
+QString PropertySubtreeView::setCurveName(QString name) {
+	QStringList list = name.split(".");
+	QString resultName = list[0];
+	if (list[list.size() - 1] == "x" || list[list.size() - 1] == "y" || list[list.size() - 1] == "z") {
+		resultName += "." + list[list.size() - 2];
+	}
+	resultName += "." + list[list.size() - 1];
+	return resultName;
+}
+
+QString PropertySubtreeView::setPropertyName(QString name) {
+	QStringList list = name.split(".");
+	QString resultName = "";
+	// Set rotation, scaling, displacement attribute parameters
+    if (list.size() > 1 && list.contains("translation") || list.contains("rotation") || list.contains("scaling")) {
+		resultName = list[list.size() - 2] + "." + list[list.size() - 1];
+		return resultName;
+	} else if (list.size() > 2 && list.contains("uniforms")) {
+		int index = list.indexOf("uniforms");
+		for (int i = index; i < list.size(); ++i) {
+			resultName += list[i];
+			resultName += ".";
+		}
+		resultName = resultName.left(resultName.length() - 1);
+		return resultName;
+	} else {
+		QMessageBox warningBox(QMessageBox::Warning, "Warning", "This property is not available as an animated property.", QMessageBox::Yes);
+	}
+	return resultName;
+}
+
+void PropertySubtreeView::slotInsertKeyFrame() {
+	raco::core::ValueHandle valueHandle = item_->valueHandle();
+	bool isResource = valueHandle.rootObject().get()->getTypeDescription().isResource;
+	if (isResource) {
+		return;
+	}
+	if (valueHandle.isProperty()) {
+		QString propertyPath = QString::fromStdString(valueHandle.getPropertyPath());
+		if (valueHandle.parent() != NULL) {
+			raco::core::ValueHandle parentHandle = valueHandle.parent();
+
+			QString property;
+			property = QString::fromStdString(parentHandle.getPropName()) + "." + QString::fromStdString(valueHandle.getPropName());
+			if (QString::fromStdString(valueHandle.getPropertyPath()).contains("material")) {
+				property = QString::fromStdString(valueHandle.getPropertyPath());
+				property = property.section(".", 1);
+			}
+			property = setPropertyName(property);
+			if (property == "") {
+				return;
+			}
+			// is have active animation
+			std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+			if (sampleProperty == std::string()) {
+				return;
+			}
+
+			propertyPath = setCurveName(propertyPath);
+			QString curve = QString::fromStdString(sampleProperty) + "." + propertyPath;
+
+			double value{0};
+			if (valueHandle.type() == raco::core::PrimitiveType::Double) {
+				value = valueHandle.asDouble();
+			}
+			std::map<std::string, std::string> bindingMap;
+			NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().getPropCurve(sampleProperty, bindingMap);
+
+			auto it = bindingMap.find(property.toStdString());
+			if (it != bindingMap.end()) {
+				Q_EMIT item_->model()->sigCreateCurve(property, QString::fromStdString(it->second), value);
+				return;
+			}
+			Q_EMIT item_->model()->sigCreateCurveAndBinding(property, curve, value);
+		}
+	}
+}
+
+void PropertySubtreeView::slotCopyProperty() {
+	raco::core::ValueHandle valueHandle = item_->valueHandle();
+	bool isResource = valueHandle.rootObject().get()->getTypeDescription().isResource;
+	if (isResource) {
+		return;
+	}
+	if (valueHandle.isProperty()) {
+		QString property = QString::fromStdString(valueHandle.getPropertyPath());
+		if (property.contains("material")) {
+			property = property.section(".", 1);
+			QClipboard* clip = QApplication::clipboard();
+			clip->setText(property);
+			return;
+		}
+		std::string str = valueHandle.getPropName();
+		if (valueHandle.parent() != NULL) {
+			valueHandle = valueHandle.parent();
+			QString property = QString::fromStdString(valueHandle.getPropName()) + "." + QString::fromStdString(str);
+			QClipboard* clip = QApplication::clipboard();
+			clip->setText(property);
+		}
+	}
+}
+
+void PropertySubtreeView::updateUniformCombox() {
+	if (uniformComBox_!= nullptr) {
+		uniformComBox_->clear();
+		auto uV = item_->valueHandle();
+		auto material = uV.parent().get("material").asRef();
+		if (!material) {
+			uniformComBox_->setCurrentText("add");
+			return;
+		}
+		auto uniformTabe = material->get("uniforms")->asTable();
+		for (int i = 0; i < uniformTabe.size(); i++) {
+			NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+			bool noShowed = false;
+			if (pNode->hasUniform(uniformTabe.name(i))) {
+				noShowed = true;
+			}
+			if (!noShowed && uniformTabe.name(i) != PTW_FRAG_SYS_OPACITY) {
+				uniformComBox_->addItem(QString::fromStdString(uniformTabe.name(i)));
+			}
+		}
+		uniformComBox_->setCurrentText("add");
+	}
+}
+
+void PropertySubtreeView::delUniformButtonClicked() {
+	NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+	for (auto checkUniformName : checkUniformName_) {
+		if (pNode->hasUniform(checkUniformName)) {
+			pNode->deleteUniformData(checkUniformName);
+			updateUniformCombox();
+			auto privateItem = item_->siblingItem("private");
+			privateItem->set(false);
+			privateItem->set(true);
+		}
+	}
+}
+
+void PropertySubtreeView::slotUniformNameChanged(QString s) {
+	NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
+	auto root = NodeDataManager::GetInstance().root();
+	if (s == "add") {
+		return;
+	}
+	if (!pNode->hasUniform(s.toStdString())) {
+		auto materialOject = item_->siblingItem("material")->valueHandle().asRef();
+		core::ValueHandle uniformsHandle = {materialOject, &user_types::Material::uniforms_};
+		Uniform un;
+		
+		for (int i{0}; i < uniformsHandle.size(); i++) {
+			if (s.toStdString() == uniformsHandle[i].getPropName()) {
+				setUniformsProperty(uniformsHandle[i], un);
+			}
+		}
+		pNode->insertUniformData(un);
+	}
+	updateUniformCombox();
+	auto privateItem = item_->siblingItem("private");
+	privateItem->set(false);
+	privateItem->set(true);
+}
+void PropertySubtreeView::setUniformsProperty(core::ValueHandle valueHandle, Uniform& tempUniform) {
+	using PrimitiveType = core::PrimitiveType;
+	tempUniform.setName(valueHandle.getPropName());
+	std::string property = valueHandle.getPropName();
+	switch (valueHandle.type()) {
+			case PrimitiveType::String: {
+				tempUniform.setName(property);
+				tempUniform.setType(UniformType::String);
+				tempUniform.setValue(valueHandle.asString());
+				break;
+			}
+			case PrimitiveType::Bool: {
+				tempUniform.setName(property);
+				tempUniform.setType(UniformType::Bool);
+				tempUniform.setValue(valueHandle.asBool());
+				break;
+			}
+			case PrimitiveType::Int: {
+				tempUniform.setName(property);
+				tempUniform.setType(UniformType::Int);
+				tempUniform.setValue(valueHandle.asInt());
+				break;
+			}
+			case PrimitiveType::Double: {
+				tempUniform.setName(property);
+				tempUniform.setType(UniformType::Double);
+				tempUniform.setValue(valueHandle.asDouble());
+				break;
+			}
+			case PrimitiveType::Ref: {
+				tempUniform.setName(property);
+				tempUniform.setType(UniformType::Ref);
+				if (valueHandle.asRef())
+					tempUniform.setValue(valueHandle.asRef()->objectName());
+				//TextureData textureData;
+				//textureData.setUniformName(property);
+				//setTexturePorperty(tempHandle.asRef(), materialData, textureData);
+
+				//if (textureData.getName().empty()) {
+				//	textureData.setName("empty");
+				//	textureData.setBitmapRef("empty");
+				//}
+				//materialData.addTexture(textureData);
+				break;
+			}
+			case PrimitiveType::Table:
+			case PrimitiveType::Struct: {
+				auto typeDesc = &valueHandle.constValueRef()->asStruct().getTypeDescription();
+				if (typeDesc == &core::Vec2f::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec2f);
+					Vec2 value;
+					value.x = valueHandle[0].asDouble();
+					value.y = valueHandle[1].asDouble();
+					tempUniform.setValue(value);
+				} else if (typeDesc == &core::Vec3f::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec3f);
+					Vec3 value;
+					value.x = valueHandle[0].asDouble();
+					value.y = valueHandle[1].asDouble();
+					value.z = valueHandle[2].asDouble();
+					tempUniform.setValue(value);
+				} else if (typeDesc == &core::Vec4f::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec4f);
+					Vec4 value;
+					value.x = valueHandle[0].asDouble();
+					value.y = valueHandle[1].asDouble();
+					value.z = valueHandle[2].asDouble();
+					value.w = valueHandle[3].asDouble();
+					tempUniform.setValue(value);
+				} else if (typeDesc == &core::Vec2i::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec4i);
+					Vec2int value;
+					value.x = valueHandle[0].asInt();
+					value.y = valueHandle[1].asInt();
+					tempUniform.setValue(value);
+				} else if (typeDesc == &core::Vec3i::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec3i);
+					Vec3int value;
+					value.x = valueHandle[0].asInt();
+					value.y = valueHandle[1].asInt();
+					value.z = valueHandle[2].asInt();
+					tempUniform.setValue(value);
+				} else if (typeDesc == &core::Vec4i::typeDescription) {
+					tempUniform.setName(property);
+					tempUniform.setType(UniformType::Vec4i);
+					Vec4int value;
+					value.x = valueHandle[0].asInt();
+					value.y = valueHandle[1].asInt();
+					value.z = valueHandle[2].asInt();
+					value.w = valueHandle[3].asInt();
+					tempUniform.setValue(value);
+				}
+				break;
+			}
+			default: {
+				break;
+			}
+		};
+}
+bool PropertySubtreeView::isValidValueHandle(QStringList list, core::ValueHandle handle) {
+	// lamada
+	auto func = [&](QStringList tempList, raco::core::ValueHandle tempHandle) -> bool {
+		if (tempHandle.isObject()) {
+			for (int i{1}; i < list.size(); i++) {
+				QString str = list[i];
+				tempHandle = tempHandle.get(str.toStdString());
+				if (!tempHandle.isProperty()) {
+					return false;
+				}
+			}
+		}
+		return true;
+	};
+
+    if (list.contains("translation") || list.contains("rotation") || list.contains("scaling")) {
+		if (list.contains("x") || list.contains("y") || list.contains("z")) {
+			return true;
+		}
+	} else if (list.contains("uniforms")) {
+		if (list.contains("x") || list.contains("y") || list.contains("z")) {
+			return true;
+		} else {
+			if (func(list, handle)) {
+				if (!handle.hasProperty("x") && !handle.hasProperty("y") && !handle.hasProperty("z")) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 void PropertySubtreeView::collectTabWidgets(QObject* item, QWidgetList& tabWidgets) {
 	if (auto itemWidget = qobject_cast<QWidget*>(item)) {
 		if (itemWidget->focusPolicy() & Qt::TabFocus) {
@@ -183,7 +646,6 @@ void PropertySubtreeView::collectTabWidgets(QObject* item, QWidgetList& tabWidge
 		collectTabWidgets(child, tabWidgets);
 	}
 }
-
 
 void PropertySubtreeView::recalculateTabOrder() {
 	QWidgetList tabWidgets;
@@ -201,14 +663,25 @@ void PropertySubtreeView::updateChildrenContainer() {
 		if (!item_->valueHandle().isObject() && item_->type() == core::PrimitiveType::Ref) {
 			childrenContainer_ = new PropertySubtreeChildrenContainer{item_, this};
 			childrenContainer_->addWidget(new EmbeddedPropertyBrowserView{item_, this});
-			layout_.addWidget(childrenContainer_, 2, 0);
-		} else if (item_->valueHandle().isObject() || hasTypeSubstructure(item_->type())) {
+            layout_.addWidget(childrenContainer_, 2, 0);
+        } else if (item_->valueHandle().isObject() || hasTypeSubstructure(item_->type())) {
 			childrenContainer_ = new PropertySubtreeChildrenContainer{item_, this};
-
+			// match is in nodeData by uniform
 			for (const auto& child : item_->children()) {
-				auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-				childrenContainer_->addWidget(subtree);
+				if (child->parentItem()->parentItem() && child->parentItem()->displayName() == "uniforms") {
+					for (auto& it : showedUniforChildren_) {
+						if (child->displayName() == it->displayName()) {
+							auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
+							childrenContainer_->addWidget(subtree);
+							break;
+						}
+					}
+				} else {
+					auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
+					childrenContainer_->addWidget(subtree);
+				}
 			}
+
 			QObject::connect(item_, &PropertyBrowserItem::childrenChanged, childrenContainer_, [this](const QList<PropertyBrowserItem*> items) {
 				Q_EMIT model_->beforeStructuralChange(this);
 				for (auto& childWidget : childrenContainer_->findChildren<PropertySubtreeView*>(QString{}, Qt::FindDirectChildrenOnly)) {
@@ -217,13 +690,15 @@ void PropertySubtreeView::updateChildrenContainer() {
 					childWidget->deleteLater();
 				}
 				for (auto& child : items) {
-					auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-					childrenContainer_->addWidget(subtree);
+					if (child->parentItem()->displayName() != "uniforms") {
+						auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
+						childrenContainer_->addWidget(subtree);
+					}
 				}
 				recalculateTabOrder();
 			});
-			recalculateLabelWidth();
-			layout_.addWidget(childrenContainer_, 2, 0);
+            recalculateLabelWidth();
+            layout_.addWidget(childrenContainer_, 2, 0);
 		}
 	} else if (!item_->showChildren() && childrenContainer_) {
 		delete childrenContainer_;
@@ -233,6 +708,30 @@ void PropertySubtreeView::updateChildrenContainer() {
 	recalculateTabOrder();
 }
 
+void PropertySubtreeView::mousePressEvent(QMouseEvent* event) {
+	if (!isUniform_)
+		return;
+	if (event->button() == Qt::LeftButton) {
+		if (!isChecked_) {
+			QPalette pal;
+			pal.setColor(QPalette::Window, QColor(206, 143, 26, 200));
+			labelContainer_->setAutoFillBackground(true);
+			labelContainer_->setPalette(pal);
+		} else {
+			labelContainer_->setAutoFillBackground(true);
+			labelContainer_->setPalette(palette_);
+		}
+		isChecked_ = !isChecked_;
+	}
+	if (isChecked_) {
+		QLabel* label = dynamic_cast<QLabel*>(labelContainer_->layout()->itemAt(1)->widget());
+		checkUniformName_.insert(label->text().toStdString());
+	} else {
+		QLabel* label = dynamic_cast<QLabel*>(labelContainer_->layout()->itemAt(1)->widget());
+		checkUniformName_.erase(label->text().toStdString());
+	}
+}
+
 void PropertySubtreeView::setLabelAreaWidth(int width) {
 	if (labelWidth_ != width) {
 		labelWidth_ = width;
@@ -240,7 +739,7 @@ void PropertySubtreeView::setLabelAreaWidth(int width) {
 	}
 }
 
-void PropertySubtreeView::recalculateLabelWidth() { 
+void PropertySubtreeView::recalculateLabelWidth() {
 	if (childrenContainer_ != nullptr) {
 		childrenContainer_->setOffset(decorationWidget_->width());
 	}

@@ -31,7 +31,7 @@ public:
 		QString objName;
 		QString objId;
 		QString tooltipText;
-	};
+    };
 
 	using RefItems = std::vector<RefItem>;
 
@@ -43,7 +43,7 @@ public:
 	int currentIndex() noexcept;
 
 	Q_SIGNAL void indexChanged(int index);
-	Q_SIGNAL void itemsChanged(const RefItems& items);
+    Q_SIGNAL void itemsChanged(const RefItems& items);
 
 	Q_SLOT void setIndex(int index) noexcept;
 
@@ -53,7 +53,7 @@ protected:
 	void updateIndex() noexcept;
 
 private:
-	RefItems items_{};
+    RefItems items_{};
 	int index_{0};
 	PropertyBrowserItem* parent_;
 	raco::components::Subscription subscription_;

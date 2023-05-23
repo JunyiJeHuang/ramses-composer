@@ -21,6 +21,7 @@
 #include "property_browser/controls/MouseWheelGuard.h"
 #include "style/Colors.h"
 #include "style/Icons.h"
+#include "NodeData/nodeManager.h"
 
 #include <QApplication>
 #include <QComboBox>
@@ -118,6 +119,7 @@ RefEditor::RefEditor(
 	});
 
 	layout->addWidget(goToRefObjectButton_);
+
 
 	QObject::connect(ref_, &PropertyBrowserRef::indexChanged, [this](auto index) {
 		emptyReference_ = (index == PropertyBrowserRef::EMPTY_REF_INDEX);

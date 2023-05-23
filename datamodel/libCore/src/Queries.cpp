@@ -438,7 +438,7 @@ bool Queries::isReadOnly(const Project& project, const ValueHandle& handle, bool
 	}
 	if (!linkState) {
 		if (currentLinkState(project, handle) != CurrentLinkState::NOT_LINKED) {
-			return true;
+            return true;
 		}
 	}
 

@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>400</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="contextMenuPolicy">
@@ -44,6 +44,10 @@
     <addaction name="menuUpgrade"/>
     <addaction name="separator"/>
     <addaction name="actionExport"/>
+    <addaction name="actionExportGltf"/>
+    <addaction name="actionExportBMWAssets"/>
+    <addaction name="actionImportBMWAssets"/>
+    <addaction name="actionConvertLuaAnim"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -83,6 +87,10 @@
     <addaction name="actionNewErrorView"/>
     <addaction name="actionNewLogView"/>
     <addaction name="actionNewPythonRunner"/>
+    <addaction name="separator"/>
+    <addaction name="actionNewAnimation"/>
+    <addaction name="actionNewProperty"/>
+    <addaction name="actionNewTimeAxisView"/>
     <addaction name="separator"/>
     <addaction name="menuLayouts"/>
     <addaction name="separator"/>
@@ -131,9 +139,9 @@
    </property>
   </action>
   <action name="actionSaveAsWithNewID">
-      <property name="text">
-          <string>Save As with new &amp;ID...</string>
-      </property>
+   <property name="text">
+    <string>Save As with new &amp;ID...</string>
+   </property>
   </action>
   <action name="actionExport">
    <property name="text">
@@ -249,7 +257,63 @@
    <property name="text">
     <string>New Pyt&amp;hon Runner</string>
    </property>
- </action>
+  </action>
+  <action name="actionNewAnimation">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>New Animation</string>
+   </property>
+   <property name="toolTip">
+    <string>New Animation</string>
+   </property>
+  </action>
+  <action name="actionNewProperty">
+   <property name="text">
+    <string>New Property</string>
+   </property>
+  </action>
+  <action name="actionNewTimeAxisView">
+   <property name="text">
+    <string>New Time Axis View</string>
+   </property>
+  </action>
+  <action name="actionExportBMWAssets">
+   <property name="text">
+    <string>Export BMW Assets</string>
+   </property>
+   <property name="toolTip">
+    <string>BMW Asset</string>
+   </property>
+  </action>
+  <action name="actionImportBMWAssets">
+   <property name="text">
+    <string>Import BMW Assets</string>
+   </property>
+   <property name="toolTip">
+    <string>BMW Asset</string>
+   </property>
+  </action>
+  <action name="actionExportGltf">
+   <property name="text">
+    <string>Export Gltf</string>
+   </property>
+   <property name="toolTip">
+    <string>Export Gltf</string>
+   </property>
+  </action>
+  <action name="actionConvertLuaAnim">
+   <property name="text">
+    <string>Convert to Lua animation</string>
+   </property>
+   <property name="toolTip">
+    <string>Convert to Lua animation</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

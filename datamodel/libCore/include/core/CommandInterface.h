@@ -16,7 +16,11 @@
 #include <string>
 #include <vector>
 
+namespace raco::guiData {
+class NodeData;
+}
 namespace raco::core {
+
 struct MeshDescriptor;
 struct MeshScenegraph;
 
@@ -62,7 +66,7 @@ public:
 	void set(ValueHandle const& handle, bool const& value);
 	void set(ValueHandle const& handle, int const& value);
 	void set(ValueHandle const& handle, int64_t const& value);
-	void set(ValueHandle const& handle, double const& value);
+    void set(ValueHandle const& handle, double const& value, bool push = true);
 	void set(ValueHandle const& handle, std::string const& value);
 	void set(ValueHandle const& handle, SEditorObject const& value);
 
@@ -94,7 +98,7 @@ public:
 	// Delete set of objects
 	// Returns number of actually deleted objects which may be larger than the passed in vector
 	// since dependent objects may need to be included.
-	size_t deleteObjects(std::vector<SEditorObject> const& objects);
+    size_t deleteObjects(std::vector<SEditorObject> const& objects, bool deleteSource = false);
 
 	// Move scenegraph nodes to new parent at a position before the specified index.
 	// - If ValueHandle is invalid/empty the scenegraph parent is removed.
@@ -108,6 +112,9 @@ public:
 	// Calls Context::insertAssetScenegraph and generates a composite undo command.
 	void insertAssetScenegraph(const raco::core::MeshScenegraph& scenegraph, const std::string& absPath, SEditorObject const& parent);
 
+    bool exportAssetScenegraph(raco::core::MeshScenegraph &scenegraph);
+
+	void insertBMWAssetScenegraph(raco::guiData::NodeData* nodeData, SEditorObject const& parent);
 	/**
 	 * Creates a serialized representation of all given [EditorObject]'s and their appropriate dependencies.
 	 * Used in conjunction with #pasteObjects.
@@ -152,6 +159,7 @@ private:
 
 	bool checkHandleForSet(ValueHandle const& handle);
 	bool checkScalarHandleForSet(ValueHandle const& handle, PrimitiveType type);
+    void deleteUsedResource(const ValueHandle &handle);
 
 	BaseContext* context_;
 	UndoStack* undoStack_;

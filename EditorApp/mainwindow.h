@@ -14,9 +14,18 @@
 #include "common_widgets/log_model/LogViewModel.h"
 #include "object_tree_view/ObjectTreeDockManager.h"
 #include "ramses_widgets/RendererBackend.h"
+#include "common_widgets/log_model/LogViewModel.h"
+#include "node_logic/NodeLogic.h"
+#include "curve/CurveNameWidget.h"
+#include "material_logic/materalLogic.h"
+#include "data_Convert/ProgramManager.h"
+#include "animation_editor/ConvertEditorAnimation.h"
 
 #include <QListWidget>
 #include <QMainWindow>
+#include <QTextEdit>
+#include <QProcess>
+#include <QFileSystemWatcher>
 
 namespace Ui {
 class MainWindow;
@@ -48,8 +57,11 @@ public:
 		static inline const char* UNDO_STACK{"Undo Stack"};
 		static inline const char* ERROR_VIEW{"Error View"};
 		static inline const char* LOG_VIEW{"Log View"};
+        static inline const char* ANIMATION_VIEW{"animation View"};
 		static inline const char* PYTHON_RUNNER{"Python Runner"};
 		static inline const char* TRACE_PLAYER{"Trace Player"};
+		static inline const char* PROPERTY_VIEW{"property View"};
+		static inline const char* TIME_AXIS_VIEW{"Time Axis View"};
 	};
 
 	explicit MainWindow(
@@ -59,17 +71,23 @@ public:
 		QWidget* parent = nullptr);
 	~MainWindow();
 
+    void initLogic();
 	void setNewPreviewMenuEntryEnabled(bool enabled);
 	void updateApplicationTitle();
 	void updateSavedLayoutMenu();
 	void updateUpgradeMenu();
 
 	const std::vector<std::wstring>& pythonSearchPaths() const;
+	QString curveNameSuffix(QString curveName);
 
 public Q_SLOTS:
 	void showMeshImportErrorMessage(const std::string& filePath, const std::string& meshError);
 	void focusToObject(const QString& objectID);
-
+	void slotCreateCurveAndBinding(QString property, QString curve, QVariant value);
+	void slotCreateCurve(QString property, QString curve, QVariant value);
+    void setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle> &map);
+	void setTextureResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap);
+    void updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map);
 protected:
 	void timerEvent(QTimerEvent* event) override;
 	void closeEvent(QCloseEvent* event) override;
@@ -80,23 +98,37 @@ protected:
 	void restoreCachedLayout();
 	void restoreCustomLayout(const QString& layoutName);
 	void regenerateLayoutDocks(const RaCoDockManager::LayoutDocks& docks);
-	void saveDockManagerCustomLayouts();
+    void saveDockManagerCustomLayouts();
 
 protected Q_SLOTS:
-	void openProject(const QString& file = {}, int featureLevel = -1, bool generateNewObjectIDs = false);
+    void openProject(const QString& file = {}, int featureLevel = -1, bool generateNewObjectIDs = false);
 	bool saveActiveProject();
 	bool upgradeActiveProject(int newFeatureLevel);
 	bool saveAsActiveProject(bool newID = false);
 	bool saveAsActiveProjectWithNewID();
+    bool exportGltf();
+	bool exportBMWAssets();
+	bool importBMWAssets();
+	void importScene();
 	void resetDockManager();
 	void updateActiveProjectConnection();
 	void updateProjectSavedConnection();
+    void convert2LuaAnimation();
+    void directoryChanged(const QString &path);
 
 Q_SIGNALS:
+    void getMaterialResHandles();
+	void getNodeDataResHandles();
+	void getTextureResHandles();
+    void updateMeshData();
+
 	void viewportChanged(const QSize& sceneSize);
 	void objectFocusRequestedForPropertyBrowser(const QString& objectID);
 	void objectFocusRequestedForTreeDock(const QString& objectID);
-
+    void getResourceHandles();
+    void axesChanged(const bool& z_up);
+    void displayGridChanged(const bool& enable);
+    void sceneUpdated(const bool& z_up);
 private:
 	Ui::MainWindow* ui;
 	OpenRecentMenu* recentFileMenu_;
@@ -108,11 +140,18 @@ private:
 	raco::application::RaCoApplication* racoApplication_;
 	raco::object_tree::view::ObjectTreeDockManager treeDockManager_;
 	raco::common_widgets::TimingsModel timingsModel_{this};
+    raco::dataConvert::ProgramManager programManager_;
 	QMetaObject::Connection activeProjectFileConnection_;
 	QMetaObject::Connection projectSavedConnection_;
 	raco::common_widgets::LogViewModel* logViewModel_;
 	std::map<QString, qint64> pythonScriptCache_;
 	std::map<QString, qint64> pythonScriptArgumentCache_;
+    raco::node_logic::NodeLogic* nodeLogic_{nullptr};
+	CurveNameWidget* curveNameWidget_{nullptr};
+	raco::material_logic::MateralLogic* materialLogic_{nullptr};
+    ConvertEditorAnimation *convertEditorAnimation_{nullptr};
+    QFileSystemWatcher fileWatcher_;
+    QStringList currentFileContents_;
 
 	int renderTimerId_ = 0;
 };

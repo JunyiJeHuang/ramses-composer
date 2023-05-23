@@ -222,9 +222,13 @@ macro(deploy_python_dlls tgt)
 	add_custom_command(TARGET ${tgt} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different "/usr/lib/x86_64-linux-gnu/libpython3.8.so.1.0" "$<TARGET_FILE_DIR:${tgt}>"
 	)
-	ENDIF()
+        ENDIF()
 endmacro()
-
+macro(deploy_protoBuf_shared_dlls tgt)
+        deploy_dlls_and_strip_symbols(${tgt} libprotobuf-lite "$<TARGET_FILE_DIR:${tgt}>")
+        deploy_dlls_and_strip_symbols(${tgt} libprotobuf "$<TARGET_FILE_DIR:${tgt}>")
+        deploy_dlls_and_strip_symbols(${tgt} libprotoc "$<TARGET_FILE_DIR:${tgt}>")
+endmacro()
 if(PACKAGE_TESTS)
 	enable_testing()
 	include(GoogleTest)	

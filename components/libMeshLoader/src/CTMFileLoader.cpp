@@ -61,7 +61,11 @@ void CTMFileLoader::reset() {
 
 const raco::core::MeshScenegraph* CTMFileLoader::getScenegraph(const std::string& absPath) {
 	// Scenegraph import for CTM is unsupported as CTM does not contain any scenegraph.
-	return nullptr;
+    return nullptr;
+}
+
+bool CTMFileLoader::writeScenegraphGltf(const core::MeshScenegraph &sceneGraph, const std::string &absPath) {
+    return false;
 }
 
 int CTMFileLoader::getTotalMeshCount() {

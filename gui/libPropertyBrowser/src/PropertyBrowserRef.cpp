@@ -27,7 +27,7 @@ PropertyBrowserRef::PropertyBrowserRef(PropertyBrowserItem* parent)
 	  lifecycleSub_{parent->dispatcher()->registerOnObjectsLifeCycle([this](auto) { update(); }, [this](auto) { update(); })},
 	  childMoveSub_{parent->dispatcher()->registerOnPropertyChange("children", [this](raco::core::ValueHandle handle) { update(); })}
  {
-	update();
+    update();
 }
 
 const PropertyBrowserRef::RefItems& PropertyBrowserRef::items() const noexcept {
@@ -42,7 +42,7 @@ void PropertyBrowserRef::update() noexcept {
 	if (parent_->valueHandle()) {
 		updateItems();
 		updateIndex();
-		Q_EMIT itemsChanged(items_);
+        Q_EMIT itemsChanged(items_);
 		Q_EMIT indexChanged(index_);
 	}
 }

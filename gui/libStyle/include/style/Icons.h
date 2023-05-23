@@ -76,7 +76,9 @@ public:
 	const QIcon typeSkin{":typeSkinIcon"};
 	const QIcon visibilityDisabled{makeDisabled(":visibilityDisabledIcon")};
 	const QIcon visibilityOn{makeDisabled(":visibilityOnIcon")};
-	const QIcon visibilityOff{makeDisabled(":visibilityOffIcon")};
+    const QIcon visibilityOff{makeDisabled(":visibilityOffIcon")};
+    const QIcon typeZoom{":typeZoomIcon"};
+    const QIcon appLogo{":applicationLogo"};
 
 	static const Icons &instance();
 	static QIcon makeDisabled(const QString &name);

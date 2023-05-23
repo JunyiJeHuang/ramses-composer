@@ -14,7 +14,7 @@ If a copy of the MPL was not distributed with this file, You can obtain one at h
 The authoring tool for the RAMSES rendering ecosystem.
 Find the [user documentation here](https://ramses-composer.readthedocs.io/).
 Find a broader overview of [the Ramses SDK here](https://ramses-sdk.readthedocs.io/).
-
+Find the new features of Ramses Preview, please refer to [What's New in Ramses Preview](./gui/libRamsesWidgets)
 
 ## Setup
 

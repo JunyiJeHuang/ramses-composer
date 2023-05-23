@@ -22,6 +22,8 @@ PreviewScrollAreaWidget::PreviewScrollAreaWidget(const QSize& sceneSize, QWidget
 	: QAbstractScrollArea{parent}, sceneSize_{sceneSize} {
 	connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &PreviewScrollAreaWidget::updateViewport);
 	connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &PreviewScrollAreaWidget::updateViewport);
+	forceUpdate_ = false;
+	s_scaleValue = 1.0f;
 }
 
 void PreviewScrollAreaWidget::setAutoSizing(const AutoSizing mode) {
@@ -61,6 +63,20 @@ void PreviewScrollAreaWidget::resizeEvent(QResizeEvent* /*event*/) {
 	updateViewport();
 }
 
+void PreviewScrollAreaWidget::autoModeRoam() {
+	if (previewMode_ != AutoPreviewMode::ROAM) {
+		previewMode_ = AutoPreviewMode::ROAM;
+		Q_EMIT autoPreviewOrRoamModeChanged(AutoPreviewMode::ROAM);
+	}
+}
+
+void PreviewScrollAreaWidget::autoModePreview() {
+	if (previewMode_ != AutoPreviewMode::PREVIEW) {
+		previewMode_ = AutoPreviewMode::PREVIEW;
+		Q_EMIT autoPreviewOrRoamModeChanged(AutoPreviewMode::PREVIEW);
+	}
+}
+
 std::optional<QPoint> PreviewScrollAreaWidget::globalPositionToPreviewPosition(const QPoint& p) {
 	auto localPosition = viewport()->mapFromGlobal(p);
 	auto result = QPoint{
@@ -86,29 +102,34 @@ void PreviewScrollAreaWidget::wheelEvent(QWheelEvent* event) {
 		sizeMode_ = AutoSizing::OFF;
 		scaleValue_ = pow(2, ceil(log(scaleValue_) / log(2)));
 	}
+    bool scaleUp{true};
 	if (event->angleDelta().y() > 0) {
 		scaleValue_ *= 2.0;
 	} else {
 		scaleValue_ *= 0.5;
-	}
-	virtSize = scaledSize();
+		scaleUp = false;
+    }
+	Q_EMIT scaleChanged(s_scaleValue, scaleUp);
+
+//	scaleValue_ = 1.0;
+    virtSize = scaledSize();
 
 	updateScrollbarSize(virtSize);
 	horizontalScrollBar()->setValue(centreX * virtSize.width() - mousePivot_.x());
-	verticalScrollBar()->setValue(centerY * virtSize.height() - mousePivot_.y());
+    verticalScrollBar()->setValue(centerY * virtSize.height() - mousePivot_.y());
 
-	updateViewport();
+    updateViewport();
 }
 
-void PreviewScrollAreaWidget::mousePressEvent(QMouseEvent* event) {
-	setCursor(Qt::DragMoveCursor);
-	mousePivot_ = event->pos();
-}
+//void PreviewScrollAreaWidget::mousePressEvent(QMouseEvent* event) {
+//	setCursor(Qt::DragMoveCursor);
+//	mousePivot_ = event->pos();
+//}
 
-void PreviewScrollAreaWidget::mouseReleaseEvent(QMouseEvent* event) {
-	unsetCursor();
-	mousePivot_ = event->pos();
-}
+//void PreviewScrollAreaWidget::mouseReleaseEvent(QMouseEvent* event) {
+//	unsetCursor();
+//	mousePivot_ = event->pos();
+//}
 
 void PreviewScrollAreaWidget::mouseMoveEvent(QMouseEvent* event) {
 	if (event->MouseButtonPress) {
@@ -130,13 +151,13 @@ void PreviewScrollAreaWidget::updateViewport() {
 			break;
 		}
 		case AutoSizing::VERTICAL_FIT: {
-			const auto scale = static_cast<float>(areaSize.height()) / sceneSize_.height();
+            const auto scale = static_cast<double>(areaSize.height()) / sceneSize_.height();
 			widgetSize = sceneSize_ * scale;
 			scaleValue_ = scale;
 			break;
 		}
 		case AutoSizing::HORIZONTAL_FIT: {
-			const auto scale = static_cast<float>(areaSize.width()) / sceneSize_.width();
+            const auto scale = static_cast<double>(areaSize.width()) / sceneSize_.width();
 			widgetSize = sceneSize_ * scale;
 			scaleValue_ = scale;
 			break;
@@ -164,8 +185,9 @@ void PreviewScrollAreaWidget::updateViewport() {
 	const QPoint viewportOffset{horizontalScrollBar()->value(), verticalScrollBar()->value()};
 
 	Q_EMIT viewportRectChanged(areaSize, viewportPosition_, viewportOffset, viewportSize, widgetSize, sceneSize_);
-	Q_EMIT scaleChanged(scaleValue_);
+    Q_EMIT scaleChanged(scaleValue_, true);
 	Q_EMIT autoSizingChanged(sizeMode_);
+	Q_EMIT autoPreviewOrRoamModeChanged(previewMode_);
 }
 
 void PreviewScrollAreaWidget::updateScrollbarSize(const QSize& widgetSize) noexcept {
@@ -182,10 +204,14 @@ QSize PreviewScrollAreaWidget::scaledSize() const noexcept {
 
 void PreviewScrollAreaWidget::setViewport(const QSize& sceneSize) {
 	QSize size = sceneSize.boundedTo({4096, 4096}).expandedTo({1, 1});
-	if (sceneSize_ != size) {
+	if (sceneSize_ != size || forceUpdate_) {
 		sceneSize_ = size;
 		updateViewport();
 	}
+}
+
+void PreviewScrollAreaWidget::setForceUpdateFlag(bool forceUpdate) {
+	forceUpdate_ = forceUpdate;
 }
 
 }  // namespace raco::ramses_widgets

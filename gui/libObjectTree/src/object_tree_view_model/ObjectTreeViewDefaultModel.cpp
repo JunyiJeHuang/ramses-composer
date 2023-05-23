@@ -75,9 +75,9 @@ ObjectTreeViewDefaultModel::ObjectTreeViewDefaultModel(raco::core::CommandInterf
 
 	nodeSubscriptions_["children"].emplace_back(dispatcher_->registerOnPropertyChange("children", [this](ValueHandle handle) {
 		dirty_ = true;
-	}));
+    }));
 
-	extProjectChangedSubscription_ = dispatcher_->registerOnExternalProjectMapChanged([this]() { dirty_ = true; });
+    extProjectChangedSubscription_ = dispatcher_->registerOnExternalProjectMapChanged([this]() { dirty_ = true; });
 
 	dirty_ = true;
 }
@@ -505,6 +505,8 @@ SEditorObject ObjectTreeViewDefaultModel::createNewObject(const std::string& typ
 	auto name = project()->findAvailableUniqueName(nodes.begin(), nodes.end(), nullptr, nodeName.empty() ? raco::components::Naming::format(typeName) : nodeName);
 	auto newObj = commandInterface_->createObject(typeName, name, parent.isValid() ? parentObj : nullptr);
 
+    Q_EMIT editNodeOpreations();
+
 	return newObj;
 }
 
@@ -587,8 +589,10 @@ bool ObjectTreeViewDefaultModel::canDuplicateAtIndices(const QModelIndexList& in
 	return Queries::canDuplicateObjects(objs, *project());
 }
 
-size_t ObjectTreeViewDefaultModel::deleteObjectsAtIndices(const QModelIndexList& indices) {
-	return commandInterface_->deleteObjects(indicesToSEditorObjects(indices));
+size_t ObjectTreeViewDefaultModel::deleteObjectsAtIndices(const QModelIndexList& indices, bool isDelete) {
+    size_t t = commandInterface_->deleteObjects(indicesToSEditorObjects(indices), isDelete);
+    Q_EMIT editNodeOpreations();
+    return t;
 }
 
 bool ObjectTreeViewDefaultModel::canDeleteUnusedResources() const {
@@ -618,6 +622,7 @@ bool ObjectTreeViewDefaultModel::pasteObjectAtIndex(const QModelIndex& index, bo
 			*outError = error.what();
 		}
 	}
+	Q_EMIT editNodeOpreations();
 	return success;
 }
 
@@ -632,29 +637,45 @@ void ObjectTreeViewDefaultModel::cutObjectsAtIndices(const QModelIndexList& indi
 	if (!text.empty()) {
 		RaCoClipboard::set(text);
 	}
+    Q_EMIT editNodeOpreations();
 }
 
 void ObjectTreeViewDefaultModel::moveScenegraphChildren(const std::vector<SEditorObject>& objects, SEditorObject parent, int row) {
 	commandInterface_->moveScenegraphChildren(objects, parent, parent ? row : -1);
+    Q_EMIT editNodeOpreations();
 }
 
-void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex) {
-	auto absPath = filePath.toStdString();
+void ObjectTreeViewDefaultModel::importMeshScenegraphFromBMWAssets(raco::guiData::NodeData* node, const QModelIndex& selectedIndex) {
+	auto selectedObject = indexToSEditorObject(selectedIndex);
+	commandInterface_->insertBMWAssetScenegraph(node, selectedObject);
+}
 
+void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex, bool &keyAnimation) {
+	auto absPath = filePath.toStdString();
 	auto selectedObject = indexToSEditorObject(selectedIndex);
 
 	// create dummy cache entry to prevent "cache corpses" if the mesh file is otherwise not accessed by any Mesh
 	auto dummyCacheEntry = commandInterface_->meshCache()->registerFileChangedHandler(absPath, {nullptr, nullptr, []() {}});
 	if (auto sceneGraphPtr = commandInterface_->meshCache()->getMeshScenegraph(absPath)) {
 		MeshScenegraph sceneGraph{*sceneGraphPtr};
-		auto importStatus = raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr).exec();
-		if (importStatus == QDialog::Accepted) {
-			commandInterface_->insertAssetScenegraph(sceneGraph, absPath, selectedObject);
+        auto importDialog = new raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr);
+		auto importStatus = importDialog->exec();
+        keyAnimation = importDialog->animationEditorButton_->isChecked();
+		if (importStatus == QDialog::Accepted && selectedObject != nullptr) {
+			bool projectZup = project()->settings()->axes_.asBool();
+			ValueHandle translation_y{selectedObject, &user_types::Node::translation_, &core::Vec3f::y};
+			ValueHandle translation_z{selectedObject, &user_types::Node::translation_, &core::Vec3f::z};
+            ValueHandle rotation_x{selectedObject, &user_types::Node::rotation_, &core::Vec3f::x};
+			float y = translation_y.as<float>();
+			float z = translation_z.as<float>();
+            float rot_x = rotation_x.as<float>();
+            commandInterface_->insertAssetScenegraph(sceneGraph, absPath, selectedObject);
 		}
 	} else {
 		auto meshError = commandInterface_->meshCache()->getMeshError(absPath);
 		Q_EMIT meshImportFailed(absPath, meshError);
 	}
+    Q_EMIT editNodeOpreations();
 }
 
 int ObjectTreeViewDefaultModel::rowCount(const QModelIndex& parent) const {

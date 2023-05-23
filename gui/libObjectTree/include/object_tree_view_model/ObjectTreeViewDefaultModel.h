@@ -108,17 +108,19 @@ Q_SIGNALS:
 	void repaintRequested();
 	void meshImportFailed(const std::string &filePath, const std::string &error);
 	void dataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles = QVector<int>());
+    void editNodeOpreations();
 
 public Q_SLOTS:
 	core::SEditorObject createNewObject(const std::string& typeName, const std::string& nodeName = "", const QModelIndex& parent = QModelIndex());
-	virtual size_t deleteObjectsAtIndices(const QModelIndexList& indices);
+    virtual size_t deleteObjectsAtIndices(const QModelIndexList& indices, bool isDelete = false);
 	virtual void copyObjectsAtIndices(const QModelIndexList& indices, bool deepCopy);
 	virtual void cutObjectsAtIndices(const QModelIndexList& indices, bool deepCut);
 	virtual bool pasteObjectAtIndex(const QModelIndex& index, bool pasteAsExtref = false, std::string* outError = nullptr, const std::string& serializedObjects = RaCoClipboard::get());
 	virtual std::vector<core::SEditorObject> duplicateObjectsAtIndices(const QModelIndexList& indices);
 	void moveScenegraphChildren(const std::vector<core::SEditorObject>& objects, core::SEditorObject parent, int row = -1);
-	void importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex);
+    void importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex, bool &keyAnimation);
 	void deleteUnusedResources();
+	void importMeshScenegraphFromBMWAssets(raco::guiData::NodeData* node, const QModelIndex& selectedIndex);
 
 protected:
 	components::SDataChangeDispatcher dispatcher_;

@@ -50,9 +50,10 @@ add_library(libCore
 	include/core/Queries_Tags.h src/Queries_Tags.cpp
 	include/core/SceneBackendInterface.h
 	include/core/Serialization.h src/Serialization.cpp
-    include/core/SerializationKeys.h    
+        include/core/SerializationKeys.h
 	include/core/TagDataCache.h src/TagDataCache.cpp
 	include/core/Undo.h src/Undo.cpp
+        include/core/UndoState.h src/UndoState.cpp
 	include/core/UserObjectFactoryInterface.h
 )
 
@@ -66,6 +67,7 @@ PUBLIC
 	raco::DataStorage	
 	raco::LogSystem
 	raco::Utils
+	raco::GuiData
 	Qt5::Core
 PRIVATE
 	# Linking the user types to the Core causes a circular dependency.

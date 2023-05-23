@@ -188,10 +188,13 @@ void ScalarSlider<T>::mouseReleaseEvent(QMouseEvent* event) {
 		} else if (event->localPos().x() > rect().right() - 24l) {
 			addValue(1);
 			signalValueEdited(value());
+            signalFinished();
 		} else {
 			signalSingleClicked();
 		}
-	}
+    } else {
+        signalFinished();
+    }
 	mouseIsDragging_ = false;
 	setCursor(Qt::CursorShape::SizeHorCursor);
 	clearFocus();

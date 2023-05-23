@@ -264,7 +264,7 @@ inline void getOutputFromEngine(const rlogic::Property& property, const core::Va
 	// read quaternion rotation data
 	if (valueHandle.isVec3f() && property.getType() == rlogic::EPropertyType::Vec4f) {
 		auto [x, y, z, w] = property.get<rlogic::vec4f>().value();
-		auto [eulerX, eulerY, eulerZ] = raco::utils::math::quaternionToXYZDegrees(x, y, z, w);
+        auto [eulerX, eulerY, eulerZ] = raco::utils::math::quaternionToXYZDegrees(x, y, z, w);
 		core::CodeControlledPropertyModifier::setVec3f(valueHandle, eulerX, eulerY, eulerZ, recorder);
 		return;
 	}

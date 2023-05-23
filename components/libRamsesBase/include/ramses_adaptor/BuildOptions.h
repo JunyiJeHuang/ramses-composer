@@ -12,5 +12,5 @@
 #include <ramses-client-api/ERotationConvention.h>
 
 namespace raco::ramses_adaptor {
-    constexpr auto RAMSES_ROTATION_CONVENTION { ramses::ERotationConvention::XYZ };
+    constexpr auto RAMSES_ROTATION_CONVENTION { ramses::ERotationConvention::ZYX }; // XYZ
 }

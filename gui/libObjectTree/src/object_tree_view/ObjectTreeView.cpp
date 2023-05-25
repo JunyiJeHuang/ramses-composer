@@ -95,6 +95,18 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 		}
 
 		Q_EMIT newObjectTreeItemsSelected(getSelectedHandles());
+
+        if (!selectedObjects.empty()) {
+            core::SEditorObject object = *(selectedObjects.begin());
+            if (object->getTypeDescription().typeName == raco::user_types::MeshNode::typeDescription.typeName) {
+                if (selModelID_ != object->objectID()) {
+                    selModelID_ = object->objectID();
+                    Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString::fromStdString(selModelID_));
+                }
+            } else {
+                Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString());
+            }
+        }
 	});
 
 	connect(treeModel_, &ObjectTreeViewDefaultModel::modelReset, this, &ObjectTreeView::restoreItemExpansionStates);
@@ -552,21 +564,28 @@ std::map<std::string, core::ValueHandle> ObjectTreeView::updateMaterial() {
 }
 
 std::map<std::string, core::ValueHandle> ObjectTreeView::updateTexture() {
-	std::map<std::string, core::ValueHandle> textureHandleReMap;
-	int row = model()->rowCount();
-	for (int i{0}; i < row; ++i) {
-		QModelIndex index = model()->index(i, 0);
-		core::ValueHandle tempHandle = indexToSEditorObject(index);
-		std::string str = tempHandle[0].asString();
-		std::string path = tempHandle[0].getPropertyPath();
-		if (&tempHandle.rootObject()->getTypeDescription() == &raco::user_types::Texture::typeDescription) {
-			textureHandleReMap.emplace(str, tempHandle);
-		}
-	}
-	return textureHandleReMap;
+    std::map<std::string, core::ValueHandle> textureHandleReMap;
+    int row = model()->rowCount();
+    for (int i{0}; i < row; ++i) {
+        QModelIndex index = model()->index(i, 0);
+        QString text = model()->data(index, Qt::DisplayRole).toString();
+        if (text == "Textures") {
+            for (int j{0}; j < model()->rowCount(index); j++) {
+                QModelIndex tempIndex = model()->index(j, 0, index);
+                core::ValueHandle tempHandle = indexToSEditorObject(tempIndex);
+                std::string str = tempHandle[0].asString();
+                std::string path = tempHandle[0].getPropertyPath();
+                textureHandleReMap.emplace(str, tempHandle);
+            }
+        }
+    }
+    return textureHandleReMap;
 }
 
 void ObjectTreeView::updateMeshData() {
+	if (viewTitle_.compare("Scene Graph") != 0) {
+		return;
+	}
     MeshDataManager::GetInstance().clearMesh();
     int row = model()->rowCount();
     for (int i{0}; i < row; ++i) {
@@ -634,7 +653,8 @@ void ObjectTreeView::globalOpreations() {
 
 void ObjectTreeView::selectObject(const QString &objectID) {
 	if (objectID.isEmpty()) {
-		resetSelection();
+        resetSelection();
+        Q_EMIT newObjectTreeItemsSelected({});
 		return;
 	}
 
@@ -721,6 +741,7 @@ void ObjectTreeView::updateMeshModelMatrix(const std::string &objectID) {
         matrix = matrix * temp;
     }
     getOneMeshModelMatrix(index, matrix);
+    Q_EMIT signalProxy::GetInstance().sigUpdateMeshModelMatrixCompleted(objectID);
 }
 
 void ObjectTreeView::updateMeshNodeVisible(const bool &visible, const std::string &objectID) {
@@ -734,6 +755,7 @@ void ObjectTreeView::updateMeshNodeVisible(const bool &visible, const std::strin
     } else {
         updateMeshModelMatrix(objectID);
     }
+    Q_EMIT signalProxy::GetInstance().sigSetVisibleMeshNodeCompleted(visible, objectID);
 }
 
 void ObjectTreeView::updateNodeProperty(const std::string &objectID) {
@@ -860,8 +882,29 @@ void ObjectTreeView::globalPasteCallback(const QModelIndex &index, bool asExtRef
 
 void ObjectTreeView::shortcutDelete() {
 	auto selectedIndices = getSelectedIndices();
+    bool isResource = false;
+    std::vector<core::SEditorObject> editorObjects = treeModel_->indicesToSEditorObjects(selectedIndices);
+    for (const auto &obj : editorObjects) {
+        std::string typeName = obj.get()->getTypeDescription().typeName;
+        if (typeName == raco::user_types::Texture::typeDescription.typeName || typeName == raco::user_types::Material::typeDescription.typeName ||
+            typeName == raco::user_types::CubeMap::typeDescription.typeName) {
+            isResource = true;
+        }
+    }
+    bool isDelete = false;
+    if (isResource) {
+        QMessageBox::StandardButton resBtn = QMessageBox::question(this, "Ramses Composer",
+            tr("Delete source file?\n"),
+            QMessageBox::Cancel | QMessageBox::No | QMessageBox::Yes,
+            QMessageBox::Yes);
+        if (resBtn == QMessageBox::Cancel) {
+            return;
+        }
+        isDelete = resBtn == QMessageBox::Yes ? true : false;
+    }
+
 	if (!selectedIndices.empty()) {
-        auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices);
+        auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices, isDelete);
 
 		if (delObjAmount > 0) {
 			selectionModel()->Q_EMIT selectionChanged({}, {});
@@ -1440,7 +1483,7 @@ void ObjectTreeView::createResources(const QString path, const QSet<QString> fil
                 raco::core::ValueHandle handle(object);
                 if (handle.hasProperty("uri")) {
                     raco::core::ValueHandle uriHandle = handle.get("uri");
-                    std::string uri = path.toStdString() + "/" + file.toStdString();
+                    std::string uri = "images/" + file.toStdString();
                     commandInterface_->set(uriHandle, uri);
                 }
             }
@@ -1485,7 +1528,7 @@ void ObjectTreeView::deleteResources(const QString path, const QSet<QString> fil
                 if (handle) {
                     if (handle.hasProperty("uri")) {
                         raco::core::ValueHandle uriHandle = handle.get("uri");
-                        std::string uri = path.toStdString() + "/" + file.toStdString();
+                        std::string uri = "images/" + file.toStdString();
                         if (uriHandle.asString().compare(uri) == 0) {
                             if (proxyModel_) {
                                 index = proxyModel_->mapToSource(index);

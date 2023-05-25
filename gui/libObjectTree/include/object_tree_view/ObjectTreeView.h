@@ -142,6 +142,7 @@ private:
     QMatrix4x4 rotationEuler(ValueHandle handle);
     QMatrix4x4 scaling(ValueHandle handle);
     void traversalParentNode(QModelIndex index, QVector<QMatrix4x4> &matrixs);
+    std::string selModelID_;
 
 };
 

@@ -27,6 +27,7 @@
 #include <QtMath>
 #include <QtAlgorithms>
 #include <QMap>
+#include <QCursor>
 
 namespace raco::user_types {
 
@@ -44,6 +45,13 @@ class SceneBackend;
 }
 
 namespace raco::ramses_widgets {
+
+enum KEY_BOARD_TYPE {
+    KEY_BOARD_NONE,
+    KEY_BOARD_TRANSLATION,
+    KEY_BOARD_ROTATION,
+    KEY_BOARD_SCALING
+};
 
 class PreviewContentWidget;
 class PreviewScrollAreaWidget;
@@ -68,7 +76,7 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 public Q_SLOTS:
 	void setViewport(const QSize& sceneSize);
@@ -83,6 +91,10 @@ private:
     float checkSingleTriCollision(QVector3D ray, QVector3D camera, QVector<QVector3D> triangle);
     QMap<std::string, QVector<QVector<QVector3D> >> getMeshTriangles();
     std::string caculateRayIntersection(QVector3D ray, QVector3D cameraPos);
+    void mouseMove(QPoint position);
+    void translationMovement(QPoint position);
+    void rotationMovement(QPoint position);
+    void scalingMovement(QPoint position);
 
 private:
 	std::unique_ptr<Ui::PreviewMainWindow> ui_;
@@ -101,6 +113,8 @@ private:
 	bool haveInited_;
     QLabel *upLabel_{nullptr};
     std::string selModelID_;
+    KEY_BOARD_TYPE keyBoardType_ = KEY_BOARD_NONE;
+    QPoint selModelPos_;
 };
 
 }  // namespace raco::ramses_widgets

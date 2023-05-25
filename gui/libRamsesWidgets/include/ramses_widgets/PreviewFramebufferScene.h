@@ -11,6 +11,8 @@
 
 #include "ramses_base/RamsesHandles.h"
 #include "ramses_widgets/RendererBackend.h"
+#include "ramses_adaptor/SceneBackend.h"
+#include "PreviewOutLineScene.h"
 #include <QtGlobal>
 
 namespace raco::ramses_widgets {
@@ -32,27 +34,28 @@ class PreviewFramebufferScene final {
 	Q_DISABLE_COPY(PreviewFramebufferScene);
 
 public:
-	explicit PreviewFramebufferScene(ramses::RamsesClient& client, ramses::sceneId_t sceneId);
+	explicit PreviewFramebufferScene(ramses::RamsesClient& client, raco::ramses_adaptor::SceneBackend* sceneBackend, ramses::sceneId_t sceneId);
 
 	ramses::sceneId_t getSceneId() const;
 	ramses::dataConsumerId_t setupFramebufferTexture(RendererBackend& backend, const QSize& size, PreviewFilteringMode filteringMode, PreviewMultiSampleRate sampleRate);
 	void setViewport(const QPoint& viewportPosition, const QSize& viewportSize, const QSize& virtualSize);
-
-private:
+	void sceneUpdate(bool z_up, float scaleValue);
 	// Scene
-	raco::ramses_base::RamsesScene scene_;
+    raco::ramses_base::RamsesScene scene_;
+    ramses_adaptor::SceneBackend* sceneBackend_;
 	raco::ramses_base::RamsesOrthographicCamera camera_;
+	std::unique_ptr<raco::ramses_widgets::PreviewOutlineScene> outlineScene_;
 	std::shared_ptr<ramses::RenderGroup> renderGroup_;
 	std::shared_ptr<ramses::RenderPass> renderPass_;
 	raco::ramses_base::RamsesEffect effect_;
-	raco::ramses_base::RamsesEffect effectMS_;
+    raco::ramses_base::RamsesEffect effectMS_;
 	raco::ramses_base::RamsesAppearance appearance_;
-	raco::ramses_base::RamsesAppearance appearanceMS_;
+    raco::ramses_base::RamsesAppearance appearanceMS_;
 	raco::ramses_base::RamsesArrayResource indexDataBuffer_;
 	raco::ramses_base::RamsesArrayResource vertexDataBuffer_;
 	raco::ramses_base::RamsesArrayResource uvDataBuffer_;
 	raco::ramses_base::RamsesGeometryBinding geometryBinding_;
-	raco::ramses_base::RamsesGeometryBinding geometryBindingMS_;
+    raco::ramses_base::RamsesGeometryBinding geometryBindingMS_;
 	raco::ramses_base::RamsesMeshNode meshNode_;
 
 	// Offscreen texture and consumer

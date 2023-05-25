@@ -322,6 +322,41 @@ inline void getOutputFromEngine(const rlogic::Property& property, const core::Va
 	}
 }
 
+inline void setUniform(ramses::Appearance* appearance, const core::ValueHandle& valueHandle) {
+    using core::PrimitiveType;
+    ramses::UniformInput input;
+    appearance->getEffect().findUniformInput(valueHandle.getPropName().c_str(), input);
+
+    switch (valueHandle.type()) {
+        case PrimitiveType::Double:
+            appearance->setInputValueFloat(input, valueHandle.as<float>());
+            break;
+        case PrimitiveType::Int:
+            appearance->setInputValueInt32(input, static_cast<int32_t>(valueHandle.as<int>()));
+            break;
+
+        case PrimitiveType::Struct: {
+            auto typeDesc = &valueHandle.constValueRef()->asStruct().getTypeDescription();
+            if (typeDesc == &core::Vec2f::typeDescription) {
+                appearance->setInputValueVector2f(input, valueHandle[0].as<float>(), valueHandle[1].as<float>());
+            } else if (typeDesc == &core::Vec3f::typeDescription) {
+                appearance->setInputValueVector3f(input, valueHandle[0].as<float>(), valueHandle[1].as<float>(), valueHandle[2].as<float>());
+            } else if (typeDesc == &core::Vec4f::typeDescription) {
+                appearance->setInputValueVector4f(input, valueHandle[0].as<float>(), valueHandle[1].as<float>(), valueHandle[2].as<float>(), valueHandle[3].as<float>());
+            } else if (typeDesc == &core::Vec2i::typeDescription) {
+                appearance->setInputValueVector2i(input, static_cast<int32_t>(valueHandle[0].as<int>()), static_cast<int32_t>(valueHandle[1].as<int>()));
+            } else if (typeDesc == &core::Vec3i::typeDescription) {
+                appearance->setInputValueVector3i(input, static_cast<int32_t>(valueHandle[0].as<int>()), static_cast<int32_t>(valueHandle[1].as<int>()), static_cast<int32_t>(valueHandle[2].as<int>()));
+            } else if (typeDesc == &core::Vec4i::typeDescription) {
+                appearance->setInputValueVector4i(input, static_cast<int32_t>(valueHandle[0].as<int>()), static_cast<int32_t>(valueHandle[1].as<int>()), static_cast<int32_t>(valueHandle[2].as<int>()), static_cast<int32_t>(valueHandle[3].as<int>()));
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 inline void setDepthWrite(ramses::Appearance* appearance, const core::ValueHandle& valueHandle) {
 	appearance->setDepthWrite(valueHandle.as<bool>() ? ramses::EDepthWrite_Enabled : ramses::EDepthWrite_Disabled);
 }

@@ -21,7 +21,7 @@ function interface(IN, OUT)
     OUT.progress = Type:Float()
     -- Start playing
     IN.start = Type:Bool()
-    -- When the value is `true`, the animation playback can be controlled separately, 
+    -- When the value is `true`, the animation playback can be controlled separately,
     -- while `false` continuously plays
     IN.playAlone = Type:Bool()
     -- External interface, setting animation names
@@ -29,16 +29,52 @@ function interface(IN, OUT)
     -- Current animation name
     OUT.animationName = Type:String()
     --[[
-        External interface: 
+        External interface:
         Scale: Scale in pixel size, the value range is 0-1000, and the default value is 300.
         Opacity: For visibility, Hidden when the value is 0, visible when the value is 1, with a default value of 1.
         Right: Orientation of Ellie, on the right when the value is 1, on the left when the value is 0, with a default value of 0.
         Color:  1. Add external variables: HUD, C1, HUD_ C1；
                 2. colorMode_ Color1=mix (C1_V4, HUD_C1_V4, HUD) color mixing;
                 3. Bind colorMode_ Color1 to u_ color1
+        DotOpacity: opacity for bg, value range 0-1, default value 0.75.
+	    DotSize: contros the size of the bg, value range 0-1, default value 1.
+	    Slide: Switch from StartOffset to TargetOffsest, value range 0-1, default value 0.
     ]]
     IN.Scale = Type:Float()
     OUT.Scale = Type:Vec3f()
+    -- OPacity
+    IN.Opacity = Type:Float()
+    OUT.Opacity = Type:Float()
+    -- HUD
+    IN.HUD = Type:Float()
+    -- u_color1
+    IN.Content_IPAIconTransformation_C1 = Type:Vec4f()
+    IN.HUD_Content_IPAIconTransformation_C1 = Type:Vec4f()
+    OUT.colorMode_Color1 = Type:Vec4f()
+    -- u_color2
+    IN.Content_IPAIconTransformation_C2 = Type:Vec4f()
+    IN.HUD_Content_IPAIconTransformation_C2 = Type:Vec4f()
+    OUT.colorMode_Color2 = Type:Vec4f()
+    -- u_color3
+    IN.Content_IPAIconTransformation_C3 = Type:Vec4f()
+    IN.HUD_Content_IPAIconTransformation_C3 = Type:Vec4f()
+    OUT.colorMode_Color3 = Type:Vec4f()
+    -- DotOpacity
+    IN.DotOpacity = Type:Float()
+    OUT.dot_opacity = Type:Float()
+    -- DotSize
+    IN.DotSize = Type:Float()
+    OUT.dot_size = Type:Float()
+    -- Right
+    IN.Right = Type:Int32()
+    -- Slide
+    IN.Slide = Type:Float()
+    IN.StartOffset = Type:Vec2f()
+    IN.TargetOffset = Type:Vec2f()
+    OUT.slide = Type:Float()
+    OUT.start_offset = Type:Vec2f()
+    OUT.target_offset = Type:Vec2f()
+    OUT.slide_translation = Type:Vec3f()
     -- External interface
 
     for on, def in pairs(interfaceDefinedMap) do
@@ -199,8 +235,70 @@ function run(IN, OUT)
 
     -- -----------------External interface
     -- Scale in pixel size, the value range is 0-1000, and the default value is 300.
+    -- Right: Orientation of Ellie, on the right when the value is 1, on the left when the value is 0, with a default value of 0.
+    local right = 0
+    if IN.Right == 0 or IN.Right == 1 then
+        right = IN.Right
+    end
+
     if IN.Scale >= 0 and IN.Scale <= 1000 then
         local scale = IN.Scale / 300
-        OUT.Scale = { scale, 1, scale }
+        local scaleX = scale
+        local scaleZ = scale
+        if right == 1 then
+            scaleX = -scaleX
+        end
+        OUT.Scale = { scaleX, 1, scaleZ }
     end
+    -- For visibility, Hidden when the value is 0, visible when the value is 1, with a default value of 1.
+    if IN.Opacity < 0 then
+        OUT.Opacity = 0
+    elseif OUT.Opacity > 1 then
+        OUT.Opacity = 1
+    else
+        OUT.Opacity = IN.Opacity
+    end
+    -- HUD Color1
+    -- OUT.colorMode_Color1 = UtilModule.blendColors2(IN.Content_IPAIconTransformation_C1, IN.HUD_Content_IPAIconTransformation_C1, IN.HUD)
+    -- OUT.colorMode_Color2 = UtilModule.blendColors2(IN.Content_IPAIconTransformation_C2, IN.HUD_Content_IPAIconTransformation_C2, IN.HUD)
+    -- OUT.colorMode_Color3 = UtilModule.blendColors2(IN.Content_IPAIconTransformation_C3, IN.HUD_Content_IPAIconTransformation_C3, IN.HUD)
+    -- debug
+    OUT.colorMode_Color1 = IN.Content_IPAIconTransformation_C1
+    OUT.colorMode_Color2 = IN.Content_IPAIconTransformation_C2
+    OUT.colorMode_Color3 = IN.Content_IPAIconTransformation_C3
+    -- opacity for bg, value range 0-1, default value 0.75.
+    if IN.DotOpacity >= 0 and IN.DotOpacity <= 2 then
+        OUT.dot_opacity = IN.DotOpacity * OUT.Opacity
+    end
+    -- contros the size of the bg, value range 0-1, default value 1.
+    if IN.DotSize >= 0 and IN.DotSize <= 1 then
+        OUT.dot_size = IN.DotSize
+    end
+    -- Slide: Switch from StartOffset to TargetOffsest, value range 0-1, default value 0.
+    local slide = IN.Slide
+    -- local slide = 1 - (1 - IN.Slide) * (1 - IN.Slide)
+    if slide < 0 then
+        slide = 0
+    elseif slide > 1 then
+        slide = 1
+    end
+
+    local _startOffset = IN.StartOffset
+    local _targetOffset = {IN.TargetOffset[1], IN.TargetOffset[2]}
+
+    if IN.Right == 1 then
+        _startOffset = {IN.StartOffset[1] * -1, IN.StartOffset[2]}
+        _targetOffset = {IN.TargetOffset[1] * -1, IN.TargetOffset[2]}
+    end
+
+    local x1, y1 = _startOffset[1], _startOffset[2]
+    local x2, y2 = _targetOffset[1], _targetOffset[2]
+
+    local dirX = x2 - x1
+    local dirY = y2 - y1
+
+    OUT.slide_translation = { x1 + dirX * slide, 0, y1 + dirY * slide }
+    OUT.slide = slide
+    OUT.start_offset = _startOffset
+    OUT.target_offset = _targetOffset
 end

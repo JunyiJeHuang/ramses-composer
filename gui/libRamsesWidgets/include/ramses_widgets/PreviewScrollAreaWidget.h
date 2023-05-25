@@ -34,6 +34,7 @@ public:
 
 	bool isGlobalPositionInsidePreview(const QPoint& p);
 	std::optional<QPoint> globalPositionToPreviewPosition(const QPoint& p);
+    std::optional<QPoint> globalPositionToLocalPosition(const QPoint& p);
 	void setForceUpdateFlag(bool forceUpdate);
 
 public Q_SLOTS:

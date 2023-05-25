@@ -18,6 +18,7 @@
 #define JSON_TRANSLATION            ("translation")
 #define JSON_ROTATION               ("rotation")
 #define JSON_SCALE                  ("scaling")
+#define JSON_SCALE_OLD              ("scale")
 #define JSON_BASIC_PROPERTY         ("basicProperty")
 #define JSON_KEYFRAME               ("keyFrame")
 #define JSON_TYPE                   ("type")

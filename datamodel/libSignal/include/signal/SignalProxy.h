@@ -13,7 +13,6 @@ class signalProxy : public QObject
 public:
     static signalProxy& GetInstance() {
         static signalProxy Instance;
-		qDebug() << "Signal& GetInstance() ";
         return Instance;
     }
     ~signalProxy() {}
@@ -94,6 +93,18 @@ Q_SIGNALS:
     void sigCreateResources(const QString path, const QSet<QString> files);
     //
     void sigDeleteResources(const QString path, const QSet<QString> files);
+    //
+    void sigUpdateMeshNodeTransProperty(const std::string &objectID, const double& transX, const double& transY);
+    //
+    void sigUpdateMeshNodeRotationProperty(const std::string &objectID, const double& rotatX, const double& rotatY);
+    //
+    void sigUpdateMeshNodeScalingProperty(const std::string &objectID, const double& scaling);
+    //
+    void sigUpdateMeshModelMatrixCompleted(const std::string &objectID);
+    //
+    void sigSetVisibleMeshNodeCompleted(const bool &visible, const std::string &objectID);
+    //
+    void sigSwithOutLineModel(const QString& id);
 };
 
 }

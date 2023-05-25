@@ -136,17 +136,17 @@ ExportDialog::ExportDialog(application::RaCoApplication* application, LogViewMod
 		auto currentPath = QString::fromStdString(raco::utils::u8path::current().string() + "/");
 		ramsesEdit_->setText(currentPath + QString("unknown.").append(raco::names::FILE_EXTENSION_RAMSES_EXPORT));
 		logicEdit_->setText(currentPath + QString("unknown.").append(raco::names::FILE_EXTENSION_LOGIC_EXPORT));
-	}
+    }
 
 	auto* summaryBox = new QGroupBox{"Summary", this};
 	auto* summaryBoxLayout = new QVBoxLayout{summaryBox};
 
 	auto* tabWidget = new QTabWidget(summaryBox);
-	summaryBoxLayout->addWidget(tabWidget);
+    summaryBoxLayout->addWidget(tabWidget);
 
 	std::string message;
 	std::vector<core::SceneBackendInterface::SceneItemDesc> sceneDescription;
-	auto sceneStatus = application->getExportSceneDescriptionAndStatus(sceneDescription, message);
+    auto sceneStatus = application->getExportSceneDescriptionAndStatus(sceneDescription, message);
 
 	auto* sceneDescriptionView = new QTreeView{tabWidget};
 	sceneDescriptionView->setModel(createSummaryModel(sceneDescription, sceneDescriptionView));

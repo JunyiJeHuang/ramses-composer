@@ -125,7 +125,7 @@ void TimeAxisMainWindow::slotTreeMenu(const QPoint &pos) {
 	} else {
 		pasteAction_->setVisible(true);
 	}
-    m_Menu.exec(QCursor::pos());  //显示菜单
+    m_Menu.exec(QCursor::pos());
 }
 
 void TimeAxisMainWindow::slotLoad() {
@@ -249,6 +249,7 @@ void TimeAxisMainWindow::slotUpdateAnimationKey(QString oldKey, QString newKey) 
 
 void TimeAxisMainWindow::slotResetAnimation() {
     animationDataManager::GetInstance().ClearAniamtion();
+    CurveManager::GetInstance().clearCurve();
 
     for (auto it : itemMap_.toStdMap()) {
         delete it.second;
@@ -352,6 +353,7 @@ void TimeAxisMainWindow::slotInsertCurve(QString property, QString curve, QVaria
         }
         point->setKeyFrame(curFrame);
         curveData->insertPoint(point);
+        visualCurveWidget_->createKeyFrame(curve);
     } else {
         Curve* curveData = new Curve();
         curveData->setCurveName(curve.toStdString());
@@ -366,7 +368,6 @@ void TimeAxisMainWindow::slotInsertCurve(QString property, QString curve, QVaria
         Q_EMIT signalProxy::GetInstance().sigCheckCurveBindingValid_From_CurveUI();
     }
     timeAxisWidget_->createKeyFrame();
-    visualCurveWidget_->createKeyFrame(curve);
 }
 
 void TimeAxisMainWindow::slotRefreshTimeAxis() {

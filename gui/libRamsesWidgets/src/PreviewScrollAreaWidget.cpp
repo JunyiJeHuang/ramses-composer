@@ -89,6 +89,10 @@ std::optional<QPoint> PreviewScrollAreaWidget::globalPositionToPreviewPosition(c
 	}
 }
 
+std::optional<QPoint> PreviewScrollAreaWidget::globalPositionToLocalPosition(const QPoint& p) {
+    return viewport()->mapFromGlobal(p);
+}
+
 void PreviewScrollAreaWidget::wheelEvent(QWheelEvent* event) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
 	mousePivot_ = event->pos();

@@ -10,6 +10,9 @@ NodeLogic::NodeLogic(raco::core::CommandInterface *commandInterface, QObject *pa
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateKeyFram_From_AnimationLogic, this, &NodeLogic::slotUpdateKeyFrame);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &NodeLogic::slotUpdateActiveAnimation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &NodeLogic::slotResetNodeData,Qt::DirectConnection);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeTransProperty, this, &NodeLogic::slotUpdateMeshNodeTranslation);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeRotationProperty, this, &NodeLogic::slotUpdateMeshNodeRotation);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeScalingProperty, this, &NodeLogic::slotUpdateMeshNodeScaling);
 }
 
 void NodeLogic::setCommandInterface(core::CommandInterface *commandInterface) {
@@ -166,6 +169,7 @@ void NodeLogic::preOrderReverse(NodeData *pNode, const int &keyFrame, const std:
 
         // TODO SETPROPERTY
         setPropertyByCurveBinding(pNode->objectID(), bindingDataMap, keyFrame);
+        raco::signal::signalProxy::GetInstance().sigUpdateMeshModelMatrix(pNode->objectID());
     }
     for (auto it = pNode->childMapRef().begin(); it != pNode->childMapRef().end(); ++it) {
         preOrderReverse(&(it->second), keyFrame, sampleProperty);
@@ -314,6 +318,60 @@ void NodeLogic::slotUpdateKeyFrame(int keyFrame) {
 
 void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
+}
+
+void NodeLogic::slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY) {
+    raco::core::ValueHandle handle;
+    if (getHandleFromObjectID(objectID, handle)) {
+
+        raco::core::ValueHandle tempHandle = handle;
+        if (getValueHanlde("translation.x", tempHandle) && commandInterface_) {
+//            double value = tempHandle.asDouble() + transX;
+            commandInterface_->set(tempHandle, transX, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("translation.y", tempHandle) && commandInterface_) {
+//            double value = tempHandle.asDouble() + transY;
+            commandInterface_->set(tempHandle, transY, false);
+        }
+    }
+}
+
+void NodeLogic::slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY) {
+    raco::core::ValueHandle handle;
+    if (getHandleFromObjectID(objectID, handle)) {
+        raco::core::ValueHandle tempHandle = handle;
+        if (getValueHanlde("rotation.x", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + rotatX;
+            commandInterface_->set(tempHandle, value, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("rotation.y", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + rotatY;
+            commandInterface_->set(tempHandle, value, false);
+        }
+    }
+}
+
+void NodeLogic::slotUpdateMeshNodeScaling(const std::string &objectID, const double &scaling) {
+    raco::core::ValueHandle handle;
+    if (getHandleFromObjectID(objectID, handle)) {
+        raco::core::ValueHandle tempHandle = handle;
+        if (getValueHanlde("scaling.x", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + scaling;
+            commandInterface_->set(tempHandle, value, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("scaling.y", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + scaling;
+            commandInterface_->set(tempHandle, value, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("scaling.z", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + scaling;
+            commandInterface_->set(tempHandle, value, false);
+        }
+    }
 }
 
 }

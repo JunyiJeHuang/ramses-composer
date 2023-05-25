@@ -133,13 +133,25 @@ PropertyInterface MeshNode::makeInterfaceFromProperty(std::string_view name, con
 }
 
 void MeshNode::updateUniformContainer(BaseContext& context, const std::string& materialName, const Table* src, ValueHandle& destUniforms) {
-	raco::core::PropertyInterfaceList uniformDescription;
-	auto pNode = guiData::NodeDataManager::GetInstance().searchNodeByID(objectID());
-	if (src) {
-		for (size_t i = 0; i < src->size(); i++) {
-			uniformDescription.emplace_back(makeInterfaceFromProperty(src->name(i), src->get(i)));
-		}
-	}
+//	raco::core::PropertyInterfaceList uniformDescription;
+//	auto pNode = guiData::NodeDataManager::GetInstance().searchNodeByID(objectID());
+//	if (src) {
+//		for (size_t i = 0; i < src->size(); i++) {
+//			uniformDescription.emplace_back(makeInterfaceFromProperty(src->name(i), src->get(i)));
+//		}
+//	}
+    raco::core::PropertyInterfaceList uniformDescription;
+    auto pNode = guiData::NodeDataManager::GetInstance().searchNodeByID(objectID());
+    if (src) {
+        for (size_t i = 0; i < src->size(); i++) {
+            auto srcAnno = src->get(i)->query<EngineTypeAnnotation>();
+            if (pNode != nullptr) {
+                if (pNode->hasUniform(src->name(i))) {
+                    uniformDescription.emplace_back(src->name(i), srcAnno->type());
+                }
+            }
+        }
+    }
 
 	OutdatedPropertiesStore& cache = cachedUniformValues_[materialName];
 	auto lookup = [src, &cache](const std::string& fullPropPath, raco::core::EnginePrimitive engineType) -> const ValueBase* {

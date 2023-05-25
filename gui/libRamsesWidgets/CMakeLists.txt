@@ -14,6 +14,7 @@ add_library(libRamsesWidgets
     include/ramses_widgets/BuildOptions.h
     include/ramses_widgets/grid_vert.h
     include/ramses_widgets/grid_frag.h
+    include/ramses_widgets/outline_shader.h
     include/ramses_widgets/PreviewContentWidget.h src/PreviewContentWidget.cpp
     include/ramses_widgets/PreviewFramebufferScene.h src/PreviewFramebufferScene.cpp
     include/ramses_widgets/PreviewMainWindow.h src/PreviewMainWindow.cpp
@@ -22,6 +23,7 @@ add_library(libRamsesWidgets
     include/ramses_widgets/RendererBackend.h src/RendererBackend.cpp
     include/ramses_widgets/SceneStateEventHandler.h src/SceneStateEventHandler.cpp
     include/ramses_widgets/PreviewBackgroundScene.h src/PreviewBackgroundScene.cpp
+    include/ramses_widgets/PreviewOutLineScene.h src/PreviewOutLineScene.cpp
     src/PreviewMainWindow.ui
 )
 

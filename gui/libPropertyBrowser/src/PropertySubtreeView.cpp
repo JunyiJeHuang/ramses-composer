@@ -137,22 +137,13 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		}
 		if (item->displayName() == "uniforms") {
             setUniformControls(item, labelLayout);
-			std::vector<Uniform> uniforms = Item2Uniform(item);
-			raco::guiData::MaterialManager::GetInstance().curUniformClear();
-			NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
-			pNode->uniformClear();
-			for (auto& un : uniforms) {
-				raco::guiData::MaterialManager::GetInstance().addCurUniform(un);
-				pNode->insertUniformData(un);
-			}
+			checkUniformName_.clear();
+			auto material = item->siblingItem("material");
+			QObject::connect(material, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateMaterial);
 			updateUniformCombox();
-		}
+        }
         QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateMesh);
         QObject::connect(item, &PropertyBrowserItem::valueChanged, this, &PropertySubtreeView::updateNode);
-
-		if (item->displayName() == "uniforms") {
-			setUniformControls(item, labelLayout);
-		}
 
 		linkControl->setControl(propertyControl_);
 		label_->setEnabled(item->editable());
@@ -179,7 +170,7 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
 		QObject::connect(item, &PropertyBrowserItem::childrenChanged, this, &PropertySubtreeView::updateChildrenContainer);
 		QObject::connect(item, &PropertyBrowserItem::showChildrenChanged, this, &PropertySubtreeView::updateChildrenContainer);
 		QObject::connect(item, &PropertyBrowserItem::childrenChangedOrCollapsedChildChanged, this, &PropertySubtreeView::playStructureChangeAnimation);
-		updateChildrenContainer();
+        updateChildrenContainer();
 	}
 
     insertKeyFrameAction_ = new QAction("Insert KeyFrame", this);
@@ -225,7 +216,7 @@ void PropertySubtreeView::updateMesh(core::ValueHandle &v) {
     }
     if (v.isProperty()) {
         std::string prop = v.getPropName();
-        if (prop == "visible") {
+        if (prop == "visibility") {
             Q_EMIT signalProxy::GetInstance().sigSetVisibleMeshNode(v.asBool(), v.rootObject()->objectID());
         }
     }
@@ -451,13 +442,15 @@ void PropertySubtreeView::updateUniformCombox() {
 		auto uniformTabe = material->get("uniforms")->asTable();
 		for (int i = 0; i < uniformTabe.size(); i++) {
 			NodeData* pNode = NodeDataManager::GetInstance().getActiveNode();
-			bool noShowed = false;
-			if (pNode->hasUniform(uniformTabe.name(i))) {
-				noShowed = true;
-			}
-			if (!noShowed && uniformTabe.name(i) != PTW_FRAG_SYS_OPACITY) {
-				uniformComBox_->addItem(QString::fromStdString(uniformTabe.name(i)));
-			}
+            if (pNode) {
+                bool noShowed = false;
+                if (pNode->hasUniform(uniformTabe.name(i))) {
+                    noShowed = true;
+                }
+                if (!noShowed && uniformTabe.name(i) != PTW_FRAG_SYS_OPACITY) {
+                    uniformComBox_->addItem(QString::fromStdString(uniformTabe.name(i)));
+                }
+            }
 		}
 		uniformComBox_->setCurrentText("add");
 	}
@@ -490,6 +483,7 @@ void PropertySubtreeView::slotUniformNameChanged(QString s) {
 		for (int i{0}; i < uniformsHandle.size(); i++) {
 			if (s.toStdString() == uniformsHandle[i].getPropName()) {
 				setUniformsProperty(uniformsHandle[i], un);
+                break;
 			}
 		}
 		pNode->insertUniformData(un);
@@ -499,6 +493,7 @@ void PropertySubtreeView::slotUniformNameChanged(QString s) {
 	privateItem->set(false);
 	privateItem->set(true);
 }
+
 void PropertySubtreeView::setUniformsProperty(core::ValueHandle valueHandle, Uniform& tempUniform) {
 	using PrimitiveType = core::PrimitiveType;
 	tempUniform.setName(valueHandle.getPropName());
@@ -531,8 +526,9 @@ void PropertySubtreeView::setUniformsProperty(core::ValueHandle valueHandle, Uni
 			case PrimitiveType::Ref: {
 				tempUniform.setName(property);
 				tempUniform.setType(UniformType::Ref);
-				if (valueHandle.asRef())
+                if (valueHandle.asRef()) {
 					tempUniform.setValue(valueHandle.asRef()->objectName());
+                }
 				//TextureData textureData;
 				//textureData.setUniformName(property);
 				//setTexturePorperty(tempHandle.asRef(), materialData, textureData);
@@ -668,18 +664,9 @@ void PropertySubtreeView::updateChildrenContainer() {
 			childrenContainer_ = new PropertySubtreeChildrenContainer{item_, this};
 			// match is in nodeData by uniform
 			for (const auto& child : item_->children()) {
-				if (child->parentItem()->parentItem() && child->parentItem()->displayName() == "uniforms") {
-					for (auto& it : showedUniforChildren_) {
-						if (child->displayName() == it->displayName()) {
-							auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-							childrenContainer_->addWidget(subtree);
-							break;
-						}
-					}
-				} else {
-					auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-					childrenContainer_->addWidget(subtree);
-				}
+                qDebug() << QString::fromStdString(child->displayName());
+                auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
+                childrenContainer_->addWidget(subtree);
 			}
 
 			QObject::connect(item_, &PropertyBrowserItem::childrenChanged, childrenContainer_, [this](const QList<PropertyBrowserItem*> items) {
@@ -690,10 +677,8 @@ void PropertySubtreeView::updateChildrenContainer() {
 					childWidget->deleteLater();
 				}
 				for (auto& child : items) {
-					if (child->parentItem()->displayName() != "uniforms") {
-						auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
-						childrenContainer_->addWidget(subtree);
-					}
+                    auto* subtree = new PropertySubtreeView{sceneBackend_, model_, child, childrenContainer_};
+					childrenContainer_->addWidget(subtree);
 				}
 				recalculateTabOrder();
 			});

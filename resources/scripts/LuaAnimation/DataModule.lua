@@ -145,7 +145,7 @@ function DataModule.getInterfaceDefinedMap()
                             defaultValues[outputName].value[curveBindingName] = uniformValue
                         end
                     elseif G.UtilModule.startWith(relation.property, 'rotation')
-                        or G.UtilModule.startWith(relation.property, 'scale')
+                        or G.UtilModule.startWith(relation.property, 'scaling')
                         or G.UtilModule.startWith(relation.property, 'translation') then
                         local propertySplit = G.UtilModule.split(relation.property, '.')
                         local prop = propertySplit[1]

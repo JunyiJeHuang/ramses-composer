@@ -168,34 +168,34 @@ bool RaCoApplication::saveAsWithNewIDs(const QString& newPath, std::string& outE
 }
 
 core::ErrorLevel RaCoApplication::getExportSceneDescriptionAndStatus(std::vector<core::SceneBackendInterface::SceneItemDesc>& outDescription, std::string& outMessage) {
-	setupScene(true);
-	logicEngineNeedsUpdate_ = true;
-	doOneLoop();
+//    setupScene(true);
+    logicEngineNeedsUpdate_ = true;
+    doOneLoop();
 
-	outDescription = scenesBackend_->getSceneItemDescriptions();
+    outDescription = scenesBackend_->getSceneItemDescriptions();
 
-	core::ErrorLevel errorLevel = scenesBackend_->sceneValid();
-	if (errorLevel != core::ErrorLevel::NONE) {
-		outMessage = sceneBackend()->getValidationReport(errorLevel);
-	} else {
-		outMessage = std::string();
-	}
+    core::ErrorLevel errorLevel = scenesBackend_->sceneValid();
+    if (errorLevel != core::ErrorLevel::NONE) {
+        outMessage = sceneBackend()->getValidationReport(errorLevel);
+    } else {
+        outMessage = std::string();
+    }
 
-	setupScene(false);
-	logicEngineNeedsUpdate_ = true;
-	rendererDirty_ = true;
+//    setupScene(false);
+    logicEngineNeedsUpdate_ = true;
+    rendererDirty_ = true;
 
-	return errorLevel;
+    return core::ErrorLevel::NONE;
 }
 
 bool RaCoApplication::exportProject(const std::string& ramsesExport, const std::string& logicExport, bool compress, std::string& outError, bool forceExportWithErrors, ELuaSavingMode luaSavingMode) {
-	setupScene(true);
+//	setupScene(true);
 	logicEngineNeedsUpdate_ = true;
 	doOneLoop();
 
-	bool status = exportProjectImpl(ramsesExport, logicExport, compress, outError, forceExportWithErrors, luaSavingMode);
+    bool status = exportProjectImpl(ramsesExport, logicExport, compress, outError, forceExportWithErrors, luaSavingMode);
 
-	setupScene(false);
+//	setupScene(false);
 	logicEngineNeedsUpdate_ = true;
 	rendererDirty_ = true;
 

@@ -52,7 +52,6 @@ void NodeDataManager::deleting(NodeData& pNode) {
 		pNode.childMapRef().clear();
         deleting(pNode);
     }else {
-        std::cout << " delete : " << pNode.objectID() << "\n";
 		NodeData* parentData = pNode.getParent();
 		if (parentData) {
             parentData->removeChild(pNode.getName());

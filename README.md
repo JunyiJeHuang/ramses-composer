@@ -7,6 +7,7 @@ This file is part of Ramses Composer
 This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
+
 # Ramses Composer
 
 ![](styles/ramses-composer-logo.png)
@@ -14,7 +15,10 @@ If a copy of the MPL was not distributed with this file, You can obtain one at h
 The authoring tool for the RAMSES rendering ecosystem.
 Find the [user documentation here](https://ramses-composer.readthedocs.io/).
 Find a broader overview of [the Ramses SDK here](https://ramses-sdk.readthedocs.io/).
-Find the new features of Ramses Preview, please refer to [What's New in Ramses Preview](./gui/libRamsesWidgets)
+Find the new features of Ramses Preview, please refer to [What's New in Ramses Preview](./gui/libRamsesWidgets).
+Some new features introduced: [New Module Function](#New Module Function). 
+
+
 
 ## Setup
 
@@ -218,3 +222,31 @@ The ```screenshot_tests/projects/images/``` directory contains the [PNG Suite](h
 
 There are no obligations on the projects you create with Ramses Composer. They are your property and you may use and license them in any way you wish. This applies to the .rca scene file, everything referenced by it and all files exported from Ramses Composer.
 
+## New Module Function
+
+### 1. Animation Editor – Support TA to make transformation and material animation  
+
+- multi-animation management windowSupports creation and display of multiple animations, supports switching animations, each animation is not associated, and displays corresponding curves and keyframes according to the current active animation binding.  
+- Curve keyframe/time axisThe animation timeline displays all key frame positions of the animation according to the currently active animation, and supports play, pause, fast-forward and rewind functions.   
+- Visual curve management windowDisplay all animation curves, support the display/hide of animation curves, support the creation of directories and node drag functions, one-click multi-node display/hide and deletion, and linkage with the visualization curve display window.  
+- Visual curve display windowDisplay visual curves, support multiple curve types (Liner/Step/Bezier/Hermite), Bezier curve supports two modes of alignment and vector.   
+- Visual curve information windowWhen the keyframe is not selected, the current CursorX/Y information is displayed. When the keyframe is selected, the curve type, alignment mode, keyframe, value and auxiliary point information of the current keyframe are displayed.   
+
+### 2. Default Standard Project--Support TA to quickly build projects in a fast way  
+- Default projectWhen opening Ramses Composer, the default project is a standard project, which contains resources (Sphere/Skybox/Plane/Cube).  
+- Create a model with one clickSupport one-click creation (Sphere/Skybox/Plane/Cube) models in Scene.    
+- Directory MonitorAdding/deleting pictures in the resource directory of the project will be automatically synchronized to the Resources in Ramses. Currently, Texture is supported, and more materials will be supported in the future.   
+
+### 3. Ray Picking & Model Selection OutLine--Support TA rapid identification model   
+According to ray picking, the currently selected model will be determined by the mouse position, and its stroke will be rendered based on the selected model to make it highlighted.  
+### 4. Import Gltf and convert gltf animation into Animation editor--support TA to import GLTF with animation and convert it to the animation of Ramses editor**Select the Editor item when importing, and it will be automatically converted to editor animation.     
+### 5. Generate Luascript animation--support Ramses editor animation conversion to script animation for Android platform
+By converting the current animation to Lua animation, the script animation can be generated after binding the script.  
+### 6. Add Display Grid--3D grids line background 
+
+### 7. Export bitmap, Shaders, Meshes, PTX/PTW for MGU Asset 
+
+### 8. The use of skeletal animation--support skeletal animation ( function Research)
+
+### 9. Model Movement(In development)--support TA to manually adjust the model position via mouse pick  
+in development

@@ -108,7 +108,6 @@ protected Q_SLOTS:
 	bool saveAsActiveProjectWithNewID();
     bool exportGltf();
 	bool exportBMWAssets();
-	bool importBMWAssets();
 	void importScene();
 	void resetDockManager();
 	void updateActiveProjectConnection();

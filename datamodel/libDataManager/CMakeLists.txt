@@ -31,7 +31,7 @@ target_link_libraries(libDataManager
         raco::TimeAxis
         raco::GuiData
         raco::PropertyBrowser
-        raco::assets
+       # raco::assets
         openctm
         Qt5::Widgets
         Qt5::Core

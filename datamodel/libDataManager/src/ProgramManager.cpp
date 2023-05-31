@@ -3,12 +3,6 @@
 #include "data_Convert/ProgramDefine.h"
 #include "PropertyData/PropertyType.h"
 
-#include "proto/Numeric.pb.h"
-#include "proto/Common.pb.h"
-#include "proto/Scenegraph.pb.h"
-#include "proto/HmiWidget.pb.h"
-#include "proto/HmiBase.pb.h"
-#include <google/protobuf/text_format.h>
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -251,8 +245,8 @@ QString wrapMode2String(WrapMode wMode) {
 
 void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
 	QJsonObject translation;
-    if(node.hasSystemData(JSON_TRANSLATION)) {
-        Vec3 tran = std::any_cast<Vec3>(node.getSystemData(JSON_TRANSLATION));
+    if(node.hasSystemData(JSON_TRANSLATION.toStdString())) {
+		Vec3 tran = std::any_cast<Vec3>(node.getSystemData(JSON_TRANSLATION.toStdString()));
         translation.insert(JSON_X, tran.x);
         translation.insert(JSON_Y, tran.y);
         translation.insert(JSON_Z, tran.z);
@@ -260,8 +254,8 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
     jsonObj.insert(JSON_TRANSLATION, translation);
 
 	QJsonObject rotation;
-    if (node.hasSystemData(JSON_ROTATION)) {
-        Vec3 rota = std::any_cast<Vec3>(node.getSystemData(JSON_ROTATION));
+	if (node.hasSystemData(JSON_ROTATION.toStdString())) {
+		Vec3 rota = std::any_cast<Vec3>(node.getSystemData(JSON_ROTATION.toStdString()));
 		rotation.insert(JSON_X, rota.x);
 		rotation.insert(JSON_Y, rota.y);
 		rotation.insert(JSON_Z, rota.z);
@@ -270,7 +264,7 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
 
 	QJsonObject scale;
     if (node.hasSystemData("scaling")) {
-        Vec3 scal = std::any_cast<Vec3>(node.getSystemData(JSON_SCALE));
+        Vec3 scal = std::any_cast<Vec3>(node.getSystemData(JSON_SCALE.toStdString()));
 		scale.insert(JSON_X, scal.x);
 		scale.insert(JSON_Y, scal.y);
 		scale.insert(JSON_Z, scal.z);
@@ -909,7 +903,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     if (translation.contains(JSON_Z)) {
         vec3.z = translation.value(JSON_Z).toDouble();
     }
-    node.insertSystemData(JSON_TRANSLATION, vec3);
+	node.insertSystemData(JSON_TRANSLATION.toStdString(), vec3);
 
     QJsonObject rotation = jsonObj.value(JSON_ROTATION).toObject();
     if (rotation.contains(JSON_X)) {
@@ -921,7 +915,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     if (rotation.contains(JSON_Z)) {
         vec3.z = rotation.value(JSON_Z).toDouble();
     }
-    node.insertSystemData(JSON_ROTATION, vec3);
+	node.insertSystemData(JSON_ROTATION.toStdString(), vec3);
 
     if (jsonObj.contains(JSON_SCALE)) {
         QJsonObject scale = jsonObj.value(JSON_SCALE).toObject();
@@ -934,7 +928,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
         if (scale.contains(JSON_Z)) {
             vec3.z = scale.value(JSON_Z).toDouble();
         }
-        node.insertSystemData(JSON_SCALE, vec3);
+        node.insertSystemData(JSON_SCALE.toStdString(), vec3);
     } else if (jsonObj.contains(JSON_SCALE_OLD)) {
         QJsonObject scale = jsonObj.value(JSON_SCALE_OLD).toObject();
         if (scale.contains(JSON_X)) {
@@ -946,7 +940,7 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
         if (scale.contains(JSON_Z)) {
             vec3.z = scale.value(JSON_Z).toDouble();
         }
-        node.insertSystemData(JSON_SCALE, vec3);
+        node.insertSystemData(JSON_SCALE.toStdString(), vec3);
     }
 }
 
@@ -1160,42 +1154,14 @@ void readJsonFillPropertyData(QJsonObject jsonObj) {
 }
 
 namespace raco::dataConvert {
-
 bool ProgramManager::writeBMWAssets(QString filePath) {
-	bool result = true;
-
-	// Output Ptx file
-	if (!outputPtx_.writeProgram2Ptx(filePath.toStdString(), openedProjectPath_)) {
-		qDebug() << "Write Ptx file ERROR!";
-		result = false;
-	}
-
-	// Output Asset file
-	outputPtw_.WriteAsset(filePath.toStdString());
-
-	// Output ctm file
-	writeCTMFile(filePath.toStdString());
-
-	return result;
-}
-
-bool ProgramManager::readBMWAssets(QString assetsFilePath) {
-	bool result = true;
-
-	// Input Ptx file
-	if (!assetsLogic_.readProgram2Ptx(assetsFilePath.toStdString())) {
-		qDebug() << "Write Ptx file ERROR!";
-		result = false;
-	}
-
-    Q_EMIT createNode(assetsLogic_.getRoot(), assetsLogic_.getMaterialArr());
-	//// Output Asset file
-	//outputPtw_.WriteAsset(filePath.toStdString());
-
-	//// Output ctm file
-	//writeCTMFile(filePath.toStdString());
-
-	return result;
+    QMessageBox msgBox;
+	msgBox.setWindowTitle("Debug message box");
+	QPushButton* okButton = msgBox.addButton("OK", QMessageBox::ActionRole);
+	msgBox.setIcon(QMessageBox::Icon::Warning);
+	msgBox.setText("You do not have permission to export BMW Assets!");
+	msgBox.exec();
+	return true;
 }
 
 void ProgramManager::setRelativePath(QString path) {
@@ -1285,6 +1251,19 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
 			;
 			std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
 			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate1", NULL)) {
+				qDebug() << "uv failed";
+			}
+		}
+
+        // uv maps a_TextureCoordinate2
+		posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate2");
+		if (posIndex != -1) {
+			aUVMaps = new CTMfloat[aVerCount * 2];
+			Attribute attri = mesh.getAttributes().at(posIndex);
+			auto uvMapsData = reinterpret_cast<float *>(attri.data.data());
+			;
+			std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
+			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate2", NULL)) {
 				qDebug() << "uv failed";
 			}
 		}

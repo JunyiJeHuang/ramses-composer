@@ -15,6 +15,7 @@
 #include <QThread>
 #include <QMap>
 #include <mutex>
+#include <QMessageBox>
 #include "PropertyData/PropertyData.h"
 #include "NodeData/nodeManager.h"
 #include "PropertyData/PropertyType.h"
@@ -22,8 +23,6 @@
 #include "CurveData/CurveManager.h"
 #include "MaterialData/materialManager.h"
 #include "signal/SignalProxy.h"
-#include "assets/OutputAssets.h"
-#include "assets/AssetsLogic.h"
 #include "MeshData/MeshDataManager.h"
 #include "openctm.h"
 #include "openctmpp.h"
@@ -42,8 +41,6 @@ class ProgramManager : public QObject {
     Q_OBJECT
 public:
 	bool writeBMWAssets(QString filePath);
-	bool readBMWAssets(QString filePath);
-
 	bool writeProgram2Json(QString filePath);
     bool readProgramFromJson(QString filePath);
     bool updateUIFromJson(QString filePath);
@@ -62,10 +59,6 @@ private:
     QString relativePath_;
     QString openedProjectPath_;
     QMap<QString, QJsonArray> aryMap_;
-    assets::OutputPtx outputPtx_;
-    assets::OutputPtw outputPtw_;
-
-    assets::AssetsLogic assetsLogic_;
 };
 }
 

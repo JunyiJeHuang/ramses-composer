@@ -583,6 +583,9 @@ std::map<std::string, core::ValueHandle> ObjectTreeView::updateTexture() {
 }
 
 void ObjectTreeView::updateMeshData() {
+	if (viewTitle_.compare("Scene Graph") != 0) {
+		return;
+	}
     MeshDataManager::GetInstance().clearMesh();
     int row = model()->rowCount();
     for (int i{0}; i < row; ++i) {

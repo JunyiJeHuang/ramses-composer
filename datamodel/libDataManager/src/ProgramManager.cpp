@@ -264,7 +264,7 @@ void initSystemProerty(QJsonObject& jsonObj, raco::guiData::NodeData& node) {
 
 	QJsonObject scale;
     if (node.hasSystemData("scaling")) {
-        Vec3 scal = std::any_cast<Vec3>(node.getSystemData("scaling"));
+        Vec3 scal = std::any_cast<Vec3>(node.getSystemData(JSON_SCALE.toStdString()));
 		scale.insert(JSON_X, scal.x);
 		scale.insert(JSON_Y, scal.y);
 		scale.insert(JSON_Z, scal.z);
@@ -917,17 +917,31 @@ void readJsonFillSystemProperty(QJsonObject jsonObj, NodeData &node) {
     }
 	node.insertSystemData(JSON_ROTATION.toStdString(), vec3);
 
-    QJsonObject scale = jsonObj.value(JSON_SCALE).toObject();
-    if (scale.contains(JSON_X)) {
-        vec3.x = scale.value(JSON_X).toDouble();
+    if (jsonObj.contains(JSON_SCALE)) {
+        QJsonObject scale = jsonObj.value(JSON_SCALE).toObject();
+        if (scale.contains(JSON_X)) {
+            vec3.x = scale.value(JSON_X).toDouble();
+        }
+        if (scale.contains(JSON_Y)) {
+            vec3.y = scale.value(JSON_Y).toDouble();
+        }
+        if (scale.contains(JSON_Z)) {
+            vec3.z = scale.value(JSON_Z).toDouble();
+        }
+        node.insertSystemData(JSON_SCALE.toStdString(), vec3);
+    } else if (jsonObj.contains(JSON_SCALE_OLD)) {
+        QJsonObject scale = jsonObj.value(JSON_SCALE_OLD).toObject();
+        if (scale.contains(JSON_X)) {
+            vec3.x = scale.value(JSON_X).toDouble();
+        }
+        if (scale.contains(JSON_Y)) {
+            vec3.y = scale.value(JSON_Y).toDouble();
+        }
+        if (scale.contains(JSON_Z)) {
+            vec3.z = scale.value(JSON_Z).toDouble();
+        }
+        node.insertSystemData(JSON_SCALE.toStdString(), vec3);
     }
-    if (scale.contains(JSON_Y)) {
-        vec3.y = scale.value(JSON_Y).toDouble();
-    }
-    if (scale.contains(JSON_Z)) {
-        vec3.z = scale.value(JSON_Z).toDouble();
-    }
-    node.insertSystemData("scaling", vec3);
 }
 
 void readUniforms2NodeData(QJsonObject JsonUniform, Uniform &un) {
@@ -1031,6 +1045,12 @@ void readJsonFillCurveBinding(QJsonObject jsonObj, NodeData &node) {
             QJsonObject curveBindingObj = curveBindingAry[i].toObject();
             std::string curve = curveBindingObj.value(JSON_CURVE).toString().toStdString();
             std::string property = curveBindingObj.value(JSON_PROPERTY).toString().toStdString();
+            // scale maping
+            if (QString::fromStdString(property).contains(JSON_SCALE_OLD)) {
+                QString string = QString::fromStdString(property);
+                string.replace(JSON_SCALE_OLD, JSON_SCALE);
+                property = string.toStdString();
+            }
             node.NodeExtendRef().curveBindingRef().insertBindingDataItem(key.toStdString(), property, curve);
         }
     }
@@ -1298,11 +1318,13 @@ bool ProgramManager::writeProgram2Json(QString filePath) {
 	return true;
 }
 bool ProgramManager::readProgramFromJson(QString filePath) {
-
     QFile file(filePath + ".json");
 	if (!file.open(QIODevice::ReadWrite)) {
 		return false;
 	}
+    if (file.size() == 0) {
+        return false;
+    }
 	QJsonParseError jsonParserError;
 	QJsonDocument jsonDocument = QJsonDocument::fromJson(file.readAll(), &jsonParserError);
 	QJsonObject jsonObject;

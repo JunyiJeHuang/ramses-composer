@@ -24,6 +24,7 @@
 #include "ramses_adaptor/NodeAdaptor.h"
 #include "core/Queries.h"
 #include "signal/SignalProxy.h"
+#include "PropertyData/PropertyType.h"
 
 #include "ui_PreviewMainWindow.h"
 #include <QLabel>
@@ -36,6 +37,49 @@
 namespace raco::ramses_widgets {
 
 using namespace raco::core;
+
+float saasin(float fac) {
+    if (fac <= -1.0f) {
+    return (float)-M_PI_2;
+    }
+    else if (fac >= 1.0f) {
+    return (float)M_PI_2;
+    }
+    else {
+    return asinf(fac);
+    }
+}
+
+float len_v2v2(const float v1[2], const float v2[2]) {
+    float x, y;
+
+    x = v1[0] - v2[0];
+    y = v1[1] - v2[1];
+    return sqrtf(x * x + y * y);
+}
+
+float normalize_v2(float n[2]) {
+    float dot = n[0] * n[0] + n[1] * n[1];
+    if (dot > 1.0e-35f) {
+        dot = sqrtf(dot);
+    } else {
+        dot = 0.0f;
+    }
+    return dot;
+}
+
+float angle_normalize_v2v2(float a[2], float b[2]) {
+    float dot = a[0] * b[0] + a[1] * b[1];
+
+    if (dot >= 0.0f) {
+        return 2.0f * saasin(len_v2v2(a, b) / 2.0f);
+    }
+
+    float v2_n[2];
+    v2_n[0] = -b[0];
+    v2_n[1] = -b[1];
+    return (float)M_PI - 2.0f * saasin(len_v2v2(a, v2_n) / 2.0f);
+}
 
 PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ramses_adaptor::SceneBackend* sceneBackend, const QSize& sceneSize, raco::core::Project* project,
 	raco::components::SDataChangeDispatcher dispatcher, raco::core::CommandInterface* commandInterface, QWidget* parent)
@@ -73,7 +117,8 @@ PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ram
 	connect(scrollAreaWidget_, &PreviewScrollAreaWidget::viewportRectChanged, previewWidget_, &PreviewContentWidget::setViewportRect);
 	connect(previewWidget_, &PreviewContentWidget::updateAxesIconLabel, this, &PreviewMainWindow::updateAxesIconLabel);
 	connect(previewWidget_, &PreviewContentWidget::newMousePosition, [this, pixelLabel](const QPoint globalPosition) {
-		if (auto previewPosition = scrollAreaWidget_->globalPositionToPreviewPosition(globalPosition)) {
+        if (auto previewPosition = scrollAreaWidget_->globalPositionToPreviewPosition(globalPosition)) {
+            mouseMove(QPoint(previewPosition->x(), previewPosition->y()));
 			QString content{};
 			content.append("x: ");
 			content.append(std::to_string(previewPosition->x()).c_str());
@@ -159,22 +204,22 @@ PreviewMainWindow::PreviewMainWindow(RendererBackend& rendererBackend, raco::ram
 			ui_->actionSetMSAAx8->setChecked(ui_->actionSetMSAAx8 == action);
 		};
 
-		connect(ui_->actionSetMSAAx0, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
-			previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_0X);
-			updateMsaaSelection(ui_->actionSetMSAAx0);
-		});
-		connect(ui_->actionSetMSAAx2, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
-			previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_2X);
-			updateMsaaSelection(ui_->actionSetMSAAx2);
-		});
-		connect(ui_->actionSetMSAAx4, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
-			previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_4X);
-			updateMsaaSelection(ui_->actionSetMSAAx4);
-		});
-		connect(ui_->actionSetMSAAx8, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
-			previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_8X);
-			updateMsaaSelection(ui_->actionSetMSAAx8);
-		});
+        connect(ui_->actionSetMSAAx0, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
+            previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_0X);
+            updateMsaaSelection(ui_->actionSetMSAAx0);
+        });
+        connect(ui_->actionSetMSAAx2, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
+            previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_2X);
+            updateMsaaSelection(ui_->actionSetMSAAx2);
+        });
+        connect(ui_->actionSetMSAAx4, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
+            previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_4X);
+            updateMsaaSelection(ui_->actionSetMSAAx4);
+        });
+        connect(ui_->actionSetMSAAx8, &QAction::triggered, this, [this, msaaMenuButton, updateMsaaSelection]() {
+            previewWidget_->setMsaaSampleRate(PreviewMultiSampleRate::MSAA_8X);
+            updateMsaaSelection(ui_->actionSetMSAAx8);
+        });
 		ui_->toolBar->insertWidget(ui_->actionSelectSizeMode, msaaMenuButton);
 	}
 	{
@@ -237,7 +282,7 @@ void PreviewMainWindow::sceneScaleUpdate(bool zup, float scaleValue, bool scaleU
         if (object) {
             if (object->getType() == ramses::ERamsesObjectType_PerspectiveCamera) {
                 ramses::PerspectiveCamera* camera = static_cast<ramses::PerspectiveCamera*>(object);
-				camera->getTranslation(x, y, z);
+                camera->getTranslation(x, y, z);
 //                if (zup) {
 //                    camera->setTranslation(x * cameraScale, y * cameraScale, z);
 //                } else {
@@ -251,6 +296,12 @@ void PreviewMainWindow::sceneScaleUpdate(bool zup, float scaleValue, bool scaleU
 
 void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
+        if (!selModelID_.empty() && keyBoardType_ != KEY_BOARD_NONE) {
+            keyBoardType_ = KEY_BOARD_NONE;
+            this->setCursor(Qt::ArrowCursor);
+            return;
+        }
+
         float cx, cy, cz;
 
         auto scene = const_cast<ramses::Scene *>(sceneBackend_->currentScene());
@@ -275,7 +326,7 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
                 // get view position
                 int width = camera->getViewportWidth();
                 int height = camera->getViewportHeight();
-                auto previewPosition = scrollAreaWidget_->globalPositionToPreviewPosition(QPoint(event->globalPos().x(), event->globalPos().y()));
+                auto previewPosition = scrollAreaWidget_->globalPositionToPreviewPosition(event->globalPos());
 
                 if (!previewPosition) {
                     return;
@@ -301,17 +352,40 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
 
                 // select node
                 Q_EMIT signal::signalProxy::GetInstance().sigSwitchObjectNode(QString::fromStdString(selModelID_));
+                Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString::fromStdString(selModelID_));
             }
         }
     }
+    QWidget::mousePressEvent(event);
 }
 
 void PreviewMainWindow::mouseReleaseEvent(QMouseEvent *event) {
-
+    QWidget::mouseReleaseEvent(event);
 }
 
-void PreviewMainWindow::mouseMoveEvent(QMouseEvent *event) {
-
+void PreviewMainWindow::keyPressEvent(QKeyEvent *event) {
+    if (!selModelID_.empty()) {
+        if (keyBoardType_ != KEY_BOARD_NONE) {
+            keyBoardType_ = KEY_BOARD_NONE;
+            this->setCursor(Qt::ArrowCursor);
+            return;
+        }
+        auto previewPosition = scrollAreaWidget_->globalPositionToPreviewPosition(this->cursor().pos());
+        if (event->key() == Qt::Key_G) {
+            keyBoardType_ = KEY_BOARD_TRANSLATION;
+            this->setCursor(Qt::SizeAllCursor);
+            selModelPos_ = QPoint(previewPosition->x(), previewPosition->y());
+        } else if (event->key() == Qt::Key_R) {
+            keyBoardType_ = KEY_BOARD_ROTATION;
+            this->setCursor(Qt::SizeAllCursor);
+            selModelPos_ = QPoint(previewPosition->x(), previewPosition->y());
+        } else if (event->key() == Qt::Key_S) {
+            keyBoardType_ = KEY_BOARD_SCALING;
+            this->setCursor(Qt::SizeHorCursor);
+            selModelPos_ = QPoint(previewPosition->x(), previewPosition->y());
+        }
+    }
+    QWidget::keyPressEvent(event);
 }
 
 void PreviewMainWindow::setAxesIconLabel(QLabel * axesIcon) {
@@ -484,7 +558,7 @@ QMap<std::string, QVector<QVector<QVector3D> > > PreviewMainWindow::getMeshTrian
     QMap<std::string, QVector<QVector<QVector3D> >> meshTriangles;
     for (auto it : guiData::MeshDataManager::GetInstance().getMeshDataMap()) {
         QVector<QVector<QVector3D> > triangles;
-        QMatrix4x4 modelMatrix = it.second.getModelMatrix().transposed();
+        QMatrix4x4 modelMatrix = it.second.getModelMatrix();
 
         std::vector<uint32_t> indices = it.second.getIndices();
         int triCount = indices.size() / 3;
@@ -501,7 +575,7 @@ QMap<std::string, QVector<QVector<QVector3D> > > PreviewMainWindow::getMeshTrian
                     int index = indices[pos + j] * 3;
                     QVector4D temp(verticesData[index], verticesData[index + 1], verticesData[index + 2], 1.0f);
 
-                    temp = temp * modelMatrix;
+                    temp = modelMatrix * temp;
                     QVector3D vertex(temp.x(), temp.y(), temp.z());
                     triangle.append(vertex);
                 }
@@ -537,6 +611,176 @@ std::string PreviewMainWindow::caculateRayIntersection(QVector3D ray, QVector3D 
         }
     }
     return objectID;
+}
+
+void PreviewMainWindow::mouseMove(QPoint position) {
+    if (!selModelID_.empty()) {
+        switch (keyBoardType_) {
+        case KEY_BOARD_TRANSLATION:{
+            translationMovement(position);
+            break;
+        }
+        case KEY_BOARD_ROTATION:{
+            rotationMovement(position);
+            break;
+        }
+        case KEY_BOARD_SCALING: {
+            scalingMovement(position);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+}
+
+void PreviewMainWindow::translationMovement(QPoint position) {
+    float cx, cy, cz;
+
+    auto scene = const_cast<ramses::Scene *>(sceneBackend_->currentScene());
+    ramses::RamsesObject* object = scene->findObjectByName("PerspectiveCamera");
+    if (object) {
+        ramses::PerspectiveCamera* camera = static_cast<ramses::PerspectiveCamera*>(object);
+        camera->getTranslation(cx, cy, cz);
+
+        QVector3D cameraPos(cx, cy, cz);
+
+        // caculate projection matrix
+        QMatrix4x4 projection_matrix;
+        projection_matrix.perspective(camera->getVerticalFieldOfView(), camera->getAspectRatio(), camera->getNearPlane(), camera->getFarPlane());
+
+        // caculate view matrix
+        float rX{0.0f}, rY{0.0f}, rZ{0.0f};
+        ramses::ERotationConvention convention;
+        camera->getRotation(rX, rY, rZ, convention);
+        QMatrix4x4 view_matrix = getViewMatrix(cameraPos, rX, rY, rZ);
+
+        // get view position
+//        int width = this->scrollAreaWidget_->width();
+//        int height = this->scrollAreaWidget_->height();
+        int width = camera->getViewportWidth();
+        int height = camera->getViewportHeight();
+
+        float x = position.x() - selModelPos_.x();
+        float y = position.y() - selModelPos_.y();
+
+        guiData::NodeData* node = guiData::NodeDataManager::GetInstance().searchNodeByID(selModelID_);
+        if (node) {
+            Vec3 tran = std::any_cast<Vec3>(node->getSystemData("translation"));
+            QVector3D translation(tran.x, tran.y, tran.z);
+
+            // caculate zfac
+            float zfac = abs(projection_matrix.row(0).w() * translation.x() + projection_matrix.row(1).w() * translation.y()
+                            + projection_matrix.row(2).w() * translation.z() + projection_matrix.row(3).w());
+            if (zfac < 1.e-6f && zfac > -1.e-6f) {
+                zfac = 1.0f;
+            }
+
+            float dx = 2.0f * x * zfac / width;
+            float dy = 2.0f * y * zfac / height;
+
+            QMatrix4x4 inverse_projection_matrix = projection_matrix.inverted();
+            QVector3D model(inverse_projection_matrix.row(0).x() * dx + inverse_projection_matrix.row(1).x() * dy,
+                            inverse_projection_matrix.row(0).y() * dx + inverse_projection_matrix.row(1).y() * dy,
+                            inverse_projection_matrix.row(0).z() * dx + inverse_projection_matrix.row(1).z() + dy);
+
+            signal::signalProxy::GetInstance().sigUpdateMeshNodeTransProperty(selModelID_, model.x(), model.y());
+        }
+
+//        int width = camera->getViewportWidth();
+//        int height = camera->getViewportHeight();
+
+//        float x = 2.0f * position.x() / width - 1.0f;
+//        float y = 1.0f - (2.0f * position.y()) / height;
+
+//        float x2 = 2.0f * selModelPos_.x() / width - 1.0f;
+//        float y2 = 1.0f - (2.0f * selModelPos_.y()) / height;
+
+//        guiData::MeshData meshData;
+//        if (guiData::MeshDataManager::GetInstance().getMeshData(selModelID_, meshData)) {
+
+//            auto model_matrix = meshData.getModelMatrix();
+
+//            QVector4D clip = QVector4D(position.x(), position.y(), 0.0, 1.0);
+//            QVector4D eye = projection_matrix.inverted() * clip;
+//            QVector4D world = view_matrix.inverted() * eye;
+//            QVector4D model = world * model_matrix;
+
+//            QVector4D clip2 = QVector4D(selModelPos_.x(), selModelPos_.y(), 0.0, 1.0);
+//            QVector4D eye2 = projection_matrix.inverted() * clip2;
+//            QVector4D world2 = view_matrix.inverted() * eye2;
+
+//            float offsetX = world.x() - world2.x();
+//            float offsetY = world.y() - world2.y();
+
+//            selModelPos_.setX(position.x());
+//            selModelPos_.setY(position.y());
+
+//            signal::signalProxy::GetInstance().sigUpdateMeshNodeTransProperty(selModelID_, offsetX, offsetY);
+//            qDebug() << "test model move:" << offsetX << offsetY;
+//        }
+    }
+}
+
+void PreviewMainWindow::rotationMovement(QPoint position) {
+    auto scene = const_cast<ramses::Scene *>(sceneBackend_->currentScene());
+    ramses::RamsesObject* object = scene->findObjectByName("PerspectiveCamera");
+    if (object) {
+        ramses::PerspectiveCamera* camera = static_cast<ramses::PerspectiveCamera*>(object);
+
+        int width = camera->getViewportWidth();
+        int height = camera->getViewportHeight();
+
+        float centerScreen[2] = {width / 2.0f, height / 2.0f};
+        float dir_prev[2], dir_cur[2];
+        dir_prev[0] = selModelPos_.x() - centerScreen[0];
+        dir_prev[1] = selModelPos_.y() - centerScreen[1];
+        dir_cur[0] = position.x() - centerScreen[0];
+        dir_cur[1] = position.y() - centerScreen[1];
+
+        if (normalize_v2(dir_prev) && normalize_v2(dir_cur)) {
+            float dphi = angle_normalize_v2v2(dir_prev, dir_cur);
+
+            float cross = dir_prev[0] * dir_cur[1] - dir_prev[1] * dir_cur[0];
+            if (cross > 0.0f) {
+                dphi = -dphi;
+            }
+
+            selModelPos_.setX(position.x());
+            selModelPos_.setY(position.y());
+
+            signal::signalProxy::GetInstance().sigUpdateMeshNodeRotationProperty(selModelID_, dphi, 0.0f);
+        }
+    }
+    return;
+
+    auto pixelRotation = 0.05f;
+    int moveX{0}, moveY{0};
+    moveX = position.x() - selModelPos_.x();
+    moveY = position.y() - selModelPos_.y();
+    double offsetRotationX{0.0}, offsetRotationY{0.0};
+    if (moveX == 0 && moveY == 0) {
+        return;
+    }
+    offsetRotationY = moveX * pixelRotation;
+    offsetRotationX = -(moveY * pixelRotation);
+
+    selModelPos_ = QPoint(position.x(), position.y());
+
+    signal::signalProxy::GetInstance().sigUpdateMeshNodeRotationProperty(selModelID_, offsetRotationX, offsetRotationY);
+}
+
+void PreviewMainWindow::scalingMovement(QPoint position) {
+    auto pixelScaling = 0.01f;
+    int moveX = position.x() - selModelPos_.x();
+    if (moveX == 0) {
+        return;
+    }
+    double offsetScaling = moveX * pixelScaling;
+
+    selModelPos_ = QPoint(position.x(), position.y());
+
+    signal::signalProxy::GetInstance().sigUpdateMeshNodeScalingProperty(selModelID_, offsetScaling);
 }
 
 static QMatrix4x4 getRotateY(float r) {

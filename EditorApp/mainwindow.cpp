@@ -529,8 +529,11 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		openProject();
 	});
 	QObject::connect(ui->actionExport, &QAction::triggered, this, [this]() {
-		auto dialog = new raco::common_widgets::ExportDialog(racoApplication_, logViewModel_, this);
-		dialog->exec();
+        isExport_ = true;
+        auto dialog = new raco::common_widgets::ExportDialog(racoApplication_, logViewModel_, this);
+        dialog->exec();
+        QThread::msleep(100);
+        isExport_ = false;
 	});
 	QObject::connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
 
@@ -657,7 +660,7 @@ void MainWindow::timerEvent(QTimerEvent* event) {
     racoApplication_->sceneBackendImpl()->flush();
 
     rendererBackend_->doOneLoop();
-//    Q_EMIT sceneUpdated(axes);
+    Q_EMIT sceneUpdated(axes);
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
@@ -688,101 +691,105 @@ void MainWindow::restoreSettings() {
 }
 
 void MainWindow::openProject(const QString& file, int featureLevel, bool generateNewObjectIDs) {
-	auto fileString = file.toStdString();
-	if (!fileString.empty() && (!raco::utils::u8path(fileString).exists() || !raco::utils::u8path(fileString).userHasReadAccess())) {
-		QMessageBox::warning(this, "File Load Error", fmt::format("Project file {} is not available for loading.\n\nCheck whether the file at the specified path still exists and that you have read access to that file.", fileString).c_str(), QMessageBox::Close);
-		return;
-	}
+    auto fileString = file.toStdString();
+    if (!fileString.empty() && (!raco::utils::u8path(fileString).exists() || !raco::utils::u8path(fileString).userHasReadAccess())) {
+        QMessageBox::warning(this, "File Load Error", fmt::format("Project file {} is not available for loading.\n\nCheck whether the file at the specified path still exists and that you have read access to that file.", fileString).c_str(), QMessageBox::Close);
+        return;
+    }
 
-	if (!resolveDirtiness()) {
-		return;
-	}
+    if (!resolveDirtiness()) {
+        return;
+    }
 
-	if (file.size() > 0) {
-		recentFileMenu_->addRecentFile(file);
-	}
+    if (file.size() > 0) {
+        recentFileMenu_->addRecentFile(file);
+    }
 
-	{
-		auto settings = raco::core::PathManager::layoutSettings();
-		dockManager_->saveCurrentLayoutInCache(settings);
-		settings.sync();
-		if (settings.status() != QSettings::NoError) {
-			LOG_WARNING(raco::log_system::COMMON, "Saving layout failed: {}", raco::core::PathManager::recentFilesStorePath().string());
-		}
-	}
+    {
+        auto settings = raco::core::PathManager::layoutSettings();
+        dockManager_->saveCurrentLayoutInCache(settings);
+        settings.sync();
+        if (settings.status() != QSettings::NoError) {
+            LOG_WARNING(raco::log_system::COMMON, "Saving layout failed: {}", raco::core::PathManager::recentFilesStorePath().string());
+        }
+    }
     Q_EMIT signalProxy::GetInstance().sigResetAllData_From_MainWindow();
 
-	// Delete all ui widgets (and their listeners) before changing the project
-	// Don't create a new DockManager right away - making QMessageBoxes pop up messes up state restoring
-	// (see https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/315)
-	delete dockManager_;
-	logViewModel_->clear();
+    // Delete all ui widgets (and their listeners) before changing the project
+    // Don't create a new DockManager right away - making QMessageBoxes pop up messes up state restoring
+    // (see https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System/issues/315)
+    delete dockManager_;
+    logViewModel_->clear();
 
-	killTimer(renderTimerId_);
-//    programManager_.readProgramFromJson(file);
-	try {
-		auto relinkCallback = [this](const std::string& projectPath) -> std::string {
-			auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
-				fmt::format("External project '{}' was not found!\n\nSpecify replacement project and relink?", projectPath).c_str(),
-				QMessageBox::Yes | QMessageBox::No);
-			if (answer == QMessageBox::Yes) {
-				auto projectDirectory = raco::utils::u8path(projectPath).normalized().parent_path().string();
-				auto file = QFileDialog::getOpenFileName(this,
-					"Replace: " + QString::fromStdString(projectPath),
-					QString::fromStdString(projectDirectory),
-					"Ramses Composer Assembly (*.rca)");
-				return file.toStdString();
-			}
-			return std::string();
-		};
-
-		int loadFeatureLevel = featureLevel;
-		while (true) {
-			try {
-				racoApplication_->switchActiveRaCoProject(file, relinkCallback, true, loadFeatureLevel, generateNewObjectIDs);
-				break;
-			} catch (const ExtrefError& error) {
-				if (auto flError = racoApplication_->getFlError()) {
-					auto answer = QMessageBox::warning(this,
-						"Feature Level Error: Upgrade Feature Level?",
-						fmt::format("Project '{}' feature level {} smaller than external project '{}' feature level {}.\n\nUpgrade project '{}' feature level to {}?", file.toStdString(), flError->currentFeatureLevel_, flError->projectPath_, flError->projectFeatureLevel_, file.toStdString(), flError->projectFeatureLevel_).c_str(),
-						QMessageBox::Yes | QMessageBox::No);
-					if (answer == QMessageBox::Yes) {
-						loadFeatureLevel = flError->projectFeatureLevel_;
-						continue;
-					}
-				}
-				throw error;
-			}
-		}
-
-	} catch (const raco::application::FutureFileVersion& error) {
-		racoApplication_->switchActiveRaCoProject({}, {});
-		QMessageBox::warning(this, "File Load Error", fmt::format("Project file was created with newer version of {app_name}. Please upgrade.\n\nExpected File Version: {expected_file_version}\nFound File Version: {file_version}", fmt::arg("app_name", "Ramses Composer"), fmt::arg("expected_file_version", raco::serialization::RAMSES_PROJECT_FILE_VERSION), fmt::arg("file_version", error.fileVersion_)).c_str(), QMessageBox::Close);
-	} catch (const ExtrefError& error) {
-		racoApplication_->switchActiveRaCoProject({}, {});
-		QMessageBox::warning(this, "File Load Error", fmt::format("External reference update failed.\n\n{}", error.what()).c_str(), QMessageBox::Close);
-	} catch (const std::exception& e) {
-		racoApplication_->switchActiveRaCoProject({}, {});
-		QMessageBox::warning(this, "File Load Error", fmt::format("Project file {} could not be loaded.\n\nReported error: {}\n\nCheck whether the file has been broken or corrupted.", fileString, e.what()).c_str(), QMessageBox::Close);
-	}
-
-	renderTimerId_ = startTimer(timerInterval60Fps);
-
-	// Recreate our layout with new context
-	dockManager_ = createDockManager(this);
-	restoreCachedLayout();
-	configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
-
+    killTimer(renderTimerId_);
     QString jsonPath = file.section(".", 0, -2);
-    programManager_.readProgramFromJson(jsonPath);
-	updateApplicationTitle();
-	updateActiveProjectConnection();
-	updateProjectSavedConnection();
-	updateUpgradeMenu();
+    if (!programManager_.readProgramFromJson(jsonPath)) {
+        jsonPath = file.section(".", 0, -1);
+        programManager_.readProgramFromJson(jsonPath);
+    }
+
+    try {
+        auto relinkCallback = [this](const std::string& projectPath) -> std::string {
+            auto answer = QMessageBox::warning(this, "External Project Not Found: Relink?",
+                fmt::format("External project '{}' was not found!\n\nSpecify replacement project and relink?", projectPath).c_str(),
+                QMessageBox::Yes | QMessageBox::No);
+            if (answer == QMessageBox::Yes) {
+                auto projectDirectory = raco::utils::u8path(projectPath).normalized().parent_path().string();
+                auto file = QFileDialog::getOpenFileName(this,
+                    "Replace: " + QString::fromStdString(projectPath),
+                    QString::fromStdString(projectDirectory),
+                    "Ramses Composer Assembly (*.rca)");
+                return file.toStdString();
+            }
+            return std::string();
+        };
+
+        int loadFeatureLevel = featureLevel;
+        while (true) {
+            try {
+                racoApplication_->switchActiveRaCoProject(file, relinkCallback, true, loadFeatureLevel, generateNewObjectIDs);
+                break;
+            } catch (const ExtrefError& error) {
+                if (auto flError = racoApplication_->getFlError()) {
+                    auto answer = QMessageBox::warning(this,
+                        "Feature Level Error: Upgrade Feature Level?",
+                        fmt::format("Project '{}' feature level {} smaller than external project '{}' feature level {}.\n\nUpgrade project '{}' feature level to {}?", file.toStdString(), flError->currentFeatureLevel_, flError->projectPath_, flError->projectFeatureLevel_, file.toStdString(), flError->projectFeatureLevel_).c_str(),
+                        QMessageBox::Yes | QMessageBox::No);
+                    if (answer == QMessageBox::Yes) {
+                        loadFeatureLevel = flError->projectFeatureLevel_;
+                        continue;
+                    }
+                }
+                throw error;
+            }
+        }
+
+    } catch (const raco::application::FutureFileVersion& error) {
+        racoApplication_->switchActiveRaCoProject({}, {});
+        QMessageBox::warning(this, "File Load Error", fmt::format("Project file was created with newer version of {app_name}. Please upgrade.\n\nExpected File Version: {expected_file_version}\nFound File Version: {file_version}", fmt::arg("app_name", "Ramses Composer"), fmt::arg("expected_file_version", raco::serialization::RAMSES_PROJECT_FILE_VERSION), fmt::arg("file_version", error.fileVersion_)).c_str(), QMessageBox::Close);
+    } catch (const ExtrefError& error) {
+        racoApplication_->switchActiveRaCoProject({}, {});
+        QMessageBox::warning(this, "File Load Error", fmt::format("External reference update failed.\n\n{}", error.what()).c_str(), QMessageBox::Close);
+    } catch (const std::exception& e) {
+        racoApplication_->switchActiveRaCoProject({}, {});
+        QMessageBox::warning(this, "File Load Error", fmt::format("Project file {} could not be loaded.\n\nReported error: {}\n\nCheck whether the file has been broken or corrupted.", fileString, e.what()).c_str(), QMessageBox::Close);
+    }
+
+    renderTimerId_ = startTimer(timerInterval60Fps);
+
+    // Recreate our layout with new context
+    dockManager_ = createDockManager(this);
+    restoreCachedLayout();
+    configureDebugActions(ui, this, racoApplication_->activeRaCoProject().commandInterface());
+
+
+    //programManager_.readProgramFromJson(jsonPath);
+    updateApplicationTitle();
+    updateActiveProjectConnection();
+    updateProjectSavedConnection();
+    updateUpgradeMenu();
     programManager_.updateUIFromJson(jsonPath);
 }
-
 MainWindow::~MainWindow() {
 	resetDockManager();
 	// sceneBackend needs to be reset first to unregister all adaptors (and their file listeners)
@@ -954,7 +961,8 @@ bool MainWindow::saveAsActiveProject(bool newID) {
             updateUpgradeMenu();
             programManager_.setOpenedProjectPath(openedProjectPath);
             programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
-            programManager_.writeProgram2Json(newPath.section(".", 0, 0));
+//            programManager_.writeProgram2Json(newPath.section(".", 0, 0));
+            programManager_.writeProgram2Json(newPath.mid(0, newPath.length() - 4));
             return true;
         } else {
             updateApplicationTitle();
@@ -1024,7 +1032,8 @@ void MainWindow::restoreCachedLayout() {
 	auto cachedLayoutInfo = dockManager_->getCachedLayoutInfo();
     nodeLogic_->setCommandInterface(racoApplication_->activeRaCoProject().commandInterface());
     convertEditorAnimation_->commandInterface(racoApplication_->activeRaCoProject().commandInterface());
-    fileWatcher_.addPath(QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string()) + "/images");
+    fileWatcher_.removePaths(fileWatcher_.files());
+    fileWatcher_.addPath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()) + "/images");
     const QDir dir(QString::fromStdString(raco::core::PathManager::defaultProjectFallbackPath().string()) + "/images");
     currentFileContents_ = dir.entryList(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
 
@@ -1109,6 +1118,8 @@ void MainWindow::updateActiveProjectConnection() {
 	QObject::disconnect(activeProjectFileConnection_);
 	if (!racoApplication_->activeProjectPath().empty()) {
 		activeProjectFileConnection_ = QObject::connect(&racoApplication_->activeRaCoProject(), &raco::application::RaCoProject::activeProjectFileChanged, [this]() {
+            fileWatcher_.removePaths(fileWatcher_.files());
+            fileWatcher_.addPath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()) + "/images");
 			updateApplicationTitle();
 		});
     }

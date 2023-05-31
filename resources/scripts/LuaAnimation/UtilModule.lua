@@ -106,4 +106,88 @@ function UtilModule.endWith(str, substr)
     end
 end
 
+-- Define a function that takes two colors in RGBA format and a blending factor
+function UtilModule.blendColors(color1, color2, HUD)
+    -- Extract the individual color components from each color
+    local r1, g1, b1, a1 = color1[1], color1[2], color1[3], color1[4]
+    local r2, g2, b2, a2 = color2[1], color2[2], color2[3], color2[4]
+
+    -- Calculate the blended color components using the provided blending factor
+    local r = r1 * (1 - HUD) + r2 * HUD
+    local g = g1 * (1 - HUD) + g2 * HUD
+    local b = b1 * (1 - HUD) + b2 * HUD
+    local a = a1 * (1 - HUD) + a2 * HUD
+
+    if a > 1 then
+        a = a / 255
+    end
+
+    if r > 1 then
+        r = r / 255
+    end
+
+    if g > 1 then
+        g = g / 255
+    end
+
+    if b > 1 then
+        b = b / 255
+    end
+
+    -- Return the blended color as a new RGBA color
+    return { r, g, b, a }
+end
+
+-- Define a function that takes two colors in RGBA format and a blending factor
+function UtilModule.blendColors2(color1, color2, HUD)
+    -- Extract the individual color components from each color
+    local r1, g1, b1, a1 = color1[1], color1[2], color1[3], color1[4]
+    local r2, g2, b2, a2 = color2[1], color2[2], color2[3], color2[4]
+
+    local a = (a1 * HUD) + a2 * (1 - HUD)
+    local r = r1 * a + r2 * (1 - a)
+    local g = g1 * a + g2 * (1 - a)
+    local b = b1 * a + b2 * (1 - a)
+
+    -- Calculate the blended color components using the provided blending factor
+    -- local r = r1 * (1 - HUD) + r2 * HUD
+    -- local g = g1 * (1 - HUD) + g2 * HUD
+    -- local b = b1 * (1 - HUD) + b2 * HUD
+    -- local a = a1 * (1 - HUD) + a2 * HUD
+
+    -- Return the blended color as a new RGBA color
+    if a > 1 then
+        a = a / 255
+    end
+
+    if r > 1 then
+        r = r / 255
+    end
+
+    if g > 1 then
+        g = g / 255
+    end
+
+    if b > 1 then
+        b = b / 255
+    end
+
+    return { r, g, b, a }
+end
+
+-- function UtilModule.blendColors3(color1, color2, HUD)
+--     local r1, g1, b1, a1 = color1[1], color1[2], color1[3], color1[4]
+--     local r2, g2, b2, a2 = color2[1], color2[2], color2[3], color2[4]
+
+--     a1 = a1 / 256.0
+--     a2 = a2 / 256.0
+--     local a = 1 - (1 - a1) * (1 - a2)
+
+--     local r = (a1 * r1 + (1 - a1) * a2 * r2) / a
+--     local g = (a1 * g1 + (1 - a1) * a2 * g2) / a
+--     local b = (a1 * b1 + (1 - a1) * a2 * b2) / a
+--     -- a = a * 256
+--     return { r, g, b, a }
+-- end
+
 return UtilModule

@@ -50,6 +50,9 @@ public Q_SLOTS:
     void slotUpdateActiveAnimation(QString animation);
     void slotUpdateKeyFrame(int keyFrame);
     void slotResetNodeData();
+    void slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY);
+    void slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY);
+    void slotUpdateMeshNodeScaling(const std::string &objectID, const double &scaling);
 
 signals:
 	void sig_getHandles_from_NodePro(std::set<core::ValueHandle>& handles);

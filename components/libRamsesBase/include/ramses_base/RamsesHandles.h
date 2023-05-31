@@ -531,7 +531,9 @@ inline RamsesRenderTarget ramsesRenderTarget(ramses::Scene* scene, const ramses:
 
 inline RamsesArrayResource ramsesArrayResource(ramses::Scene* scene, ramses::EDataType type, uint32_t numElements, const void* arrayData, const char* name = nullptr) {
 	RamsesArrayResource result{scene->createArrayResource(type, numElements, arrayData), createRamsesObjectDeleter<ramses::ArrayResource>(scene)};
-	result->setName(name);
+    if (result) {
+        result->setName(name);
+    }
 	return result;
 }
 

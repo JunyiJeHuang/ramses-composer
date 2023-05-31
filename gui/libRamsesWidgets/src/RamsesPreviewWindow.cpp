@@ -96,7 +96,7 @@ RamsesPreviewWindow::RamsesPreviewWindow(
 	RendererBackend& rendererBackend,
 	raco::ramses_adaptor::SceneBackend* sceneBackend)
 	: windowHandle_{windowHandle}, rendererBackend_{rendererBackend}, displayId_{ramses::displayId_t::Invalid()}, offscreenBufferId_{ramses::displayBufferId_t::Invalid()},
-    framebufferScene_{std::make_unique<raco::ramses_widgets::PreviewFramebufferScene>(rendererBackend_.client(), rendererBackend.internalSceneId())},
+    framebufferScene_{std::make_unique<raco::ramses_widgets::PreviewFramebufferScene>(rendererBackend_.client(), sceneBackend,rendererBackend.internalSceneId())},
 	backgroundScene_{std::make_unique<raco::ramses_widgets::PreviewBackgroundScene>(rendererBackend_.client(), sceneBackend, rendererBackend.internalSceneId())} {
 }
 
@@ -172,7 +172,7 @@ void RamsesPreviewWindow::commit(bool forceUpdate) {
 			// but an offscreen render buffer created with RamsesRenderer::createOffscreenBuffer to avoid creating the
 			// offscreen render buffer in the scene we eventually export (and in fact for Ramses this offscreen render buffer is
 			// the framebuffer - that we use it later on to blit it into our preview makes for the Ramses scene no difference).
-			const ramses::dataConsumerId_t dataConsumerId = framebufferScene_->setupFramebufferTexture(rendererBackend_, next_.targetSize, next_.filteringMode, next_.sampleRate);
+            const ramses::dataConsumerId_t dataConsumerId = framebufferScene_->setupFramebufferTexture(rendererBackend_, next_.targetSize, next_.filteringMode, next_.sampleRate);
 			offscreenBufferId_ = rendererBackend_.renderer().createOffscreenBuffer(displayId_, next_.targetSize.width(), next_.targetSize.height(), next_.sampleRate);
 			rendererBackend_.renderer().setDisplayBufferClearColor(displayId_, offscreenBufferId_, next_.backgroundColor.redF(), next_.backgroundColor.greenF(),
 				next_.backgroundColor.blueF(), next_.backgroundColor.alphaF());
@@ -217,7 +217,8 @@ void RamsesPreviewWindow::setEnableDisplayGrid(bool enable) {
 }
 
 void RamsesPreviewWindow::sceneUpdate(bool z_up, float scaleValue) {
-	backgroundScene_->sceneUpdate(z_up, scaleValue);
+    framebufferScene_->sceneUpdate(z_up, scaleValue);
+    //backgroundScene_->sceneUpdate(z_up, scaleValue);
 }
 
 }   // namespace raco::ramses_widgets

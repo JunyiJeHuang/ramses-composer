@@ -78,7 +78,7 @@ public:
 	QString name() const;
 
 	bool dirty() const noexcept;
-	bool save(std::string &outError);
+    bool save(std::string &outError, const std::string &oldFolder = std::string());
 	bool saveAs(const QString& fileName, std::string& outError, bool setProjectName = false);
 
 	// @exception ExtrefError
@@ -112,8 +112,8 @@ private:
 
 
 	void onAfterProjectPathChange(const std::string& oldPath, const std::string& newPath);
-	void generateProjectSubfolder(const std::string& subFolderPath);
-	void generateAllProjectSubfolders();
+    void generateProjectSubfolder(const std::string &oldFolderPath, const std::string& subFolderPath);
+    void generateAllProjectSubfolders(const std::string &oldFolderPath);
 	void updateActiveFileListener();
 
 	raco::core::DataChangeRecorder recorder_;

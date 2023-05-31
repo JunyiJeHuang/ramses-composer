@@ -1,11 +1,11 @@
-/*
+﻿/*
  * SPDX-License-Identifier: MPL-2.0
  *
  * This file is part of Ramses Composer
  * (see https://github.com/bmwcarit/ramses-composer).
  *
  * This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
- * If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * If a  of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "application/RaCoProject.h"
 
@@ -147,31 +147,31 @@ void RaCoProject::onAfterProjectPathChange(const std::string& oldPath, const std
 				if (auto anno = property.query<URIAnnotation>(); anno && !anno->isProjectSubdirectoryURI()) {
 					auto uriPath = property.asString();
 					if (!uriPath.empty() && raco::utils::u8path(uriPath).is_relative()) {
-						context_->set(property, raco::utils::u8path(uriPath).rerootRelativePath(oldPath, newPath).string());
+//						context_->set(property, raco::utils::u8path(uriPath).rerootRelativePath(oldPath, newPath).string());
 					}
 				}
 			}
 		}
 	}
-	project_.rerootExternalProjectPaths(oldPath, newPath);
-	updateActiveFileListener();
-	undoStack_.push("Rewrite uri paths.");
+    project_.rerootExternalProjectPaths(oldPath, newPath);
+    updateActiveFileListener();
+    undoStack_.push("Rewrite uri paths.");
 }
 
-void RaCoProject::generateProjectSubfolder(const std::string& subFolderPath) {
+void RaCoProject::generateProjectSubfolder(const std::string &oldFolderPath, const std::string& subFolderPath) {
 	auto path = raco::utils::u8path(subFolderPath).normalizedAbsolutePath(project_.currentFolder());
-	if (!path.existsDirectory()) {
-		std::filesystem::create_directories(path);
+    if (!path.existsDirectory() && raco::utils::u8path(oldFolderPath).existsDirectory()) {
+        std::filesystem::copy(oldFolderPath, path, std::filesystem::copy_options::recursive);
 	}
 }
 
-void RaCoProject::generateAllProjectSubfolders() {
+void RaCoProject::generateAllProjectSubfolders(const std::string &oldFolderPath) {
 	const auto& settings = project_.settings();
-	generateProjectSubfolder(settings->defaultResourceDirectories_->imageSubdirectory_.asString());
-	generateProjectSubfolder(settings->defaultResourceDirectories_->meshSubdirectory_.asString());
-	generateProjectSubfolder(settings->defaultResourceDirectories_->scriptSubdirectory_.asString());
-	generateProjectSubfolder(settings->defaultResourceDirectories_->interfaceSubdirectory_.asString());
-	generateProjectSubfolder(settings->defaultResourceDirectories_->shaderSubdirectory_.asString());
+    generateProjectSubfolder(oldFolderPath + "/" + settings->defaultResourceDirectories_->imageSubdirectory_.asString(), settings->defaultResourceDirectories_->imageSubdirectory_.asString());
+    generateProjectSubfolder(oldFolderPath + "/" + settings->defaultResourceDirectories_->meshSubdirectory_.asString(), settings->defaultResourceDirectories_->meshSubdirectory_.asString());
+    generateProjectSubfolder(oldFolderPath + "/" + settings->defaultResourceDirectories_->scriptSubdirectory_.asString(), settings->defaultResourceDirectories_->scriptSubdirectory_.asString());
+    generateProjectSubfolder(oldFolderPath + "/" + settings->defaultResourceDirectories_->interfaceSubdirectory_.asString(), settings->defaultResourceDirectories_->interfaceSubdirectory_.asString());
+    generateProjectSubfolder(oldFolderPath + "/" + settings->defaultResourceDirectories_->shaderSubdirectory_.asString(), settings->defaultResourceDirectories_->shaderSubdirectory_.asString());
 
 	applyDefaultCachedPaths();
 }
@@ -237,7 +237,7 @@ void RaCoProject::subscribeDefaultCachedPathChanges(const raco::components::SDat
 void RaCoProject::updateActiveFileListener() {
 	activeProjectFileChangeListener_ = activeProjectFileChangeMonitor_.registerFileChangedHandler(project_.currentPath(),
 		[this]() {
-			Q_EMIT activeProjectFileChanged();
+            Q_EMIT activeProjectFileChanged();
 		});
 }
 
@@ -433,7 +433,7 @@ QJsonDocument RaCoProject::serializeProjectData(const std::unordered_map<std::st
 	});
 
 	std::vector<SLink> links;
-	std::copy(project_.links().begin(), project_.links().end(), std::back_inserter(links));
+    std::copy(project_.links().begin(), project_.links().end(), std::back_inserter(links));
 	std::sort(links.begin(), links.end(), [](const SLink& left, const SLink& right) {
 		return LinkDescriptor::lessThanByObjectID(left->descriptor(), right->descriptor());
 	});
@@ -638,7 +638,7 @@ QJsonDocument RaCoProject::serializeProject(const std::unordered_map<std::string
 	return serializedJson;
 }
 
-bool RaCoProject::save(std::string& outError) {
+bool RaCoProject::save(std::string& outError, const std::string &oldFolder) {
 	outError.clear();
 	const auto path(project_.currentPath());
 	LOG_INFO(raco::log_system::PROJECT, "Saving project to {}", path);
@@ -685,7 +685,7 @@ bool RaCoProject::save(std::string& outError) {
 	}
 	file.close();
 
-	generateAllProjectSubfolders();
+    generateAllProjectSubfolders(oldFolder);
 
 	dirty_ = false;
 	LOG_INFO(raco::log_system::PROJECT, "Finished saving project to {}", path);
@@ -706,18 +706,18 @@ bool RaCoProject::saveAs(const QString& fileName, std::string& outError, bool se
 		// But we need an undo stack entry since the save below wil perform a restore from the undo stack.
 		// However the onAfterProjectPathChange will perform an unconditional undo stack push.
 		// This means that using the context in the operations below is OK as long as we perform the onAfterProjectPathChange afterwards.
-		if (setProjectName) {
-			auto projName = raco::utils::u8path(newPath).stem().string();
-			auto settings = project_.settings();
-			if (settings->objectName().empty()) {
-				context_->set({settings, &raco::core::EditorObject::objectName_}, projName);
-			}
-		}
-		project_.setCurrentPath(newPath);
+        if (setProjectName) {
+            auto projName = raco::utils::u8path(newPath).stem().string();
+            auto settings = project_.settings();
+            if (settings->objectName().empty()) {
+                context_->set({settings, &raco::core::EditorObject::objectName_}, projName);
+            }
+        }
+        project_.setCurrentPath(newPath);
 		// Note: this will perform an undo stack push
-		onAfterProjectPathChange(oldProjectFolder, project_.currentFolder());
+        onAfterProjectPathChange(oldProjectFolder, project_.currentFolder());
 		// Note: save will perform a restore from the undo stack as part of the file save optimization
-		if (save(outError)) {
+        if (save(outError, oldProjectFolder)) {
 			undoStack_.reset();
 			dirty_ = false;
 			return true;

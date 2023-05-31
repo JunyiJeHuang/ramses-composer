@@ -101,6 +101,7 @@
 #define JSON_RESOURCE               QString("resource")
 #define JSON_GENERATE_MIPMAPS       QString("generateMipMaps")
 #define JSON_MATERIAL_REF			QString("materialReference")
+
 #define PTX_SCENE_NAME				QString("Scene")
 #define PTW_USED_ANIMATION_NAME		std::string("UsedAnimationName")
 #define PTW_PRE_CURVES_ONE_PROP		std::string("Multi-CurvesSingleProp-")

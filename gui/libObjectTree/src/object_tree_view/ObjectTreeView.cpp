@@ -795,10 +795,12 @@ void ObjectTreeView::bindLuaScriptOutput(const QModelIndex &index) {
             if (materialsHandle) {
                 raco::core::ValueHandle materialHandle = materialsHandle.get("material");
                 if (materialHandle) {
-                    raco::core::ValueHandle uniformsHandle = materialsHandle.get("uniforms");
+                    raco::core::ValueHandle uniformsHandle = materialHandle.get("uniforms");
                     if (uniformsHandle) {
                         raco::core::ValueHandle uniformHandle = uniformsHandle.get(property);
-                        commandInterface_->addLink(output, uniformHandle);
+                        if (uniformHandle) {
+                            commandInterface_->addLink(output, uniformHandle);
+                        }
                     }
                 }
             }
@@ -824,7 +826,7 @@ void ObjectTreeView::bindLuaScriptOutput(const QModelIndex &index) {
                                     commandInterface_->addLink(valueHandle, propHandle);
                                 }
                             } else {
-                                bindUniforms(property.toStdString(), valueHandle, targetHandle);
+                                bindUniforms(property.section(".", 1).toStdString(), valueHandle, targetHandle);
                             }
                         }
                     }

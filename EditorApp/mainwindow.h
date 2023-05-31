@@ -151,6 +151,7 @@ private:
     ConvertEditorAnimation *convertEditorAnimation_{nullptr};
     QFileSystemWatcher fileWatcher_;
     QStringList currentFileContents_;
+    bool isExport_{false};
 
 	int renderTimerId_ = 0;
 };

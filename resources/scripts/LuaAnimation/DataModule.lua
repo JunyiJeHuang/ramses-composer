@@ -219,7 +219,7 @@ function DataModule.getTransformCurveData(interfaceDefinedMap)
     for i, curveItem in ipairs(DataModule.getData().curve) do
         curveMap[curveItem.name] = curveItem
     end
-
+    -- UtilModule.printJson(curveMap)
     -- do return data end
     for outputName, curveItem in pairs(interfaceDefinedMap) do
         data[outputName] = {
@@ -245,7 +245,8 @@ function DataModule.getTransformCurveData(interfaceDefinedMap)
 
             if curveItem.value.x ~= nil then
                 local active = curveItem.value.x.curveName[activeAnimaName]
-                if active ~= nil then
+                -- UtilModule.printJson(curveMap)
+                if active ~= nil and curveMap[active] ~= nil then
                     data[outputName].value.x = curveMap[active].pointList
                 end
             end
@@ -253,7 +254,7 @@ function DataModule.getTransformCurveData(interfaceDefinedMap)
             if curveItem.value.y ~= nil then
                 -- UtilModule.printJson(curveItem)
                 local active = curveItem.value.y.curveName[activeAnimaName]
-                if active ~= nil then
+                if active ~= nil and curveMap[active] ~= nil then
                     data[outputName].value.y = curveMap[active].pointList
                 end
             end
@@ -261,7 +262,7 @@ function DataModule.getTransformCurveData(interfaceDefinedMap)
             if curveItem.type == 'vec3f' or curveItem.type == 'vec4f' then
                 if curveItem.value.z ~= nil then
                     local active = curveItem.value.z.curveName[activeAnimaName]
-                    if active ~= nil then
+                    if active ~= nil and curveMap[active] ~= nil then
                         data[outputName].value.z = curveMap[active].pointList
                     else
                         data[outputName].value.z = {}
@@ -273,7 +274,7 @@ function DataModule.getTransformCurveData(interfaceDefinedMap)
                 if curveItem.type == 'vec4f' then
                     if curveItem.value.w ~= nil then
                         local active = curveItem.value.w.curveName[activeAnimaName]
-                        if active ~= nil then
+                        if active ~= nil and curveMap[active] ~= nil then
                             data[outputName].value.w = curveMap[active].pointList
                         else
                             data[outputName].value.w = {}

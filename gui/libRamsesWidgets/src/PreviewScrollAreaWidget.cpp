@@ -115,7 +115,6 @@ void PreviewScrollAreaWidget::wheelEvent(QWheelEvent* event) {
     }
 	Q_EMIT scaleChanged(s_scaleValue, scaleUp);
 
-//	scaleValue_ = 1.0;
     virtSize = scaledSize();
 
 	updateScrollbarSize(virtSize);

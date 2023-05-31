@@ -45,7 +45,7 @@ std::string baseFolderForRelativePath(const Project& project, SEditorObject obje
 }
 
 std::string resolveUriPropertyToAbsolutePath(const Project& project, const ValueHandle& uri) {
-	std::string uriValue = uri.asString();
+    std::string uriValue = uri.asString();
 	if (uriValue.empty()) {
 		return std::string();
 	}

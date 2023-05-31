@@ -149,7 +149,7 @@ void RaCoApplication::switchActiveRaCoProject(const QString& file, std::function
 	activeProject_->applyDefaultCachedPaths();
 	activeProject_->setupCachedPathSubscriptions(dataChangeDispatcher_);
 
-	setupScene(false);
+    setupScene(true); // it need to set true, if it set false, can't export luascripts
 	startTime_ = std::chrono::high_resolution_clock::now();
 	doOneLoop();
 

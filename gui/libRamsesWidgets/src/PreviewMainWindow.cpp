@@ -693,17 +693,31 @@ void PreviewMainWindow::translationMovement(QPoint position) {
 //        float x = 2.0f * position.x() / width - 1.0f;
 //        float y = 1.0f - (2.0f * position.y()) / height;
 
+//        float x2 = 2.0f * selModelPos_.x() / width - 1.0f;
+//        float y2 = 1.0f - (2.0f * selModelPos_.y()) / height;
+
 //        guiData::MeshData meshData;
 //        if (guiData::MeshDataManager::GetInstance().getMeshData(selModelID_, meshData)) {
 
 //            auto model_matrix = meshData.getModelMatrix();
 
-//            QVector4D clip = QVector4D(x, y, 0.0, 1.0);
+//            QVector4D clip = QVector4D(position.x(), position.y(), 0.0, 1.0);
 //            QVector4D eye = projection_matrix.inverted() * clip;
 //            QVector4D world = view_matrix.inverted() * eye;
 //            QVector4D model = world * model_matrix;
 
-//            signal::signalProxy::GetInstance().sigUpdateMeshNodeTransProperty(selModelID_, model.x(), model.y());
+//            QVector4D clip2 = QVector4D(selModelPos_.x(), selModelPos_.y(), 0.0, 1.0);
+//            QVector4D eye2 = projection_matrix.inverted() * clip2;
+//            QVector4D world2 = view_matrix.inverted() * eye2;
+
+//            float offsetX = world.x() - world2.x();
+//            float offsetY = world.y() - world2.y();
+
+//            selModelPos_.setX(position.x());
+//            selModelPos_.setY(position.y());
+
+//            signal::signalProxy::GetInstance().sigUpdateMeshNodeTransProperty(selModelID_, offsetX, offsetY);
+//            qDebug() << "test model move:" << offsetX << offsetY;
 //        }
     }
 }

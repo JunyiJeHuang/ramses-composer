@@ -37,9 +37,6 @@ target_link_libraries(libDataManager
         Qt5::Core
         Qt5::Gui
     PRIVATE
-        protobuf::libprotobuf-lite
-        protobuf::libprotobuf
-        protobuf::libprotoc
         raco::LogSystem
 )
 

@@ -287,7 +287,7 @@ void PropertySubtreeView::setUniformControls(PropertyBrowserItem* item, Property
 				break;
 			}
 		}
-		if (!isShowed && child->displayName() != PTW_FRAG_SYS_OPACITY) {
+		if (!isShowed && child->displayName() != "Sys_Opacity") {
 			uniformComBox_->addItem(QString::fromStdString(child->displayName()));
 		}
 	}
@@ -447,7 +447,7 @@ void PropertySubtreeView::updateUniformCombox() {
                 if (pNode->hasUniform(uniformTabe.name(i))) {
                     noShowed = true;
                 }
-                if (!noShowed && uniformTabe.name(i) != PTW_FRAG_SYS_OPACITY) {
+				if (!noShowed && uniformTabe.name(i) != "Sys_Opacity") {
                     uniformComBox_->addItem(QString::fromStdString(uniformTabe.name(i)));
                 }
             }

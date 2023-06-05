@@ -45,7 +45,6 @@ public:
     bool readProgramFromJson(QString filePath);
     bool updateUIFromJson(QString filePath);
 
-    bool writeCTMFile(std::string filePathStr);
     void setRelativePath(QString path);
 	void setOpenedProjectPath(QString path);
     void initFolderData();

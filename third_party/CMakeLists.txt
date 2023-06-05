@@ -160,10 +160,10 @@ macro(deploy_python_folder tgt)
 endmacro()
 
 #protobuf
-add_subdirectory(protobuf)
-set_target_properties(libprotobuf-lite PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
-set_target_properties(libprotobuf PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
-set_target_properties(libprotoc PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
+# add_subdirectory(protobuf)
+# set_target_properties(libprotobuf-lite PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
+# set_target_properties(libprotobuf PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
+# set_target_properties(libprotoc PROPERTIES FOLDER third_party/protobuf POSITION_INDEPENDENT_CODE ON)
 
 macro(deploy_python_folder_headless tgt)
     add_dependencies(${tgt} RaCoHeadlessPythonModuleDeployment)

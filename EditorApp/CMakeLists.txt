@@ -81,6 +81,10 @@ PUBLIC
 	raco::RamsesWidgets
     raco::pybind11
 	raco::LogSystem
+
+    #- protobuf::libprotobuf-lite
+    #- protobuf::libprotobuf
+    #- protobuf::libprotoc
 )
 add_compile_definitions(RaCoEditor PRIVATE CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
@@ -93,4 +97,4 @@ deploy_raco_cppruntime_dlls(RaCoEditor)
 deploy_viewer(RaCoEditor)
 deploy_python_dlls(RaCoEditor)
 deploy_python_folder(RaCoEditor)
-#deploy_protoBuf_shared_dlls(RaCoEditor)
+#- deploy_protoBuf_shared_dlls(RaCoEditor)

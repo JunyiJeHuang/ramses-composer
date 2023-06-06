@@ -1154,8 +1154,21 @@ void readJsonFillPropertyData(QJsonObject jsonObj) {
 }
 
 namespace raco::dataConvert {
+// bool ProgramManager::writeBMWAssets(QString filePath) {
+// 	bool result = true;
+// 	// Output Ptx file
+// 	if (!outputPtx_.writeProgram2Ptx(filePath.toStdString(), openedProjectPath_)) {
+// 		qDebug() << "Write Ptx file ERROR!";
+// 		result = false;
+// 	}
+// 	// Output Asset file
+// 	outputPtw_.WriteAsset(filePath.toStdString());
+// 	// Output ctm file
+// 	outputCTM_.writeCTMFile(filePath.toStdString());
+// 	return result;
+// }
 bool ProgramManager::writeBMWAssets(QString filePath) {
-    QMessageBox msgBox;
+	QMessageBox msgBox;
 	msgBox.setWindowTitle("Debug message box");
 	QPushButton* okButton = msgBox.addButton("OK", QMessageBox::ActionRole);
 	msgBox.setIcon(QMessageBox::Icon::Warning);
@@ -1171,8 +1184,6 @@ void ProgramManager::setRelativePath(QString path) {
 void ProgramManager::setOpenedProjectPath(QString path) {
 	openedProjectPath_ = path;
 }
-
-
 
 bool ProgramManager::writeProgram2Json(QString filePath) {
 	QFile file(filePath + ".json");

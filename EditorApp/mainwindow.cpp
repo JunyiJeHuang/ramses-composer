@@ -853,7 +853,7 @@ bool MainWindow::saveActiveProject() {
 				recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
 				updateApplicationTitle();
                 QString path = QString::fromStdString(racoApplication_->activeProjectPath());
-                programManager_.writeProgram2Json(path.section(".", 0, 0));
+				programManager_.writeProgram2Json(path.mid(0, path.length() - 4));
 				return true;
 			} else {
 				updateApplicationTitle();	
@@ -961,7 +961,6 @@ bool MainWindow::saveAsActiveProject(bool newID) {
             updateUpgradeMenu();
             programManager_.setOpenedProjectPath(openedProjectPath);
             programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
-//            programManager_.writeProgram2Json(newPath.section(".", 0, 0));
             programManager_.writeProgram2Json(newPath.mid(0, newPath.length() - 4));
             return true;
         } else {

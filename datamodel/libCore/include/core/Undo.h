@@ -38,78 +38,78 @@ enum UndoType {
 
 class UndoHelpers {
 public:
-	static void updateSingleValue(const ValueBase *src, ValueBase *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
+    static void updateSingleValue(const ValueBase *src, ValueBase *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
 
-	static void callOnBeforeRemoveReferenceHandler(raco::data_storage::Table *dest, const size_t &index, raco::core::ValueHandle &destHandle);
+    static void callOnBeforeRemoveReferenceHandler(raco::data_storage::Table *dest, const size_t &index, raco::core::ValueHandle &destHandle);
 
-	static void updateEditorObject(const EditorObject *src, SEditorObject dest, translateRefFunc translateRef, excludePropertyPredicateFunc excludeIf, UserObjectFactoryInterface &factory, DataChangeRecorder *outChanges, bool invokeHandler, bool updateObjectAnnotations = true);
-	static void updateMissingTableProperties(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
+    static void updateEditorObject(const EditorObject *src, SEditorObject dest, translateRefFunc translateRef, excludePropertyPredicateFunc excludeIf, UserObjectFactoryInterface &factory, DataChangeRecorder *outChanges, bool invokeHandler, bool updateObjectAnnotations = true);
+    static void updateMissingTableProperties(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
 
 private:
-	static void updateTableAsArray(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
-	static void updateStruct(const ClassWithReflectedMembers *src, ClassWithReflectedMembers *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
-	static void updateTableByName(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
+    static void updateTableAsArray(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
+    static void updateStruct(const ClassWithReflectedMembers *src, ClassWithReflectedMembers *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
+    static void updateTableByName(const Table *src, Table *dest, ValueHandle destHandle, translateRefFunc translateRef, DataChangeRecorder *outChanges, bool invokeHandler);
 };
 
 
 class UndoStack {
 public:
-	using Callback = std::function<void()>;
+    using Callback = std::function<void()>;
 
-	UndoStack(
+    UndoStack(
         BaseContext *context, const Callback &onChange = []() {});
 
-	// Add another undo stack entry.
-	void push(const std::string &description, std::string mergeId = std::string());
+    // Add another undo stack entry.
+    void push(const std::string &description, std::string mergeId = std::string());
     void push(const std::string &description, UndoState state);
 
-	// Number of entries on the undo stack
-	size_t size() const;
-	const std::string &description(size_t index) const;
+    // Number of entries on the undo stack
+    size_t size() const;
+    const std::string &description(size_t index) const;
 
-	// Get the current position of the undo stack pointer
-	size_t getIndex() const;
+    // Get the current position of the undo stack pointer
+    size_t getIndex() const;
 
-	// Jump backward or forward to any position in the undo stack.
-	size_t setIndex(size_t newIndex, bool force = false);
+    // Jump backward or forward to any position in the undo stack.
+    size_t setIndex(size_t newIndex, bool force = false);
 
-	// Go one entry backwards.
-	void undo();
+    // Go one entry backwards.
+    void undo();
 
-	// Go one entry forward.
-	void redo();
+    // Go one entry forward.
+    void redo();
 
-	bool canUndo() const noexcept;
-	bool canRedo() const noexcept;
+    bool canUndo() const noexcept;
+    bool canRedo() const noexcept;
 
-	void reset();
+    void reset();
     void resetUndoState(STRUCT_VISUAL_CURVE_POS pos);
     void resetUndoState(STRUCT_NODE node);
 
     bool curIndexIsOpreatObject();
 
 protected:
-	void saveProjectState(const Project *src, Project *dest, Project *ref, const DataChangeRecorder &changes, UserObjectFactoryInterface &factory);
-	void updateProjectState(const Project *src, Project *dest, const DataChangeRecorder &changes, UserObjectFactoryInterface &factory);
+    void saveProjectState(const Project *src, Project *dest, Project *ref, const DataChangeRecorder &changes, UserObjectFactoryInterface &factory);
+    void updateProjectState(const Project *src, Project *dest, const DataChangeRecorder &changes, UserObjectFactoryInterface &factory);
 
-	void restoreProjectState(Project *src, Project *dest, BaseContext &context, UserObjectFactoryInterface &factory);
+    void restoreProjectState(Project *src, Project *dest, BaseContext &context, UserObjectFactoryInterface &factory);
     void restoreAnimationState(UndoState state);
 
-	bool canMerge(const DataChangeRecorder &changes);
+    bool canMerge(const DataChangeRecorder &changes);
 
-	BaseContext *context_;
-	Callback onChange_;
+    BaseContext *context_;
+    Callback onChange_;
 
-	struct Entry {
-		Entry(std::string description = std::string(), std::string mergeId = std::string());
-		std::string description;
+    struct Entry {
+        Entry(std::string description = std::string(), std::string mergeId = std::string());
+        std::string description;
         std::string mergeId;
-		Project state;
+        Project state;
         UndoState undoState;
-	};
+    };
 
-	std::vector<std::unique_ptr<Entry>> stack_;
-	size_t index_ = 0;
+    std::vector<std::unique_ptr<Entry>> stack_;
+    size_t index_ = 0;
 };
 
 }  // namespace raco::core

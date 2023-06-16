@@ -136,30 +136,30 @@ ads::CDockWidget* createDockWidget(const QString& title, QWidget* parent) {
 }
 
 ads::CDockAreaWidget* createAndAddPreview(MainWindow* mainWindow, const char* dockObjName, RaCoDockManager* dockManager, raco::ramses_widgets::RendererBackend& rendererBackend, raco::application::RaCoApplication* application) {
-	const auto& viewport = application->activeRaCoProject().project()->settings()->viewport_;
-	const auto& backgroundColor = *application->activeRaCoProject().project()->settings()->backgroundColor_;
-	const auto& axes = application->activeRaCoProject().project()->settings()->axes_;
+    const auto& viewport = application->activeRaCoProject().project()->settings()->viewport_;
+    const auto& backgroundColor = *application->activeRaCoProject().project()->settings()->backgroundColor_;
+    const auto& axes = application->activeRaCoProject().project()->settings()->axes_;
     auto* previewWidget = new raco::ramses_widgets::PreviewMainWindow{rendererBackend, application->sceneBackendImpl(), {*viewport->i1_, *viewport->i2_}, application->activeRaCoProject().project(), application->dataChangeDispatcher()
     ,application->activeRaCoProject().commandInterface()};
-	QObject::connect(mainWindow, &MainWindow::viewportChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setViewport);
+    QObject::connect(mainWindow, &MainWindow::viewportChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setViewport);
     QObject::connect(mainWindow, &MainWindow::axesChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setAxes);
     QObject::connect(mainWindow, &MainWindow::displayGridChanged, previewWidget, &raco::ramses_widgets::PreviewMainWindow::setEnableDisplayGrid);
     QObject::connect(mainWindow, &MainWindow::sceneUpdated, previewWidget, &raco::ramses_widgets::PreviewMainWindow::sceneUpdate);
-	previewWidget->displayScene(application->sceneBackendImpl()->currentSceneId(), backgroundColor);
-	previewWidget->setWindowFlags(Qt::Widget);
+    previewWidget->displayScene(application->sceneBackendImpl()->currentSceneId(), backgroundColor);
+    previewWidget->setWindowFlags(Qt::Widget);
 
-	auto* dock = createDockWidget(MainWindow::DockWidgetTypes::RAMSES_PREVIEW, mainWindow);
-	dock->setObjectName(dockObjName);
-	dock->setWidget(previewWidget);
-	QObject::connect(dock, &ads::CDockWidget::closed, [mainWindow]() {
-		mainWindow->setNewPreviewMenuEntryEnabled(true);
-	});
-	QLabel* axesIcon_ = new QLabel(previewWidget);
-	axesIcon_->setScaledContents(true);
-	axesIcon_->setStyleSheet("background:transparent");
+    auto* dock = createDockWidget(MainWindow::DockWidgetTypes::RAMSES_PREVIEW, mainWindow);
+    dock->setObjectName(dockObjName);
+    dock->setWidget(previewWidget);
+    QObject::connect(dock, &ads::CDockWidget::closed, [mainWindow]() {
+        mainWindow->setNewPreviewMenuEntryEnabled(true);
+    });
+    QLabel* axesIcon_ = new QLabel(previewWidget);
+    axesIcon_->setScaledContents(true);
+    axesIcon_->setStyleSheet("background:transparent");
     previewWidget->setAxesIconLabel(axesIcon_);
-	mainWindow->setNewPreviewMenuEntryEnabled(false);
-	return dockManager->addDockWidget(ads::CenterDockWidgetArea, dock);
+    mainWindow->setNewPreviewMenuEntryEnabled(false);
+    return dockManager->addDockWidget(ads::CenterDockWidgetArea, dock);
 }
 
 void connectPropertyBrowserAndTreeDockManager(MainWindow* mainWindow, raco::property_browser::PropertyBrowserWidget* propertyBrowser, raco::object_tree::view::ObjectTreeDockManager& treeDockManager, raco::dataConvert::ProgramManager& programManager, raco::node_logic::NodeLogic* nodeDataPro) {
@@ -273,7 +273,7 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
     if (tempTitle.compare(QString("Scene Graph")) == 0) {
         newTreeView->updateMeshData();
         nodeDataPro->setNodeNameHandleReMap(newTreeView->updateNodeTree());
-        nodeDataPro->AnalyzeHandle();
+        nodeDataPro->analyzeHandle();
     }
 
 	dockObjectView->setObjectName(dockObjName);
@@ -1257,7 +1257,7 @@ void MainWindow::setTextureResHandles(const std::map<std::string, raco::core::Va
 void MainWindow::updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map) {
 	if (title.compare(QString("Scene Graph")) == 0 && nodeLogic_) {
 		nodeLogic_->setNodeNameHandleReMap(map);
-		nodeLogic_->AnalyzeHandle();
+        nodeLogic_->analyzeHandle();
     }
 }
 

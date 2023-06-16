@@ -612,7 +612,7 @@ void InitAnimationJson(QJsonObject& jsonObj) {
         aniData.insert(JSON_UPDATE_INTERVAL, animation.second.GetUpdateInterval());
         jsonObj.insert(QString::fromStdString(animation.first), aniData);
 	}
-    jsonObj.insert(JSON_ACTIVE_ANIMATION, QString::fromStdString(raco::guiData::animationDataManager::GetInstance().GetActiveAnimation()));
+    jsonObj.insert(JSON_ACTIVE_ANIMATION, QString::fromStdString(raco::guiData::animationDataManager::GetInstance().getActiveAnimationName()));
 }
 void InitCurveJson(QJsonArray& jsonObj) {
 	for (auto curve : raco::guiData::CurveManager::GetInstance().getCurveList()) {
@@ -1200,18 +1200,6 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
 
         context = ctmNewContext(CTM_EXPORT);
 
-        // fill attributes
-		for (auto attriIt : mesh.getAttributes()) {
-			int size = attriIt.data.size();
-			CTMfloat *aAttribute = new CTMfloat[size];
-			auto attriData = reinterpret_cast<float *>(attriIt.data.data());
-			std::memcpy(aAttribute, attriData, size * sizeof(float));
-			if (CTM_NONE == ctmAddAttribMap(context, aAttribute, attriIt.name.c_str())) {
-				qDebug() << "color failed";
-			}
-			delete[] aAttribute;
-		}
-
         // normals
         int posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Normal");
         if (posIndex != -1) {
@@ -1266,7 +1254,22 @@ bool ProgramManager::writeCTMFile(std::string filePathStr) {
 			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate2", NULL)) {
 				qDebug() << "uv failed";
 			}
-		}
+        }
+
+        // fill attributes
+        QStringList list = {"a_Normal", "a_Position", "a_TextureCoordinate"};
+        for (auto attriIt : mesh.getAttributes()) {
+            if (!list.contains(QString::fromStdString(attriIt.name))) {
+                int size = attriIt.data.size();
+                CTMfloat *aAttribute = new CTMfloat[size];
+                auto attriData = reinterpret_cast<float *>(attriIt.data.data());
+                std::memcpy(aAttribute, attriData, size * sizeof(float));
+                if (CTM_NONE == ctmAddAttribMap(context, aAttribute, attriIt.name.c_str())) {
+                    qDebug() << "attribute failed";
+                }
+                delete[] aAttribute;
+            }
+        }
 
         ctmCompressionMethod(context, CTM_METHOD_MG1);
 

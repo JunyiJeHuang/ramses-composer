@@ -94,9 +94,9 @@ Q_SIGNALS:
     //
     void sigDeleteResources(const QString path, const QSet<QString> files);
     //
-    void sigUpdateMeshNodeTransProperty(const std::string &objectID, const double& transX, const double& transY);
+    void sigUpdateMeshNodeTransProperty(const std::string &objectID, const double& transX, const double& transY, const double& transZ);
     //
-    void sigUpdateMeshNodeRotationProperty(const std::string &objectID, const double& rotatX, const double& rotatY);
+    void sigUpdateMeshNodeRotationProperty(const std::string &objectID, const double& rotatX, const double& rotatY, const double& rotatZ);
     //
     void sigUpdateMeshNodeScalingProperty(const std::string &objectID, const double& scaling);
     //

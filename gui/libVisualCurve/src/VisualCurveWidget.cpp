@@ -156,7 +156,7 @@ void VisualCurveWidget::insertKeyFrame() {
 }
 
 std::map<std::string, std::string> VisualCurveWidget::getBindingMap() {
-    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     NodeData* nodeData = NodeDataManager::GetInstance().getActiveNode();
     std::map<std::string, std::string> bindingMap;
     if (nodeData) {
@@ -1036,7 +1036,7 @@ void VisualCurveWidget::initVisualCurvePos() {
 void VisualCurveWidget::drawKeyFrame(QPainter &painter) {
     std::string curCurve = VisualCurvePosManager::GetInstance().getCurrentPointInfo().first;
     int index = VisualCurvePosManager::GetInstance().getCurrentPointInfo().second;
-    std::string animation = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string animation = animationDataManager::GetInstance().getActiveAnimationName();
     std::map < std::string, std::map<std::string, std::string>> curveBindingMap;
     curveBindingMap = NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().bindingMap();
 

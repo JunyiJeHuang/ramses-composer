@@ -69,7 +69,7 @@ void PreviewOutlineScene::updateMeshModelMatrix(const std::string& objectID) {
 		raco::guiData::MeshData meshdata;
         guiData::MeshDataManager::GetInstance().getMeshData(selectedObjectId_, meshdata);
 		ramses::UniformInput mMatixInput;
-		auto mMatrix = meshdata.getModelMatrix();
+        auto mMatrix = meshdata.getModelMatrix();
 		auto uniformState = (*appearance_sm_)->getEffect().findUniformInput("u_MMatrix", mMatixInput);
         (*appearance_sm_)->setInputValueMatrix44f(mMatixInput, mMatrix.data());
 
@@ -136,6 +136,7 @@ void PreviewOutlineScene::InitCamera() {
     if (object) {
         if (object->getType() == ramses::ERamsesObjectType_PerspectiveCamera) {
             globalCamera_ = static_cast<ramses::PerspectiveCamera*>(object);
+
         }
     }
     width_ = globalCamera_->getViewportWidth();

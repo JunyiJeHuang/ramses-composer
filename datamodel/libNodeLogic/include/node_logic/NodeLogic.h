@@ -25,10 +25,10 @@ public:
                        QObject *parent = nullptr);
 
     void setCommandInterface(raco::core::CommandInterface* commandInterface);
-	void AnalyzeHandle();
+    void analyzeHandle();
 
 	void initBasicProperty(raco::core::ValueHandle valueHandle, NodeData *pNode);
-	void Analyzing(NodeData *pNode);
+    void analyzing(NodeData *pNode);
 
     bool getValueHanlde(std::string property, core::ValueHandle &valueHandle);
 
@@ -50,8 +50,8 @@ public Q_SLOTS:
     void slotUpdateActiveAnimation(QString animation);
     void slotUpdateKeyFrame(int keyFrame);
     void slotResetNodeData();
-    void slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY);
-    void slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY);
+    void slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY, const double &transZ);
+    void slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY, const double &rotatZ);
     void slotUpdateMeshNodeScaling(const std::string &objectID, const double &scaling);
 
 signals:

@@ -190,7 +190,7 @@ void PropertyBrowserWidget::slotInsertCurveBinding(QString property, QString cur
     std::string stdstrCurve = curve.toStdString();
     std::string stdstrProperty = property.toStdString();
 
-    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (sampleProperty == std::string()) {
         return;
     }

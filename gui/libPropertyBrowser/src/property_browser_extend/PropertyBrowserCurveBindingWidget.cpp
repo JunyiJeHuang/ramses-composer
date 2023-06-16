@@ -21,7 +21,7 @@ PropertyBrowserCurveBindingWidget::PropertyBrowserCurveBindingWidget(core::Comma
 
 void PropertyBrowserCurveBindingWidget::initCurveBindingWidget() {
     clearCurveBinding();
-    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (sampleProperty == std::string()) {
         return;
     }
@@ -60,7 +60,7 @@ void PropertyBrowserCurveBindingWidget::insertData() {
         return;
     }
 
-    std::string stdStrSampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string stdStrSampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     QString sampleProperty = QString::fromStdString(stdStrSampleProperty);
     if (stdStrSampleProperty == std::string()) {
         return;
@@ -84,7 +84,7 @@ void PropertyBrowserCurveBindingWidget::insertData() {
 }
 
 void PropertyBrowserCurveBindingWidget::removeData() {
-    std::string stdStrSampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string stdStrSampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (stdStrSampleProperty == std::string()) {
         return;
     }

@@ -53,6 +53,13 @@ enum KEY_BOARD_TYPE {
     KEY_BOARD_SCALING
 };
 
+enum MODEL_MOVE_DIRECT {
+    MODEL_MOVE_DEFAULT,
+    MODEL_MOVE_X,
+    MODEL_MOVE_Y,
+    MODEL_MOVE_Z
+};
+
 class PreviewContentWidget;
 class PreviewScrollAreaWidget;
 
@@ -87,6 +94,7 @@ public Q_SLOTS:
 	void sceneUpdate(bool z_up);
 private:
     QMatrix4x4 getViewMatrix(QVector3D position, float rX, float rY, float rZ);
+    QMatrix4x4 getViewMatrix2(QVector3D posistion, float rX, float rY, float rZ);
     QVector<float> checkTriCollision(QVector3D ray, QVector3D camera, QVector<QVector<QVector3D>> triangles);
     float checkSingleTriCollision(QVector3D ray, QVector3D camera, QVector<QVector3D> triangle);
     QMap<std::string, QVector<QVector<QVector3D> >> getMeshTriangles();
@@ -95,6 +103,7 @@ private:
     void translationMovement(QPoint position);
     void rotationMovement(QPoint position);
     void scalingMovement(QPoint position);
+    QVector3D calculateModelTranslation(QPoint position);
 
 private:
 	std::unique_ptr<Ui::PreviewMainWindow> ui_;
@@ -112,9 +121,12 @@ private:
 	int mode_;
 	bool haveInited_;
     QLabel *upLabel_{nullptr};
+    QLabel *modelLabel_{nullptr};
     std::string selModelID_;
     KEY_BOARD_TYPE keyBoardType_ = KEY_BOARD_NONE;
+    MODEL_MOVE_DIRECT modelMoveDirect_ = MODEL_MOVE_DEFAULT;
     QPoint selModelPos_;
+    QVector3D selModelTranslation_;
 };
 
 }  // namespace raco::ramses_widgets

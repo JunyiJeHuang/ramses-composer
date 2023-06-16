@@ -64,7 +64,6 @@ protected:
     virtual void keyReleaseEvent(QKeyEvent *event) override;
 
 public Q_SLOTS:
-    //选中时间轴区域时，滚动条操作的处理函数
     void setViewportRect(
             const QSize areaSize,
             const QPoint viewportOffset,
@@ -83,7 +82,6 @@ Q_SIGNALS:
     void sigSwitchCurveType();
     void sigUpdateSlider(int keyFrame);
 private:
-    // 绘制关键帧
     void drawKeyFrame(QPainter &painter);
 private:
     QPoint viewportOffset_;
@@ -91,9 +89,9 @@ private:
     int intervalLength_;
     int numTextInterval_{10};
     MOUSEACTION mouseAction_{MOUSE_NO_ACTION};
-    DragPushButton *button_{nullptr}; //时间轴滑动条
+    DragPushButton *button_{nullptr};
     int timerId_{0};
-    double moveNumX_{-4}; //时间轴起始,向左扩展变成负值,向右扩展不变
+    double moveNumX_{-4};
     double moveNumY_{0};
     int offsetX_{0};
 

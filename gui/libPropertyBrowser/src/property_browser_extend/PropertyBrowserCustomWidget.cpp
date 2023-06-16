@@ -65,7 +65,7 @@ void PropertyBrowserCustomWidget::insertData() {
 }
 
 void PropertyBrowserCustomWidget::removeData() {
-    std::string stdStrSampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string stdStrSampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (stdStrSampleProperty == std::string()) {
         return;
     }

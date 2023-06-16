@@ -19,7 +19,7 @@ void NodeLogic::setCommandInterface(core::CommandInterface *commandInterface) {
     commandInterface_ = commandInterface;
 }
 
-void NodeLogic::Analyzing(NodeData *pNode) {
+void NodeLogic::analyzing(NodeData *pNode) {
 	if (!pNode )
 		return;
     handleMapMutex_.lock();
@@ -33,7 +33,7 @@ void NodeLogic::Analyzing(NodeData *pNode) {
     handleMapMutex_.unlock();
 
 	for (auto it = pNode->childMapRef().begin(); it != pNode->childMapRef().end(); ++it) {
-		Analyzing(&(it->second));
+        analyzing(&(it->second));
     }
 }
 
@@ -111,10 +111,10 @@ bool NodeLogic::hasHandleFromObjectID(const std::string &objectID) {
     return true;
 }
 
-void NodeLogic::AnalyzeHandle() {
+void NodeLogic::analyzeHandle() {
 	raco::guiData::NodeDataManager &nodeManager = NodeDataManager::GetInstance();
 
-	Analyzing(&(nodeManager.root()));
+    analyzing(&(nodeManager.root()));
 }
 
 void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData *node) {
@@ -320,24 +320,29 @@ void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
 }
 
-void NodeLogic::slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY) {
+void NodeLogic::slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY, const double &transZ) {
     raco::core::ValueHandle handle;
     if (getHandleFromObjectID(objectID, handle)) {
 
         raco::core::ValueHandle tempHandle = handle;
         if (getValueHanlde("translation.x", tempHandle) && commandInterface_) {
-//            double value = tempHandle.asDouble() + transX;
-            commandInterface_->set(tempHandle, transX, false);
+            double value = tempHandle.asDouble() + transX;
+            commandInterface_->set(tempHandle, value, false);
         }
         tempHandle = handle;
         if (getValueHanlde("translation.y", tempHandle) && commandInterface_) {
-//            double value = tempHandle.asDouble() + transY;
-            commandInterface_->set(tempHandle, transY, false);
+            double value = tempHandle.asDouble() + transY;
+            commandInterface_->set(tempHandle, value, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("translation.z", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + transZ;
+            commandInterface_->set(tempHandle, value, false);
         }
     }
 }
 
-void NodeLogic::slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY) {
+void NodeLogic::slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY, const double &rotatZ) {
     raco::core::ValueHandle handle;
     if (getHandleFromObjectID(objectID, handle)) {
         raco::core::ValueHandle tempHandle = handle;
@@ -348,6 +353,11 @@ void NodeLogic::slotUpdateMeshNodeRotation(const std::string &objectID, const do
         tempHandle = handle;
         if (getValueHanlde("rotation.y", tempHandle) && commandInterface_) {
             double value = tempHandle.asDouble() + rotatY;
+            commandInterface_->set(tempHandle, value, false);
+        }
+        tempHandle = handle;
+        if (getValueHanlde("rotation.z", tempHandle) && commandInterface_) {
+            double value = tempHandle.asDouble() + rotatZ;
             commandInterface_->set(tempHandle, value, false);
         }
     }

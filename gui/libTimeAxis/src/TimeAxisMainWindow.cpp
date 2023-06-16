@@ -210,7 +210,7 @@ void TimeAxisMainWindow::slotItemChanged(QStandardItem* item) {
         itemMap_.insert(newKey, item);
 
         animationDataManager::GetInstance().ModifyAnimation(oldKey.toStdString(), newKey.toStdString());
-        if (animationDataManager::GetInstance().GetActiveAnimation().compare(oldKey.toStdString())) {
+        if (animationDataManager::GetInstance().getActiveAnimationName().compare(oldKey.toStdString())) {
             animationDataManager::GetInstance().SetActiveAnimation(newKey.toStdString());
         }
         Q_EMIT signalProxy::GetInstance().sigResetAnimationProperty_From_AnimationLogic();
@@ -333,7 +333,7 @@ void TimeAxisMainWindow::slotInitAnimationMgr() {
                 model_->appendRow(item);
             }
         }
-        curItemName_ = QString::fromStdString(animationDataManager::GetInstance().GetActiveAnimation());
+        curItemName_ = QString::fromStdString(animationDataManager::GetInstance().getActiveAnimationName());
         if (!curItemName_.isEmpty()) {
             loadAnimation();
             timeAxisWidget_->refreshKeyFrameView();
@@ -375,7 +375,7 @@ void TimeAxisMainWindow::slotRefreshTimeAxis() {
 }
 
 void TimeAxisMainWindow::slotRefreshTimeAxisAfterUndo() {
-	if (animationDataManager::GetInstance().GetActiveAnimation().empty() || animationDataManager::GetInstance().getAniamtionNameList().empty()) {
+	if (animationDataManager::GetInstance().getActiveAnimationName().empty() || animationDataManager::GetInstance().getAniamtionNameList().empty()) {
         return;
     }
     int startTime = animationDataManager::GetInstance().getActiveAnimationData().GetStartTime();

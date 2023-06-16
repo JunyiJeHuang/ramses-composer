@@ -612,7 +612,7 @@ void InitAnimationJson(QJsonObject& jsonObj) {
         aniData.insert(JSON_UPDATE_INTERVAL, animation.second.GetUpdateInterval());
         jsonObj.insert(QString::fromStdString(animation.first), aniData);
 	}
-    jsonObj.insert(JSON_ACTIVE_ANIMATION, QString::fromStdString(raco::guiData::animationDataManager::GetInstance().GetActiveAnimation()));
+    jsonObj.insert(JSON_ACTIVE_ANIMATION, QString::fromStdString(raco::guiData::animationDataManager::GetInstance().getActiveAnimationName()));
 }
 void InitCurveJson(QJsonArray& jsonObj) {
 	for (auto curve : raco::guiData::CurveManager::GetInstance().getCurveList()) {

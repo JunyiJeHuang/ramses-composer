@@ -19,7 +19,7 @@ CurveNameWidget::CurveNameWidget(QWidget *parent) {
 
 void CurveNameWidget::setBindingData(QString property, QString curve) {
     index_ = 1;
-    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (sampleProperty == std::string()) {
         return;
     }
@@ -38,7 +38,7 @@ void CurveNameWidget::getBindingData(QString &property, QString &curve) {
 
 void CurveNameWidget::slotOkBtnClicked() {
     QString curve = curveEdit_->text();
-    std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+    std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
     if (sampleProperty == std::string()) {
         return;
     }

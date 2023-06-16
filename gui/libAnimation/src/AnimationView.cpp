@@ -59,7 +59,7 @@ AnimationView::AnimationView(QWidget *parent) {
 }
 
 void AnimationView::initAnimationView() {
-    QString sampleProperty = QString::fromStdString(animationDataManager::GetInstance().GetActiveAnimation());
+    QString sampleProperty = QString::fromStdString(animationDataManager::GetInstance().getActiveAnimationName());
     if (!sampleProperty.isEmpty()) {
         slotloadAnimation(sampleProperty);
     }
@@ -127,7 +127,7 @@ void AnimationView::slotUpdateAnimationProperty() {
     loopCountStrEditor_->setValue(tempData.GetLoopCount());
     intervalStrEditor_->setValue(tempData.GetUpdateInterval());
     playSpeedStrEditor_->setValue(tempData.GetPlaySpeed());
-    returnStrEditor_->setText(QString::fromStdString(animationDataManager::GetInstance().GetActiveAnimation()));
+    returnStrEditor_->setText(QString::fromStdString(animationDataManager::GetInstance().getActiveAnimationName()));
 }
 
 void AnimationView::slotResetAniamitonView() {

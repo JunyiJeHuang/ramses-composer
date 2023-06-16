@@ -381,7 +381,7 @@ void PropertySubtreeView::slotInsertKeyFrame() {
 				return;
 			}
 			// is have active animation
-			std::string sampleProperty = animationDataManager::GetInstance().GetActiveAnimation();
+			std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
 			if (sampleProperty == std::string()) {
 				return;
 			}

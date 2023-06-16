@@ -99,26 +99,26 @@ void PreviewScrollAreaWidget::wheelEvent(QWheelEvent* event) {
 #else
 	mousePivot_ = event->position().toPoint();
 #endif
-	auto virtSize = scaledSize();
-	double centreX = static_cast<double>(horizontalScrollBar()->value() + mousePivot_.x()) / virtSize.width();
-	double centerY = static_cast<double>(verticalScrollBar()->value() + mousePivot_.y()) / virtSize.height();
-	if (sizeMode_ != AutoSizing::OFF) {
-		sizeMode_ = AutoSizing::OFF;
-		scaleValue_ = pow(2, ceil(log(scaleValue_) / log(2)));
-	}
-    bool scaleUp{true};
-	if (event->angleDelta().y() > 0) {
-		scaleValue_ *= 2.0;
-	} else {
-		scaleValue_ *= 0.5;
-		scaleUp = false;
+    auto virtSize = scaledSize();
+    double centreX = static_cast<double>(horizontalScrollBar()->value() + mousePivot_.x()) / virtSize.width();
+    double centerY = static_cast<double>(verticalScrollBar()->value() + mousePivot_.y()) / virtSize.height();
+    if (sizeMode_ != AutoSizing::OFF) {
+        sizeMode_ = AutoSizing::OFF;
+        scaleValue_ = pow(2, ceil(log(scaleValue_) / log(2)));
     }
-	Q_EMIT scaleChanged(s_scaleValue, scaleUp);
+    bool scaleUp{true};
+    if (event->angleDelta().y() > 0) {
+        scaleValue_ *= 2.0;
+    } else {
+        scaleValue_ *= 0.5;
+        scaleUp = false;
+    }
+    Q_EMIT scaleChanged(s_scaleValue, scaleUp);
 
     virtSize = scaledSize();
 
-	updateScrollbarSize(virtSize);
-	horizontalScrollBar()->setValue(centreX * virtSize.width() - mousePivot_.x());
+    updateScrollbarSize(virtSize);
+    horizontalScrollBar()->setValue(centreX * virtSize.width() - mousePivot_.x());
     verticalScrollBar()->setValue(centerY * virtSize.height() - mousePivot_.y());
 
     updateViewport();

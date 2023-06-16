@@ -1154,8 +1154,21 @@ void readJsonFillPropertyData(QJsonObject jsonObj) {
 }
 
 namespace raco::dataConvert {
+// bool ProgramManager::writeBMWAssets(QString filePath) {
+// 	bool result = true;
+// 	// Output Ptx file
+// 	if (!outputPtx_.writeProgram2Ptx(filePath.toStdString(), openedProjectPath_)) {
+// 		qDebug() << "Write Ptx file ERROR!";
+// 		result = false;
+// 	}
+// 	// Output Asset file
+// 	outputPtw_.WriteAsset(filePath.toStdString());
+// 	// Output ctm file
+// 	outputCTM_.writeCTMFile(filePath.toStdString());
+// 	return result;
+// }
 bool ProgramManager::writeBMWAssets(QString filePath) {
-    QMessageBox msgBox;
+	QMessageBox msgBox;
 	msgBox.setWindowTitle("Debug message box");
 	QPushButton* okButton = msgBox.addButton("OK", QMessageBox::ActionRole);
 	msgBox.setIcon(QMessageBox::Icon::Warning);
@@ -1170,118 +1183,6 @@ void ProgramManager::setRelativePath(QString path) {
 
 void ProgramManager::setOpenedProjectPath(QString path) {
 	openedProjectPath_ = path;
-}
-
-bool ProgramManager::writeCTMFile(std::string filePathStr) {
-	filePathStr = filePathStr.substr(0, filePathStr.find(".rca"));
-	QString tempPath = QString::fromStdString(filePathStr);
-	QDir folder(tempPath + "/meshes");
-    if (!folder.exists()) {
-		folder.mkpath(tempPath + "/meshes");
-    }
-
-    for (const auto &meshIt : MeshDataManager::GetInstance().getMeshDataMap()) {
-        MeshData mesh = meshIt.second;
-		std::string path = tempPath.toStdString() + "/" + mesh.getMeshUri();
-        CTMuint aVerCount = mesh.getNumVertices();
-        CTMuint aTriCount = mesh.getNumTriangles();
-
-        CTMfloat *aVertices = new CTMfloat[aVerCount * 3];
-        CTMuint *aIndices = new CTMuint[aTriCount * 3];
-        CTMfloat *aNormals{nullptr};
-        CTMfloat *aUVMaps{nullptr};
-
-        CTMcontext context;
-        CTMenum ret;
-
-        std::vector<uint32_t> indices = mesh.getIndices();
-        auto indicesData = reinterpret_cast<uint32_t *>(indices.data());;
-        std::memcpy(aIndices, indicesData, aTriCount * 3 * sizeof(uint32_t));
-
-        context = ctmNewContext(CTM_EXPORT);
-
-        // normals
-        int posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Normal");
-        if (posIndex != -1) {
-            aNormals = new CTMfloat[aVerCount * 3];
-            Attribute attri = mesh.getAttributes().at(posIndex);
-            auto normalsData = reinterpret_cast<float *>(attri.data.data());;
-            std::memcpy(aNormals, normalsData, aVerCount * 3 * sizeof(float));
-        }
-
-        // vertices
-        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Position");
-        if (posIndex != -1) {
-            Attribute attri = mesh.getAttributes().at(posIndex);
-            auto verticesData = reinterpret_cast<float *>(attri.data.data());
-            std::memcpy(aVertices, verticesData, aVerCount * 3 * sizeof(float));
-        }
-
-        ctmDefineMesh(context, aVertices, aVerCount, aIndices, aTriCount, aNormals);
-
-        // uv maps
-        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate");
-        if (posIndex != -1) {
-            aUVMaps = new CTMfloat[aVerCount * 2];
-            Attribute attri = mesh.getAttributes().at(posIndex);
-            auto uvMapsData = reinterpret_cast<float *>(attri.data.data());;
-            std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
-            if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate", NULL)) {
-                qDebug() << "uv failed";
-            }
-        }
-        // uv maps a_TextureCoordinate1
-		posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate1");
-		if (posIndex != -1) {
-			aUVMaps = new CTMfloat[aVerCount * 2];
-			Attribute attri = mesh.getAttributes().at(posIndex);
-			auto uvMapsData = reinterpret_cast<float *>(attri.data.data());
-			;
-			std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
-			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate1", NULL)) {
-				qDebug() << "uv failed";
-			}
-		}
-
-        // uv maps a_TextureCoordinate2
-		posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate2");
-		if (posIndex != -1) {
-			aUVMaps = new CTMfloat[aVerCount * 2];
-			Attribute attri = mesh.getAttributes().at(posIndex);
-			auto uvMapsData = reinterpret_cast<float *>(attri.data.data());
-			;
-			std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
-			if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate2", NULL)) {
-				qDebug() << "uv failed";
-			}
-        }
-
-        // fill attributes
-        QStringList list = {"a_Normal", "a_Position", "a_TextureCoordinate"};
-        for (auto attriIt : mesh.getAttributes()) {
-            if (!list.contains(QString::fromStdString(attriIt.name))) {
-                int size = attriIt.data.size();
-                CTMfloat *aAttribute = new CTMfloat[size];
-                auto attriData = reinterpret_cast<float *>(attriIt.data.data());
-                std::memcpy(aAttribute, attriData, size * sizeof(float));
-                if (CTM_NONE == ctmAddAttribMap(context, aAttribute, attriIt.name.c_str())) {
-                    qDebug() << "attribute failed";
-                }
-                delete[] aAttribute;
-            }
-        }
-
-        ctmCompressionMethod(context, CTM_METHOD_MG1);
-
-        ctmSave(context, path.c_str());
-        ctmFreeContext(context);
-
-        delete[] aVertices;
-        delete[] aIndices;
-        delete[] aNormals;
-        delete[] aUVMaps;
-    }
-    return true;
 }
 
 bool ProgramManager::writeProgram2Json(QString filePath) {

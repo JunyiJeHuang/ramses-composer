@@ -27,6 +27,9 @@
 #include "openctm.h"
 #include "openctmpp.h"
 
+//- #include "assets/OutputAssets.h"
+//- #include "assets/AssetsLogic.h"
+
 using namespace raco::guiData;
 namespace raco::dataConvert {
 
@@ -45,7 +48,6 @@ public:
     bool readProgramFromJson(QString filePath);
     bool updateUIFromJson(QString filePath);
 
-    bool writeCTMFile(std::string filePathStr);
     void setRelativePath(QString path);
 	void setOpenedProjectPath(QString path);
     void initFolderData();
@@ -59,6 +61,10 @@ private:
     QString relativePath_;
     QString openedProjectPath_;
     QMap<QString, QJsonArray> aryMap_;
+
+//-   assets::OutputPtx outputPtx_;
+//-   assets::OutputPtw outputPtw_;
+//-   assets::OutputCTM outputCTM_;
 };
 }
 

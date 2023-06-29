@@ -125,7 +125,7 @@ bool LuaInterfaceAdaptor::sync(core::Errors* errors) {
 		ramsesInterface_.reset();
 
 		if (!interfaceText.empty() &&
-			(!sceneAdaptor_->optimizeForExport() || 
+            (sceneAdaptor_->optimizeForExport() ||
 				!raco::core::Queries::getLinksConnectedToObject(sceneAdaptor_->project(), editorObject_, true, false).empty() &&
 				raco::core::Queries::getLinksConnectedToObject(sceneAdaptor_->project(), editorObject_, false, true).empty())) {
 
@@ -154,9 +154,9 @@ bool LuaInterfaceAdaptor::sync(core::Errors* errors) {
 	}
 
 	if (ramsesInterface_) {
-		core::ValueHandle luaInputs{editorObject_, &user_types::LuaInterface::inputs_};
-		auto success = setLuaInputInEngine(ramsesInterface_->getInputs(), luaInputs);
-		LOG_WARNING_IF(log_system::RAMSES_ADAPTOR, !success, "Script set properties failed: {}", LogicEngineErrors{sceneAdaptor_->logicEngine()});
+        core::ValueHandle luaInputs{editorObject_, &user_types::LuaInterface::inputs_};
+        auto success = setLuaInputInEngine(ramsesInterface_->getInputs(), luaInputs);
+        LOG_WARNING_IF(log_system::RAMSES_ADAPTOR, !success, "Script set properties failed: {}", LogicEngineErrors{sceneAdaptor_->logicEngine()});
 	}
 
 	tagDirty(false);

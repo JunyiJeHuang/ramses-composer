@@ -19,7 +19,7 @@ namespace raco::time_axis {
 #define BASE_NUM 5
 #define DEFAULT_BUTTON_WIDTH 20
 
-//滚动条操作的选项
+
 enum MOUSEACTION {
     MOUSE_SCROLL_DOWN = 0, // when select timeAxis area, scroll down
     MOUSE_SCROLL_UP = 1, // when select timeAxis area, scroll up

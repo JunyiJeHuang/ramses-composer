@@ -864,6 +864,7 @@ void ObjectTreeView::cut() {
 	auto selectedIndices = getSelectedIndices(true);
 	if (!selectedIndices.isEmpty()) {
 		treeModel_->cutObjectsAtIndices(selectedIndices, false);
+        Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString());
 	}
 }
 
@@ -909,7 +910,8 @@ void ObjectTreeView::shortcutDelete() {
         auto delObjAmount = treeModel_->deleteObjectsAtIndices(selectedIndices, isDelete);
 
 		if (delObjAmount > 0) {
-			selectionModel()->Q_EMIT selectionChanged({}, {});
+            selectionModel()->Q_EMIT selectionChanged({}, {});
+            Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString());
 		}
 	}
 }
@@ -1157,6 +1159,7 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
             }
             treeModel_->deleteObjectsAtIndices(selectedItemIndices, isDelete);
 			selectionModel()->Q_EMIT selectionChanged({}, {});
+            Q_EMIT signal::signalProxy::GetInstance().sigSwithOutLineModel(QString());
 		},
 		QKeySequence::Delete);
 	actionDelete->setEnabled(canDeleteSelectedIndices);

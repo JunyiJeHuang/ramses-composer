@@ -59,7 +59,7 @@ private:
 	CameraParam_t currentCameraParam_;
     std::string selectedObjectId_;
 
-	ramses::PerspectiveCamera* globalCamera_;
+    ramses::PerspectiveCamera* globalCamera_{nullptr};
 
 	std::shared_ptr<ramses::RenderGroup> renderGroup_sm_;
 	std::shared_ptr<ramses::RenderPass> renderPass_sm_;

@@ -236,7 +236,7 @@ inline bool setLuaInputInEngine(rlogic::Property* property, const core::ValueHan
 			for (size_t i{0}; i < valueHandle.size(); i++) {
 				if (property->getType() == rlogic::EPropertyType::Array) {
 					success = setLuaInputInEngine(property->getChild(i), valueHandle[i]) && success;
-				} else {
+                } else {
 					success = setLuaInputInEngine(property->getChild(valueHandle[i].getPropName()), valueHandle[i]) && success;
 				}
 			}

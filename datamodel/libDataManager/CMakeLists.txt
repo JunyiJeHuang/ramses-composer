@@ -31,16 +31,16 @@ target_link_libraries(libDataManager
         raco::TimeAxis
         raco::GuiData
         raco::PropertyBrowser
-       # raco::assets
+        #-  raco::assets
         openctm
         Qt5::Widgets
         Qt5::Core
         Qt5::Gui
     PRIVATE
-        protobuf::libprotobuf-lite
-        protobuf::libprotobuf
-        protobuf::libprotoc
         raco::LogSystem
+    #-     protobuf::libprotobuf-lite
+    #-     protobuf::libprotobuf
+    #-     protobuf::libprotoc
 )
 
 add_library(raco::dataConvert ALIAS libDataManager)

@@ -42,8 +42,6 @@ public:
     void preOrderReverse(NodeData *pNode, const int &keyFrame, const std::string &sampleProperty);
     void setPropertyByCurveBinding(const std::string &objecID, const std::map<std::string, std::string> &map, const int &keyFrame);
     bool getKeyValue(std::string curve, EInterPolationType type, int keyFrame, double& value);
-
-
     void delNodeBindingByCurveName(std::string curveName);
 
 public Q_SLOTS:

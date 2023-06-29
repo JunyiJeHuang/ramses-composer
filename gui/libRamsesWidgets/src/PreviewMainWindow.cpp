@@ -339,6 +339,7 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
         if (!selModelID_.empty() && keyBoardType_ != KEY_BOARD_NONE) {
             keyBoardType_ = KEY_BOARD_NONE;
             this->setCursor(Qt::ArrowCursor);
+            modelLabel_->setText("   ");
             return;
         }
 
@@ -361,7 +362,7 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
                 float rX{0.0f}, rY{0.0f}, rZ{0.0f};
                 ramses::ERotationConvention convention;
                 camera->getRotation(rX, rY, rZ, convention);
-                QMatrix4x4 view_matrix = getViewMatrix(position, rX, rY, rZ);
+                QMatrix4x4 view_matrix = getViewMatrix2(position, rX, rY, rZ);
 
                 // get view position
                 int width = camera->getViewportWidth();
@@ -378,16 +379,23 @@ void PreviewMainWindow::mousePressEvent(QMouseEvent *event) {
                 QVector3D ray_nds = QVector3D(x, y, 1.0f);
                 QVector4D ray_clip = QVector4D(ray_nds, 1.0f);
                 QVector4D ray_eye = projection_matrix.inverted() * ray_clip;
-                QVector4D ray_world = view_matrix.inverted() * ray_eye;
+                QVector4D ray_camera = view_matrix.inverted() * ray_eye;
 
-                if (ray_world.w() != 0.0f) {
-                    ray_world.setX(ray_world.x()/ray_world.w());
-                    ray_world.setY(ray_world.y()/ray_world.w());
-                    ray_world.setZ(ray_world.z()/ray_world.w());
+                QVector3D ray_world;
+                if (ray_camera.w() != 0.0f) {
+                    ray_world = QVector3D(ray_eye.x() / ray_eye.w(), ray_eye.y() / ray_eye.w(), ray_eye.z() / ray_eye.w());
                 }
-                QVector3D ray = (QVector3D(ray_world.x(), ray_world.y(), ray_world.z()) - position).normalized();
 
-                // caculate Ray Intersection; return: node objectID
+                //QQuaternion rotation = QQuaternion::fromEulerAngles(rX, rY, rZ);
+
+                QQuaternion q1 = QQuaternion::fromAxisAndAngle(QVector3D(0, 0, 1), rZ);
+                QQuaternion q2 = QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0), rY);
+                QQuaternion q3 = QQuaternion::fromAxisAndAngle(QVector3D(1, 0, 0), rX);
+                QQuaternion rotation = q1 * q2 * q3;
+
+                QVector3D ray = QVector3D(ray_world - position).normalized();
+                ray = rotation.rotatedVector(ray);
+
                 selModelID_ = caculateRayIntersection(ray, position);
 
                 // select node
@@ -601,16 +609,28 @@ QMatrix4x4 PreviewMainWindow::getViewMatrix(QVector3D position, float rX, float 
     return view;
 }
 
-QMatrix4x4 PreviewMainWindow::getViewMatrix2(QVector3D posistion, float rX, float rY, float rZ) {
-    QQuaternion q = QQuaternion::fromEulerAngles(qDegreesToRadians(rX), qDegreesToRadians(rY), qDegreesToRadians(rZ));
-    QMatrix4x4 R(q.toRotationMatrix());
+QMatrix4x4 PreviewMainWindow::getViewMatrix2(QVector3D position, float rX, float rY, float rZ) {
+//    QQuaternion q = QQuaternion::fromEulerAngles(qDegreesToRadians(rX), qDegreesToRadians(rY), qDegreesToRadians(rZ));
+//    QMatrix4x4 R(q.toRotationMatrix());
 
-    QMatrix4x4 T;
-    T.setToIdentity();
-    T.translate(-QVector3D(posistion.x(), posistion.y(), posistion.z()));
+//    QMatrix4x4 T;
+//    T.setToIdentity();
+//    T.translate(-QVector3D(position.x(), position.y(), position.z()));
+
+//    QMatrix4x4 ViewMatrix;
+//    ViewMatrix = R.transposed() * T;
+//    return ViewMatrix;
+
+    QVector3D target(0, 0, 0);
+    QVector3D up(0, 1, 0);
+    QVector3D direction = target - position;
+
+    QVector3D right = QVector3D::crossProduct(direction, up).normalized();
+    QVector3D trueUp = QVector3D::crossProduct(right, direction).normalized();
 
     QMatrix4x4 ViewMatrix;
-    ViewMatrix = R.transposed() * T;
+    ViewMatrix.setToIdentity();
+    ViewMatrix.lookAt(position, position + direction, trueUp);
     return ViewMatrix;
 }
 
@@ -716,7 +736,7 @@ std::string PreviewMainWindow::caculateRayIntersection(QVector3D ray, QVector3D 
 }
 
 void PreviewMainWindow::mouseMove(QPoint position) {
-    if (modelMoveDirect_ == MODEL_MOVE_DEFAULT) {
+    if (modelMoveDirect_ == MODEL_MOVE_DEFAULT && keyBoardType_ != KEY_BOARD_SCALING) {
         return;
     }
 

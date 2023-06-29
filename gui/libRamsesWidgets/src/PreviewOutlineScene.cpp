@@ -25,7 +25,7 @@ PreviewOutlineScene::PreviewOutlineScene(raco::ramses_base::RamsesScene& scene, 
 }
 
 void PreviewOutlineScene::sceneUpdate(bool z_up, float scaleValue) {
-	if (globalCamera_ == nullptr) {
+    //if (globalCamera_ == nullptr) {
 		auto scene = const_cast<ramses::Scene*>(sceneBackend_->currentScene());
 		auto id = scene->getSceneId();
 		ramses::RamsesObject* object = scene->findObjectByName("PerspectiveCamera");
@@ -57,12 +57,8 @@ void PreviewOutlineScene::sceneUpdate(bool z_up, float scaleValue) {
                 }
 			}
 		}
-    }
+    //}
 }
-
-//void PreviewOutlineScene::updateScreenFPS(uint32_t width, uint32_t height) {
-//    globalCamera_ = nullptr;
-//}
 
 void PreviewOutlineScene::updateMeshModelMatrix(const std::string& objectID) {
 	if (appearance_sm_ != nullptr) {
@@ -133,10 +129,13 @@ void PreviewOutlineScene::InitCamera() {
     auto scene = const_cast<ramses::Scene*>(sceneBackend_->currentScene());
     auto id = scene->getSceneId();
     ramses::RamsesObject* object = scene->findObjectByName("PerspectiveCamera");
-    if (object) {
-        if (object->getType() == ramses::ERamsesObjectType_PerspectiveCamera) {
-            globalCamera_ = static_cast<ramses::PerspectiveCamera*>(object);
-
+    if (object == nullptr) {
+        return;
+    }
+    if (object->getType() == ramses::ERamsesObjectType_PerspectiveCamera) {
+        globalCamera_ = static_cast<ramses::PerspectiveCamera*>(object);
+        if (globalCamera_ == nullptr) {
+            return;
         }
     }
     width_ = globalCamera_->getViewportWidth();

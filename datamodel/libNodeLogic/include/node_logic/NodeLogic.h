@@ -6,9 +6,10 @@
 
 #include "core/CommandInterface.h"
 #include "property_browser/PropertyBrowserItem.h"
-#include "NodeData/nodeManager.h"
+#include "NodeData/NodeManager.h"
 #include "CurveData/CurveManager.h"
 #include "signal/SignalProxy.h"
+#include "user_types/RenderPass.h"
 #include <QDebug>
 #include <QMutex>
 
@@ -35,6 +36,12 @@ public:
     void setProperty(core::ValueHandle handle, std::string property, float value);
     std::map<std::string, core::ValueHandle > &getNodeNameHandleReMap();
 
+    void analyzeRenderHandles(const std::map<std::string, core::ValueHandle> &handles);
+    void analyzeRenderPass(const std::string &id, const core::ValueHandle &handle);
+    void analyzeRenderTarget(const std::string &id, const core::ValueHandle &handle);
+    void analyzeRenderLayer(const std::string &id, const core::ValueHandle &handle);
+    void analyzeRenderBuffer(const std::string &id, const core::ValueHandle &handle);
+
     void setNodeNameHandleReMap(std::map<std::string, core::ValueHandle> nodeNameHandleReMap);
     bool getHandleFromObjectID(const std::string &objectID, raco::core::ValueHandle &handle);
     bool hasHandleFromObjectID(const std::string &objectID);
@@ -48,6 +55,7 @@ public Q_SLOTS:
     void slotUpdateActiveAnimation(QString animation);
     void slotUpdateKeyFrame(int keyFrame);
     void slotResetNodeData();
+    void slotUpdateNodeProperty(const std::string &objectID, const raco::core::ValueHandle &handle);
     void slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY, const double &transZ);
     void slotUpdateMeshNodeRotation(const std::string &objectID, const double &rotatX, const double &rotatY, const double &rotatZ);
     void slotUpdateMeshNodeScaling(const std::string &objectID, const double &scaling);

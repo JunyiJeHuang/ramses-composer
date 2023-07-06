@@ -57,6 +57,18 @@ public:
         materialName_ = name;
     }
 
+    void addTag(std::string tag) {
+        tags.push_back(tag);
+    }
+
+    std::vector<std::string> getTags() {
+        return tags;
+    }
+
+    void clearTags() {
+        tags.clear();
+    }
+
     std::string getMaterialsID() {
         return materialsID_;
     }
@@ -119,7 +131,6 @@ public:
         }
         return true;
     }
-
 
     NodeData* getParent() {
         return parentNode_;
@@ -249,6 +260,7 @@ public:
 private:
     std::string nodeName_;
     std::string objectID_;
+    std::vector<std::string> tags;
     NodeExtend nodeExtend_;
     std::map<std::string, std::any> systemDataMap_;
     // materials ID

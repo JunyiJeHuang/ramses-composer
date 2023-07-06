@@ -1,4 +1,4 @@
-#include "NodeData/nodeManager.h"
+#include "NodeData/NodeManager.h"
 
 
 namespace raco::guiData {

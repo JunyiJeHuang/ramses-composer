@@ -1,4 +1,4 @@
-#include "MaterialData/materialManager.h"
+#include "MaterialData/MaterialManager.h"
 
 namespace raco::guiData {
 MaterialManager &MaterialManager::GetInstance() {

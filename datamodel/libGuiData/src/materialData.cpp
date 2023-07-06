@@ -1,4 +1,4 @@
-#include "MaterialData/materialData.h"
+#include "MaterialData/MaterialData.h"
 #include <vector>
 
 namespace raco::guiData {

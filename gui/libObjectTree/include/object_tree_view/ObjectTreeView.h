@@ -46,6 +46,7 @@ public:
     bool getOneMeshData(ValueHandle valueHandle, raco::guiData::MeshData &meshData);
     bool getOneMaterialHandle(ValueHandle &valueHandle);
     void getOneMaterials(QModelIndex index, std::map<std::string, core::ValueHandle> &materialHandleMap);
+    void getResourceHandle(QModelIndex index, std::map<std::string, core::ValueHandle> &resourceHandleMap);
 
     std::map<std::string, core::ValueHandle> updateNodeTree();
 	std::map<std::string, core::ValueHandle> updateResource();
@@ -81,6 +82,7 @@ Q_SIGNALS:
     void externalObjectSelected();
     void setMaterialResHandles(const std::map<std::string, core::ValueHandle>& map);
 	void setTextureResHandles(const std::map<std::string, core::ValueHandle> &map);
+    void setResourceHandles(const std::map<std::string, core::ValueHandle> &map);
     void updateNodeHandles(const QString &title, const std::map<std::string, core::ValueHandle> &map);
 
 public Q_SLOTS:
@@ -97,6 +99,7 @@ public Q_SLOTS:
 	void collapsed(const QModelIndex &index);
     void getMaterialResHandles();
 	void getTextureResHandles();
+    void getResourceHandles();
     void fillMeshData();
     void selectActiveObject();
     void updateMeshModelMatrix(const std::string &objectID);

@@ -1,4 +1,4 @@
-#include"AnimationData/animationData.h"
+#include"AnimationData/AnimationData.h"
 
 namespace raco::guiData {
 animationData::animationData() {

@@ -2,6 +2,7 @@
 #include "PropertyData/PropertyType.h"
 #include "time_axis/TimeAxisCommon.h"
 #include "VisualCurveData/VisualCurvePosManager.h"
+#include "RenderData/RenderDataManager.h"
 #include <QDebug>
 
 namespace raco::node_logic {
@@ -10,6 +11,7 @@ NodeLogic::NodeLogic(raco::core::CommandInterface *commandInterface, QObject *pa
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateKeyFram_From_AnimationLogic, this, &NodeLogic::slotUpdateKeyFrame);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &NodeLogic::slotUpdateActiveAnimation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &NodeLogic::slotResetNodeData,Qt::DirectConnection);
+    connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateNodeProp_From_ObjectView, this, &NodeLogic::slotUpdateNodeProperty);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeTransProperty, this, &NodeLogic::slotUpdateMeshNodeTranslation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeRotationProperty, this, &NodeLogic::slotUpdateMeshNodeRotation);
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateMeshNodeScalingProperty, this, &NodeLogic::slotUpdateMeshNodeScaling);
@@ -86,6 +88,161 @@ std::map<std::string, core::ValueHandle> &NodeLogic::getNodeNameHandleReMap() {
     return nodeObjectIDHandleReMap_;
 }
 
+void NodeLogic::analyzeRenderHandles(const std::map<std::string, core::ValueHandle> &handles) {
+    RenderDataManager::GetInstance().clear();
+    for (const auto &it : handles) {
+        std::string objectID = it.first;
+        raco::core::ValueHandle handle = it.second;
+        if (handle.rootObject()->isType<raco::user_types::RenderPass>()) {
+            analyzeRenderPass(objectID, handle);
+        } else if (handle.rootObject()->isType<raco::user_types::RenderTarget>()) {
+            analyzeRenderTarget(objectID, handle);
+        } else if (handle.rootObject()->isType<raco::user_types::RenderLayer>()) {
+            analyzeRenderLayer(objectID, handle);
+        } else if (handle.rootObject()->isType<raco::user_types::RenderBuffer>()) {
+            analyzeRenderBuffer(objectID, handle);
+        }
+    }
+}
+
+void NodeLogic::analyzeRenderPass(const std::string &id, const core::ValueHandle &handle) {
+    RenderPass renderPass;
+    for (int i = 0; i < handle.size(); i++) {
+        core::ValueHandle tempHandle = handle[i];
+        QString property = QString::fromStdString(tempHandle.getPropName());
+        if (property.compare("objectName") == 0) {
+            std::string name = tempHandle.asString();
+            renderPass.setObjectName(name);
+        } else if (property.compare("target") == 0) {
+            raco::core::ValueHandle targetHandle = tempHandle.asRef();
+            if (targetHandle) {
+                std::string target = targetHandle[0].asString();
+                renderPass.setRenderTarget(target);
+            }
+        } else if (property.compare("camera") == 0) {
+            raco::core::ValueHandle cameraHandle = tempHandle.asRef();
+            if (cameraHandle) {
+                std::string camera = cameraHandle[0].asString();
+                renderPass.setCamera(camera);
+            }
+        } else if (property.contains("layer")) {
+            raco::core::ValueHandle layerHandle = tempHandle.asRef();
+            if (layerHandle) {
+                std::string layer = layerHandle[0].asString();
+                renderPass.addRenderLayer(layer);
+            }
+        } else if (property.compare("enabled") == 0) {
+            bool enabled = tempHandle.asBool();
+            renderPass.setEnabled(enabled);
+        } else if (property.compare("renderOrder") == 0) {
+            int order = tempHandle.asInt();
+            renderPass.setRenderOrder(order);
+        } else if (property.compare("clearColor") == 0) {
+            raco::core::Vec4f clearColo = tempHandle.asVec4f();
+            renderPass.setClearColor(clearColo.x.asDouble(), clearColo.y.asDouble(), clearColo.z.asDouble(), clearColo.w.asDouble());
+        } else if (property.compare("enableClearColor") == 0) {
+            bool enable = tempHandle.asBool();
+            renderPass.setEnableClearColor(enable);
+        } else if (property.compare("enableClearDepth") == 0) {
+            bool enable = tempHandle.asBool();
+            renderPass.setEnableClearDepth(enable);
+        } else if (property.compare("enableClearStencil") == 0) {
+            bool enable = tempHandle.asBool();
+            renderPass.setEnableClearStencil(enable);
+        }
+    }
+    RenderDataManager::GetInstance().addRenderPass(id, renderPass);
+}
+
+void NodeLogic::analyzeRenderTarget(const std::string &id, const core::ValueHandle &handle) {
+    RenderTarget renderTarget;
+    for (int i = 0; i < handle.size(); i++) {
+        core::ValueHandle tempHandle = handle[i];
+        QString property = QString::fromStdString(tempHandle.getPropName());
+        if (property.compare("objectName") == 0) {
+            std::string name = tempHandle.asString();
+            renderTarget.setObjectName(name);
+        } else if (property.contains("buffer")) {
+            raco::core::ValueHandle bufferHandle = tempHandle.asRef();
+            if (bufferHandle) {
+                std::string buffer = bufferHandle[0].asString();
+                renderTarget.addRenderBuffer(buffer);
+            }
+        }
+    }
+    RenderDataManager::GetInstance().addRenderTarget(id, renderTarget);
+}
+
+void NodeLogic::analyzeRenderLayer(const std::string &id, const core::ValueHandle &handle) {
+    RenderLayer renderLayer;
+    for (int i = 0; i < handle.size(); i++) {
+        core::ValueHandle tempHandle = handle[i];
+        QString property = QString::fromStdString(tempHandle.getPropName());
+        qDebug() << property;
+        if (property.compare("objectName") == 0) {
+            std::string name = tempHandle.asString();
+            renderLayer.setObjectName(name);
+        } else if (property.compare("materialFilterMode") == 0) {
+            int mode = tempHandle.asInt();
+            renderLayer.setMaterialFilterMode(mode);
+        } else if (property.compare("sortOrder") == 0) {
+            int order = tempHandle.asInt();
+            renderLayer.setRenderOrder(order);
+        } else if (QString::fromStdString(tempHandle.getPropName()).compare("renderableTags") == 0) {
+            for (int j = 0; j < tempHandle.size(); j++) {
+                raco::core::ValueHandle tagHandle = tempHandle[j];
+                std::string tag = tagHandle.asString();
+                renderLayer.addRenderTag(tag);
+            }
+        } else if (QString::fromStdString(tempHandle.getPropName()).compare("materialFilterTags") == 0) {
+            for (int j = 0; j < tempHandle.size(); j++) {
+                raco::core::ValueHandle tagHandle = tempHandle[j];
+                std::string tag = tagHandle.asString();
+                renderLayer.addMaterialFilterTag(tag);
+            }
+        }
+    }
+    RenderDataManager::GetInstance().addRenderLayer(id, renderLayer);
+}
+
+void NodeLogic::analyzeRenderBuffer(const std::string &id, const core::ValueHandle &handle) {
+    RenderBuffer renderBuffer;
+    std::string name;
+    for (int i = 0; i < handle.size(); i++) {
+        core::ValueHandle tempHandle = handle[i];
+        QString property = QString::fromStdString(tempHandle.getPropName());
+        if (property.compare("objectName") == 0) {
+            name = tempHandle.asString();
+            renderBuffer.setObjectName(name);
+        } else if (property.compare("wrapUMode") == 0) {
+            int mode = tempHandle.asInt();
+            renderBuffer.setUWrapMode((WrapMode)mode);
+        } else if (property.compare("wrapVMode") == 0) {
+            int mode = tempHandle.asInt();
+            renderBuffer.setVWrapMode((WrapMode)mode);
+        } else if (property.contains("minSamplingMethod")) {
+            int method = tempHandle.asInt();
+            renderBuffer.setMinSamplingMethod((Filter)method);
+        } else if (property.compare("magSamplingMethod") == 0) {
+            int method = tempHandle.asInt();
+            renderBuffer.setMagSamplingMethod((Filter)method);
+        } else if (property.compare("anisotropy") == 0) {
+            int level = tempHandle.asInt();
+            renderBuffer.setAnisotropyLevel(level);
+        } else if (property.contains("width")) {
+            int width = tempHandle.asInt();
+            renderBuffer.setWidth(width);
+        } else if (property.compare("height") == 0) {
+            int height = tempHandle.asInt();
+            renderBuffer.setHeight(height);
+        } else if (property.compare("format") == 0) {
+            int format = tempHandle.asInt();
+            renderBuffer.setFormat((FORMAT)format);
+        }
+    }
+    RenderDataManager::GetInstance().addRenderBuffer(name, renderBuffer);
+}
+
 void NodeLogic::setNodeNameHandleReMap(std::map<std::string, core::ValueHandle> nodeNameHandleReMap) {
     QMutexLocker locker(&handleMapMutex_);
 	nodeObjectIDHandleReMap_.clear();
@@ -148,8 +305,13 @@ void NodeLogic::initBasicProperty(raco::core::ValueHandle valueHandle, NodeData 
 				scal.y = tempHandle.get("y").asDouble();
 				scal.z = tempHandle.get("z").asDouble();
                 node->insertSystemData("scaling", scal);
-
-			}  
+            } else if (QString::fromStdString(tempHandle.getPropName()).compare("tags") == 0) {
+                for (int j = 0; j < tempHandle.size(); j++) {
+                    raco::core::ValueHandle tagHandle = tempHandle[j];
+                    std::string tag = tagHandle.asString();
+                    node->addTag(tag);
+                }
+            }
             initBasicProperty(valueHandle[i], node);
 		}
     }
@@ -318,6 +480,16 @@ void NodeLogic::slotUpdateKeyFrame(int keyFrame) {
 
 void NodeLogic::slotResetNodeData() {
     NodeDataManager::GetInstance().clearNodeData();
+}
+
+void NodeLogic::slotUpdateNodeProperty(const std::string &objectID, const core::ValueHandle &handle) {
+    handleMapMutex_.lock();
+    if (objectID != "" && objectID != "objectID") {
+        NodeData *pNode = NodeDataManager::GetInstance().searchNodeByID(objectID);
+        pNode->clearTags();
+        initBasicProperty(handle, pNode);
+    }
+    handleMapMutex_.unlock();
 }
 
 void NodeLogic::slotUpdateMeshNodeTranslation(const std::string &objectID, const double &transX, const double &transY, const double &transZ) {

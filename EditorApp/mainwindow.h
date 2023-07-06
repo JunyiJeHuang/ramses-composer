@@ -87,6 +87,7 @@ public Q_SLOTS:
 	void slotCreateCurve(QString property, QString curve, QVariant value);
     void setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle> &map);
 	void setTextureResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap);
+    void setResourceHandles(const std::map<std::string, raco::core::ValueHandle>& mMap);
     void updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map);
 protected:
 	void timerEvent(QTimerEvent* event) override;
@@ -118,13 +119,14 @@ protected Q_SLOTS:
 Q_SIGNALS:
     void getMaterialResHandles();
 	void getNodeDataResHandles();
-	void getTextureResHandles();
+    void getTextureResHandles();
+    void getResourceHandles();
     void updateMeshData();
 
 	void viewportChanged(const QSize& sceneSize);
 	void objectFocusRequestedForPropertyBrowser(const QString& objectID);
 	void objectFocusRequestedForTreeDock(const QString& objectID);
-    void getResourceHandles();
+
     void axesChanged(const bool& z_up);
     void displayGridChanged(const bool& enable);
     void sceneUpdated(const bool& z_up);

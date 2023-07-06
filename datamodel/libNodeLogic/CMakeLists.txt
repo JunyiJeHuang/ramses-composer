@@ -28,6 +28,7 @@ target_link_libraries(libNodeLogic
         raco::Components
         raco::GuiData
         raco::signal
+        raco::UserTypes
         Qt5::Widgets
         Qt5::Core
         Qt5::Gui

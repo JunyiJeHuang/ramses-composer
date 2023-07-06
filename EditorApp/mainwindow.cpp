@@ -246,11 +246,13 @@ ads::CDockAreaWidget* createAndAddObjectTree(const char* title, const char* dock
 	QObject::connect(mainWindow, &MainWindow::getNodeDataResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::globalOpreations);
 	QObject::connect(mainWindow, &MainWindow::getMaterialResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getMaterialResHandles);
 	QObject::connect(mainWindow, &MainWindow::getTextureResHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getTextureResHandles);
+    QObject::connect(mainWindow, &MainWindow::getResourceHandles, newTreeView, &raco::object_tree::view::ObjectTreeView::getResourceHandles);
     QObject::connect(mainWindow, &MainWindow::updateMeshData, newTreeView, &raco::object_tree::view::ObjectTreeView::updateMeshData);
 	
 	QObject::connect(&programManager, &raco::dataConvert::ProgramManager::createNode, newTreeView, &raco::object_tree::view::ObjectTreeView::importBMWAssets);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setMaterialResHandles, mainWindow, &MainWindow::setMaterialResHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setTextureResHandles, mainWindow, &MainWindow::setTextureResHandles);
+    QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::setResourceHandles, mainWindow, &MainWindow::setResourceHandles);
 	QObject::connect(newTreeView, &raco::object_tree::view::ObjectTreeView::updateNodeHandles, mainWindow, &MainWindow::updateNodeHandles);
 
     QString tempTitle(title);
@@ -908,6 +910,7 @@ bool MainWindow::exportBMWAssets() {
 		Q_EMIT getMaterialResHandles();
 		Q_EMIT getTextureResHandles();
 		Q_EMIT updateMeshData();
+        Q_EMIT getResourceHandles();
 		recentFileMenu_->addRecentFile(racoApplication_->activeProjectPath().c_str());
 		updateActiveProjectConnection();
 		updateApplicationTitle();
@@ -1250,7 +1253,13 @@ void MainWindow::setTextureResHandles(const std::map<std::string, raco::core::Va
 	if (materialLogic_) {
 		materialLogic_->setTextureResourcesHandleReMap(mMap);
 		materialLogic_->AnalyzingTexture();
-	}
+    }
+}
+
+void MainWindow::setResourceHandles(const std::map<std::string, raco::core::ValueHandle> &mMap) {
+    if (nodeLogic_) {
+        nodeLogic_->analyzeRenderHandles(mMap);
+    }
 }
 
 void MainWindow::updateNodeHandles(const QString &title, const std::map<std::string, raco::core::ValueHandle> &map) {

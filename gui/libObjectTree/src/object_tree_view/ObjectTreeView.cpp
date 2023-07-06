@@ -490,9 +490,9 @@ bool ObjectTreeView::getOneMaterialHandle(ValueHandle &valueHandle) {
         if (valueHandle != NULL && valueHandle.hasProperty("material")) {
             valueHandle = valueHandle.get("material");
             if (valueHandle.type() == core::PrimitiveType::Table) {
-                    if (valueHandle != NULL) {
-                        return true;
-                    }
+                if (valueHandle != NULL) {
+                    return true;
+                }
             }
         }
     }
@@ -502,7 +502,7 @@ bool ObjectTreeView::getOneMaterialHandle(ValueHandle &valueHandle) {
 void ObjectTreeView::getOneMaterials(QModelIndex index, std::map<std::string, core::ValueHandle> &materialHandleMap) {
     if (!model()->hasChildren(index)) {
         core::ValueHandle tempHandle = indexToSEditorObject(index);
-        std::string objectID = tempHandle[0].asString();;
+        std::string objectID = tempHandle[0].asString();
         if (getOneMaterialHandle(tempHandle)) {
             materialHandleMap.emplace(objectID, tempHandle);
         }
@@ -510,11 +510,26 @@ void ObjectTreeView::getOneMaterials(QModelIndex index, std::map<std::string, co
         for (int i{0}; i < model()->rowCount(index); i++) {
             QModelIndex tempIndex = model()->index(i, 0, index);
             core::ValueHandle tempHandle = indexToSEditorObject(tempIndex);
-            std::string objectID = tempHandle[0].asString();;
+            std::string objectID = tempHandle[0].asString();
             if (getOneMaterialHandle(tempHandle)) {
                 materialHandleMap.emplace(objectID, tempHandle);
             }
             getOneMaterials(tempIndex, materialHandleMap);
+        }
+    }
+}
+
+void ObjectTreeView::getResourceHandle(QModelIndex index, std::map<std::string, core::ValueHandle> &resourceHandleMap) {
+    if (!model()->hasChildren(index)) {
+        core::ValueHandle tempHandle = indexToSEditorObject(index);
+        std::string objectID = tempHandle[0].asString();
+        resourceHandleMap.emplace(objectID, tempHandle);
+    } else {
+        for (int i{0}; i < model()->rowCount(index); i++) {
+            QModelIndex tempIndex = model()->index(i, 0, index);
+            core::ValueHandle tempHandle = indexToSEditorObject(tempIndex);
+            std::string objectID = tempHandle[0].asString();
+            getResourceHandle(tempIndex, resourceHandleMap);
         }
     }
 }
@@ -541,16 +556,13 @@ std::map<std::string, core::ValueHandle> ObjectTreeView::updateNodeTree() {
 }
 
 std::map<std::string, core::ValueHandle> ObjectTreeView::updateResource() {
-	std::map<std::string, core::ValueHandle> ResHandleReMap;
+    std::map<std::string, core::ValueHandle> resHandleReMap;
 	int row = model()->rowCount();
 	for (int i{0}; i < row; ++i) {
 		QModelIndex index = model()->index(i, 0);
-		core::ValueHandle tempHandle = indexToSEditorObject(index);
-		// ID
-        std::string str = tempHandle[0].asString();
-		ResHandleReMap.emplace(str, tempHandle);
+        getResourceHandle(index, resHandleReMap);
 	}
-    return ResHandleReMap;
+    return resHandleReMap;
 }
 
 std::map<std::string, core::ValueHandle> ObjectTreeView::updateMaterial() {
@@ -686,7 +698,15 @@ void ObjectTreeView::getTextureResHandles() {
 		return;
 	}
 	std::map<std::string, core::ValueHandle> handleMap = updateTexture();
-	Q_EMIT setTextureResHandles(handleMap);
+    Q_EMIT setTextureResHandles(handleMap);
+}
+
+void ObjectTreeView::getResourceHandles() {
+    if (viewTitle_.compare("Resources") != 0) {
+        return;
+    }
+    std::map<std::string, core::ValueHandle> handleMap = updateResource();
+    Q_EMIT setResourceHandles(handleMap);
 }
 
 void ObjectTreeView::fillMeshData() {

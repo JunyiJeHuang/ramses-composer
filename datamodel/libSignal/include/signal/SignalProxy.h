@@ -62,7 +62,7 @@ Q_SIGNALS:
     //
     void sigInitPropertyBrowserView();
     //
-    void sigUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString file);
+    void sigUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString file, bool filter);
     //
     void sigDeleteAniamtionNode(std::set<std::string> ids);
     //

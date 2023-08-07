@@ -58,15 +58,27 @@ public:
     }
 
     void addTag(std::string tag) {
-        tags.push_back(tag);
+        tags_.push_back(tag);
     }
 
     std::vector<std::string> getTags() {
-        return tags;
+        return tags_;
     }
 
     void clearTags() {
-        tags.clear();
+        tags_.clear();
+    }
+
+    void addRenderPass(std::string renderPass) {
+        renderPasses_.push_back(renderPass);
+    }
+
+    std::vector<std::string> getRenderPasses() {
+        return renderPasses_;
+    }
+
+    void clearRenderPasses() {
+        renderPasses_.clear();
     }
 
     std::string getMaterialsID() {
@@ -260,7 +272,8 @@ public:
 private:
     std::string nodeName_;
     std::string objectID_;
-    std::vector<std::string> tags;
+    std::vector<std::string> tags_;
+    std::vector<std::string> renderPasses_;
     NodeExtend nodeExtend_;
     std::map<std::string, std::any> systemDataMap_;
     // materials ID

@@ -8,6 +8,57 @@
 #include <iostream>
 #include <fstream>
 #include <qdir.h>
+#include <QImage>
+#include <QVector3D>
+#include <QPainter>
+#include <QImageWriter>
+#include <fstream>
+
+void saveDDS(const QString& filePath, const QImage& image) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return;
+    }
+
+    QDataStream stream(&file);
+
+    stream.writeRawData("DDS ", 4);
+
+    quint32 dwSize = 124;
+    quint32 dwFlags = 0x1 | 0x2 | 0x4 | 0x1000;
+    quint32 dwHeight = image.height();
+    quint32 dwWidth = image.width();
+    quint32 dwPitchOrLinearSize = dwWidth * 4;
+    quint32 dwDepth = 0;
+    quint32 dwMipMapCount = 1;
+    quint32 dwReserved1[11] = { 0 };
+    quint32 dwReserved2 = 0;
+
+    stream << dwSize << dwFlags << dwHeight << dwWidth << dwPitchOrLinearSize
+           << dwDepth << dwMipMapCount;
+
+    for (int i = 0; i < 11; ++i) {
+        stream << dwReserved1[i];
+    }
+
+    quint32 dwSize2 = 32;
+    quint32 dwFlags2 = 0x4;
+    quint32 dwFourCC = 0x31545844;
+    quint32 dwRGBBitCount = 32;
+    quint32 dwRBitMask = 0x00FF0000;
+    quint32 dwGBitMask = 0x0000FF00;
+    quint32 dwBBitMask = 0x000000FF;
+    quint32 dwABitMask = 0xFF000000;
+
+    stream << dwSize2 << dwFlags2 << dwFourCC << dwRGBBitCount
+           << dwRBitMask << dwGBitMask << dwBBitMask << dwABitMask;
+
+    QByteArray imageData(reinterpret_cast<const char*>(image.constBits()), image.sizeInBytes());
+    stream.writeRawData(imageData.constData(), imageData.size());
+
+    file.close();
+}
+
 QString dataType2String(int type) {
     QString strType;
     switch(type) {
@@ -1168,6 +1219,13 @@ namespace raco::dataConvert {
 // 	return result;
 // }
 bool ProgramManager::writeBMWAssets(QString filePath) {
+    QDir folder;
+    folder.mkpath(filePath);
+    std::map<std::string, CubeMapData> cubeMap = MaterialManager::GetInstance().getCubeMaps();
+    for (const auto &it :cubeMap) {
+        cubeMap2DdsFormat(filePath, it.first);
+    }
+
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Debug message box");
 	QPushButton* okButton = msgBox.addButton("OK", QMessageBox::ActionRole);
@@ -1176,6 +1234,163 @@ bool ProgramManager::writeBMWAssets(QString filePath) {
 	msgBox.exec();
 	return true;
 }
+
+//bool writeCTMFile(std::string filePathStr) {
+//    filePathStr = filePathStr.substr(0, filePathStr.find(".rca"));
+//    QString tempPath = QString::fromStdString(filePathStr);
+//    QDir folder(tempPath + "/meshes");
+//    if (!folder.exists()) {
+//        folder.mkpath(tempPath + "/meshes");
+//    }
+
+//    for (const auto& meshIt : MeshDataManager::GetInstance().getMeshDataMap()) {
+//        MeshData mesh = meshIt.second;
+//        std::string path = tempPath.toStdString() + "/" + mesh.getMeshUri();
+//        CTMuint aVerCount = mesh.getNumVertices();
+//        CTMuint aTriCount = mesh.getNumTriangles();
+
+//        CTMfloat* aVertices = new CTMfloat[aVerCount * 3];
+//        CTMuint* aIndices = new CTMuint[aTriCount * 3];
+//        CTMfloat* aNormals{nullptr};
+//        CTMfloat* aTangent{nullptr};
+//        CTMfloat* aBitTangent{nullptr};
+//        CTMfloat* aColor{nullptr};
+//        CTMfloat* aUVMaps{nullptr};
+
+//        CTMcontext context;
+//        CTMenum ret;
+
+//        std::vector<uint32_t> indices = mesh.getIndices();
+//        auto indicesData = reinterpret_cast<uint32_t*>(indices.data());
+//        ;
+//        std::memcpy(aIndices, indicesData, aTriCount * 3 * sizeof(uint32_t));
+
+//        context = ctmNewContext(CTM_EXPORT);
+
+//        // fill attributes
+////        for (auto attriIt : mesh.getAttributes()) {
+////            int size = attriIt.data.size();
+////            CTMfloat* aAttribute = new CTMfloat[size];
+////            auto attriData = reinterpret_cast<float*>(attriIt.data.data());
+////            std::memcpy(aAttribute, attriData, size * sizeof(float));
+////            if (CTM_NONE == ctmAddAttribMap(context, aAttribute, attriIt.name.c_str())) {
+////                qDebug() << "color failed";
+////            }
+////            delete[] aAttribute;
+////        }
+
+//        // normals
+//        int posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Normal");
+//        if (posIndex != -1) {
+//            aNormals = new CTMfloat[aVerCount * 3];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto normalsData = reinterpret_cast<float*>(attri.data.data());
+//            ;
+//            std::memcpy(aNormals, normalsData, aVerCount * 3 * sizeof(float));
+//        }
+
+//        // vertices
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Position");
+//        if (posIndex != -1) {
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto verticesData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aVertices, verticesData, aVerCount * 3 * sizeof(float));
+//        }
+
+//        ctmDefineMesh(context, aVertices, aVerCount, aIndices, aTriCount, aNormals);
+//        // Mesh.001  Mesh.179  Mesh.180   Mesh.181    Mesh.182    Mesh.183
+
+//        if (mesh.getMeshName() == "Mesh.183" || mesh.getMeshName() == "Mesh.001") {
+
+//            qDebug() << "error mesh";
+//        }
+
+//        // uv maps
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate");
+//        if (posIndex != -1) {
+//            aUVMaps = new CTMfloat[aVerCount * 2];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto uvMapsData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
+//            if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate", NULL)) {
+//                qDebug() << "uv failed";
+//            }
+//        }
+//        // uv maps a_TextureCoordinate1
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate1");
+//        if (posIndex != -1) {
+//            aUVMaps = new CTMfloat[aVerCount * 2];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto uvMapsData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
+//            if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate1", NULL)) {
+//                qDebug() << "uv failed";
+//            }
+//        }
+
+//        // uv maps a_TextureCoordinate2
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_TextureCoordinate2");
+//        if (posIndex != -1) {
+//            aUVMaps = new CTMfloat[aVerCount * 2];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto uvMapsData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aUVMaps, uvMapsData, aVerCount * 2 * sizeof(float));
+//            if (CTM_NONE == ctmAddUVMap(context, aUVMaps, "a_TextureCoordinate2", NULL)) {
+//                qDebug() << "uv failed";
+//            }
+//        }
+
+//        // a_Tangent
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Tangent");
+//        if (posIndex != -1) {
+//            aTangent = new CTMfloat[aVerCount * 3];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto TangentData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aTangent, TangentData, aVerCount * 3 * sizeof(float));
+//            if (CTM_NONE == ctmAddAttribMap(context, aTangent, "a_Tangent")) {
+//                qDebug() << "aTangent failed";
+//            }
+//        }
+
+//        // a_Bitangent
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Bitangent");
+//        if (posIndex != -1) {
+//            aBitTangent = new CTMfloat[aVerCount * 3];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto BitTangentData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aBitTangent, BitTangentData, aVerCount * 3 * sizeof(float));
+//            if (CTM_NONE == ctmAddAttribMap(context, aBitTangent, "a_Bitangent")) {
+//                qDebug() << "aTangent failed";
+//            }
+//        }
+
+//        // a_Color
+//        posIndex = MeshDataManager::GetInstance().attriIndex(mesh.getAttributes(), "a_Color");
+//        if (posIndex != -1) {
+//            aColor = new CTMfloat[aVerCount * 4];
+//            Attribute attri = mesh.getAttributes().at(posIndex);
+//            auto ColorData = reinterpret_cast<float*>(attri.data.data());
+//            std::memcpy(aColor, ColorData, aVerCount * 4 * sizeof(float));
+//            if (CTM_NONE == ctmAddAttribMap(context, aColor, "a_Color")) {
+//                qDebug() << "aTangent failed";
+//            }
+//        }
+
+//        ctmCompressionMethod(context, CTM_METHOD_MG1);
+
+//        ctmSave(context, path.c_str());
+//        ctmFreeContext(context);
+
+//        delete[] aVertices;
+//        delete[] aIndices;
+//        delete[] aNormals;
+//        delete[] aTangent;
+//        delete[] aUVMaps;
+//        delete[] aBitTangent;
+//        delete[] aColor;
+//    }
+//    return true;
+//}
 
 void ProgramManager::setRelativePath(QString path) {
     relativePath_ = path;
@@ -1319,6 +1534,44 @@ void ProgramManager::initFolderData() {
         }
 
         folder->insertCurve(curveName.toStdString());
+    }
+}
+
+void ProgramManager::cubeMap2DdsFormat(const QString &filePath, const std::string &id) {
+    CubeMapData cubeMapData;
+    MaterialManager::GetInstance().searchCubeMap(id, cubeMapData);
+    std::vector<CubeTexture> cubeTextures = cubeMapData.getCubTextures();
+    QString cubeName = QString::fromStdString(cubeMapData.getObjectName());
+    QString savePath = filePath + "/" + cubeName;
+    for (int i{0}; i < cubeTextures.size(); i++) {
+        auto texture = cubeTextures[i];
+        QImage frontImage(QString::fromStdString(texture.getPZUri()));
+        QImage backImage(QString::fromStdString(texture.getNZUri()));
+        QImage leftImage(QString::fromStdString(texture.getNXUri()));
+        QImage rightImage(QString::fromStdString(texture.getPXUri()));
+        QImage topImage(QString::fromStdString(texture.getPYUri()));
+        QImage bottomImage(QString::fromStdString(texture.getNYUri()));
+
+        QSize imageSize = frontImage.size();
+        int skyboxWidth = imageSize.width() * 4;
+        int skyboxHeight = imageSize.height() * 3;
+        QImage skybox(skyboxWidth, skyboxHeight, QImage::Format_RGBA8888);
+        skybox.fill(Qt::transparent);
+
+        QPainter painter(&skybox);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+        painter.drawImage(QRect(imageSize.width(), imageSize.height(), imageSize.width(), imageSize.height()), frontImage);
+        painter.drawImage(QRect(3 * imageSize.width(), imageSize.height(), imageSize.width(), imageSize.height()), backImage);
+        painter.drawImage(QRect(0, imageSize.height(), imageSize.width(), imageSize.height()), leftImage);
+        painter.drawImage(QRect(2 * imageSize.width(), imageSize.height(), imageSize.width(), imageSize.height()), rightImage);
+        painter.drawImage(QRect(imageSize.width(), 0, imageSize.width(), imageSize.height()), topImage);
+        painter.drawImage(QRect(imageSize.width(), 2 * imageSize.height(), imageSize.width(), imageSize.height()), bottomImage);
+        painter.end();
+
+        skybox.save(savePath + ".png");
+        QString path = savePath + QString::number(i) + ".dds";
+        saveDDS(path, skybox);
     }
 }
 

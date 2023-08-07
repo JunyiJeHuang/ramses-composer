@@ -202,7 +202,24 @@ bool MaterialManager::hasUniform(std::string name) {
 			return true;
         }
     }
-	return false;
+    return false;
+}
+
+void MaterialManager::addCubeMap(const std::string &id, const CubeMapData &cube) {
+    cubeMaps_.emplace(id, cube);
+}
+
+bool MaterialManager::searchCubeMap(const std::string &id, CubeMapData &cube) {
+    auto it = cubeMaps_.find(id);
+    if (it == cubeMaps_.end()) {
+        return false;
+    }
+    cube = it->second;
+    return true;
+}
+
+std::map<std::string, CubeMapData> MaterialManager::getCubeMaps() {
+    return cubeMaps_;
 }
 
 void MaterialManager::clearData() {

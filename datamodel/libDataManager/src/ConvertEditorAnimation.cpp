@@ -1,6 +1,7 @@
 #include "animation_editor/ConvertEditorAnimation.h"
 #include "utils/MathUtils.h"
-
+#include "CurveData/CurveData.h"
+#include "NodeData/NodeManager.h"
 
 #define PI 3.141592653589793238462643f
 static const int rotationSize{4};
@@ -10,6 +11,49 @@ double fixRotationValue(double value) {
     int integer = ((int)value + 360) % 360;
     value = integer + decimal;
     return value;
+}
+
+double perpendicularDistance(Point* point, Point* lineStart, Point* lineEnd) {
+    double x = std::any_cast<int>(point->getKeyFrame());
+    double y = std::any_cast<double>(point->getDataValue());
+    double x1 = std::any_cast<int>(lineStart->getKeyFrame());
+    double y1 = std::any_cast<double>(lineStart->getDataValue());
+    double x2 = std::any_cast<int>(lineEnd->getKeyFrame());
+    double y2 = std::any_cast<double>(lineEnd->getDataValue());
+
+    double numerator = std::abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1);
+    double denominator = std::sqrt(std::pow(y2 - y1, 2) + std::pow(x2 - x1, 2));
+
+    return numerator / denominator;
+}
+
+void rdpRecursive(const std::vector<Point*> &pointList, int startIndex, int endIndex, double epsilon, std::vector<Point*> &result) {
+    double maxDistance = 0;
+    int maxIndex = 0;
+
+    for (int i = startIndex + 1; i < endIndex; i++) {
+        double distance = perpendicularDistance(pointList[i], pointList[startIndex], pointList[endIndex]);
+        if (distance > maxDistance) {
+            maxDistance = distance;
+            maxIndex = i;
+        }
+    }
+
+    if (maxDistance > epsilon) {
+        rdpRecursive(pointList, startIndex, maxIndex, epsilon, result);
+        result.push_back(pointList[maxIndex]);
+        rdpRecursive(pointList, maxIndex, endIndex, epsilon, result);
+    }
+}
+
+std::vector<Point*> rdpFilter(const std::vector<Point*> &pointList, double epsilon) {
+    std::vector<Point*> result;
+
+    result.push_back(pointList.front());
+    rdpRecursive(pointList, 0, pointList.size() - 1, epsilon, result);
+    result.push_back(pointList.back());
+
+    return result;
 }
 
 ConvertEditorAnimation::ConvertEditorAnimation(raco::core::CommandInterface *commandInterface, QObject *parent)
@@ -22,7 +66,7 @@ void ConvertEditorAnimation::commandInterface(raco::core::CommandInterface *comm
     commandInterface_ = commandInterface;
 }
 
-void ConvertEditorAnimation::slotUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString fileName) {
+void ConvertEditorAnimation::slotUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString fileName, bool filter) {
     animationChannels_.clear();
     animationNodes_.clear();
 	fileName.remove(QRegExp("\\s"));
@@ -73,11 +117,11 @@ void ConvertEditorAnimation::slotUpdateGltfAnimation(const std::set<raco::core::
         animationIDs.emplace(animationID);
     }
 
-    updateGltfAnimation(animation);
+    updateGltfAnimation(animation, filter);
     Q_EMIT raco::signal::signalProxy::GetInstance().sigDeleteAniamtionNode(animationIDs);
 }
 
-void ConvertEditorAnimation::updateGltfAnimation(std::string animation) {
+void ConvertEditorAnimation::updateGltfAnimation(std::string animation, bool filter) {
     if (animation.empty()) {
         curAnimation_ = "";
         return;
@@ -107,11 +151,40 @@ void ConvertEditorAnimation::updateGltfAnimation(std::string animation) {
                 updateOneGltfCurve(nodeData, keyFrames, propertyData, interpolation, property, node);
             }
         }
+        if (filter) {
+            // filter animation data
+            std::list<Curve *> curveList = raco::guiData::CurveManager::GetInstance().getCurveList();
+            preOrderReverse(&NodeDataManager::GetInstance().root(), animation, curveList);
+        }
     }
+
     Q_EMIT raco::signal::signalProxy::GetInstance().sigInitCurveView();
     Q_EMIT raco::signal::signalProxy::GetInstance().sigRepaintTimeAixs_From_CurveUI();
 }
 
+void ConvertEditorAnimation::preOrderReverse(NodeData *pNode, const std::string &animation, std::list<Curve *> curveList) {
+    if (!pNode)
+        return;
+
+    if (pNode->getBindingySize() != 0) {
+        std::map<std::string, std::string> bindingDataMap;
+        pNode->NodeExtendRef().curveBindingRef().getPropCurve(animation, bindingDataMap);
+
+        for (const auto &binding : bindingDataMap) {
+            Curve *curve = CurveManager::GetInstance().getCurve(binding.second);
+            std::list<Point *> pointList = curve->getPointList();
+            std::vector<Point*> points(pointList.begin(), pointList.end());
+            std::vector<Point*> results = rdpFilter(points, 0.05);
+            curve->clear();
+            for (auto it : results) {
+                curve->insertPoint(it);
+            }
+        }
+    }
+    for (auto it = pNode->childMapRef().begin(); it != pNode->childMapRef().end(); ++it) {
+        preOrderReverse(&(it->second), animation, curveList);
+    }
+}
 
 std::array<double, 3> XYZEul_FromHMatrix(float M[][4]) {
 	std::array<double, 3> ea;

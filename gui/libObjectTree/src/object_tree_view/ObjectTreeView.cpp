@@ -621,14 +621,14 @@ int ObjectTreeView::attriElementSize(VertexAttribDataType type) {
     }
 }
 
-void ObjectTreeView::convertGltfAnimation(QString fileName) {
+void ObjectTreeView::convertGltfAnimation(QString fileName, bool filterData) {
     int row = model()->rowCount();
     raco::core::ValueHandle valueHandle;
     std::set<raco::core::ValueHandle> handles;
     for (int i{0}; i < row; ++i) {
         QModelIndex index = model()->index(i, 0);
         if (getAnimationHandle(index, valueHandle, handles)) {
-            Q_EMIT raco::signal::signalProxy::GetInstance().sigUpdateGltfAnimation(handles, fileName);
+            Q_EMIT raco::signal::signalProxy::GetInstance().sigUpdateGltfAnimation(handles, fileName, filterData);
         }
     }
 }
@@ -1140,10 +1140,11 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 			auto file = QFileDialog::getOpenFileName(this, "Load Asset File", QString::fromStdString(sceneFolder.string()), "glTF files (*.gltf *.glb);; All files (*.*)");
 			if (!file.isEmpty()) {
                 bool keyAnimation;
-                treeModel_->importMeshScenegraph(file, insertionTargetIndex, keyAnimation);
+                bool filterData;
+                treeModel_->importMeshScenegraph(file, insertionTargetIndex, keyAnimation, filterData);
                 if (keyAnimation) {
 					QString fileName = file.section("/",-1);
-                    convertGltfAnimation(fileName);
+                    convertGltfAnimation(fileName, filterData);
                     updateMeshData();
                 }
 			}

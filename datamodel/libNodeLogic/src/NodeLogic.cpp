@@ -121,8 +121,8 @@ void NodeLogic::analyzeRenderPass(const std::string &id, const core::ValueHandle
             }
         } else if (property.compare("camera") == 0) {
             raco::core::ValueHandle cameraHandle = tempHandle.asRef();
-            if (cameraHandle) {
-                std::string camera = cameraHandle[0].asString();
+            if (cameraHandle && cameraHandle.hasProperty("objectName")) {
+                std::string camera = cameraHandle.get("objectName").asString();
                 renderPass.setCamera(camera);
             }
         } else if (property.contains("layer")) {
@@ -188,17 +188,21 @@ void NodeLogic::analyzeRenderLayer(const std::string &id, const core::ValueHandl
         } else if (property.compare("sortOrder") == 0) {
             int order = tempHandle.asInt();
             renderLayer.setRenderOrder(order);
-        } else if (QString::fromStdString(tempHandle.getPropName()).compare("renderableTags") == 0) {
+        } else if (property.compare("renderableTags") == 0) {
             for (int j = 0; j < tempHandle.size(); j++) {
                 raco::core::ValueHandle tagHandle = tempHandle[j];
-                std::string tag = tagHandle.asString();
-                renderLayer.addRenderTag(tag);
+                if (tagHandle) {
+                    std::string tag = tagHandle.getPropName();
+                    renderLayer.addRenderTag(tag);
+                }
             }
-        } else if (QString::fromStdString(tempHandle.getPropName()).compare("materialFilterTags") == 0) {
+        } else if (property.compare("materialFilterTags") == 0) {
             for (int j = 0; j < tempHandle.size(); j++) {
                 raco::core::ValueHandle tagHandle = tempHandle[j];
-                std::string tag = tagHandle.asString();
-                renderLayer.addMaterialFilterTag(tag);
+                if (tagHandle) {
+                    std::string tag = tagHandle.getPropName();
+                    renderLayer.addMaterialFilterTag(tag);
+                }
             }
         }
     }
@@ -207,12 +211,11 @@ void NodeLogic::analyzeRenderLayer(const std::string &id, const core::ValueHandl
 
 void NodeLogic::analyzeRenderBuffer(const std::string &id, const core::ValueHandle &handle) {
     RenderBuffer renderBuffer;
-    std::string name;
     for (int i = 0; i < handle.size(); i++) {
         core::ValueHandle tempHandle = handle[i];
         QString property = QString::fromStdString(tempHandle.getPropName());
         if (property.compare("objectName") == 0) {
-            name = tempHandle.asString();
+            std::string name = tempHandle.asString();
             renderBuffer.setObjectName(name);
         } else if (property.compare("wrapUMode") == 0) {
             int mode = tempHandle.asInt();
@@ -240,7 +243,7 @@ void NodeLogic::analyzeRenderBuffer(const std::string &id, const core::ValueHand
             renderBuffer.setFormat((FORMAT)format);
         }
     }
-    RenderDataManager::GetInstance().addRenderBuffer(name, renderBuffer);
+    RenderDataManager::GetInstance().addRenderBuffer(id, renderBuffer);
 }
 
 void NodeLogic::setNodeNameHandleReMap(std::map<std::string, core::ValueHandle> nodeNameHandleReMap) {

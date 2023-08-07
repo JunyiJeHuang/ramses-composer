@@ -114,6 +114,7 @@ protected Q_SLOTS:
 	void updateActiveProjectConnection();
 	void updateProjectSavedConnection();
     void convert2LuaAnimation();
+    void convert2RacoAnimation();
     void directoryChanged(const QString &path);
 
 Q_SIGNALS:

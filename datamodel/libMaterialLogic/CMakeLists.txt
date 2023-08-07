@@ -8,7 +8,7 @@ This file is part of Ramses Composer
 raco_find_qt_components(Widgets)
 
 add_library(libMaterialLogic
-    include/material_logic/materalLogic.h src/materalLogic.cpp
+    include/material_logic/MateralLogic.h src/MateralLogic.cpp
     )
 
 target_include_directories(libMaterialLogic

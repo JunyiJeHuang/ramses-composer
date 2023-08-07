@@ -1310,6 +1310,10 @@ void BaseContext::insertBMWAssetScenegraph(guiData::NodeData *node, const SEdito
 
 }
 
+void BaseContext::convert2AnimationScenegraph() {
+
+}
+
 SLink BaseContext::addLink(const ValueHandle& start, const ValueHandle& end, bool isWeak) {
 	// Remove existing links ending on the property or any nested child properties
 	for (auto link : Queries::getLinksConnectedToPropertySubtree(*project_, end, false, true)) {

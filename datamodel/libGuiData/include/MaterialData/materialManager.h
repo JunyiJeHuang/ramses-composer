@@ -47,6 +47,10 @@ public:
 	void curUniformAssign(std::vector<Uniform> arr);
 	bool hasUniform(std::string name);
 
+    void addCubeMap(const std::string &id, const CubeMapData &cube);
+    bool searchCubeMap(const std::string &id, CubeMapData &cube);
+    std::map<std::string, CubeMapData> getCubeMaps();
+
     void clearData();
 
     void traverseMaterialData();
@@ -62,6 +66,7 @@ private:
     std::map<std::string, Shader> shaderMap_;// vertex and fragment
     std::map<std::string, Bitmap> bitmapMap_;
 	std::map<std::string, TextureData> textureMap_;  // <name , texture>
+    std::map<std::string, CubeMapData> cubeMaps_;
 	std::vector<Uniform> currentUniforms_;
 };
 }

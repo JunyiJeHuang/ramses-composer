@@ -107,9 +107,19 @@ MeshAssetImportDialog::MeshAssetImportDialog(raco::core::MeshScenegraph& sceneGr
     animationModeButtonLayout_->addWidget(new QLabel("Animation Node"));
     animationModeButtonLayout_->addStretch();
 
+    filterModeCheck_ = new QCheckBox(this);
+    filterModeCheck_->setChecked(true);
+    filterModeButtonLayout_ = new QHBoxLayout(nullptr);
+    filterModeButtonLayout_->addWidget(new QLabel("Filter Data:"));
+    filterModeButtonLayout_->addStretch(2);
+    filterModeButtonLayout_->addWidget(filterModeCheck_);
+    filterModeButtonLayout_->addStretch(1);
+
     selButtonLayout_ = new QVBoxLayout(nullptr);
 //    selButtonLayout_->addLayout(axesDirectionButtonLayout_);
     selButtonLayout_->addLayout(animationModeButtonLayout_);
+    selButtonLayout_->addLayout(filterModeButtonLayout_);
+    selButtonLayout_->addStretch();
 
 	dialogButtonBox_ = new QDialogButtonBox{QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this};
 	dialogButtonBox_->button(QDialogButtonBox::Ok)->setText("Import");

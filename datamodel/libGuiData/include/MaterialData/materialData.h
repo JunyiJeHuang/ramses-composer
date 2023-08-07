@@ -65,6 +65,22 @@ enum Filter {
     LinearMipMapLinear
 };
 
+enum FORMAT {
+    RGBA4,
+    R8,
+    RG8,
+    RGB8,
+    RGBA8,
+    R16F,
+    R32F,
+    RG16F,
+    RG32F,
+    RGA16F,
+    RGA32F,
+    Depth24,
+    Depth24_Stencil8
+};
+
 enum WrapMode {
     Clamp,
     Repeat,
@@ -484,6 +500,155 @@ private:
     ColorWrite colorWrite_;
  };
 
+class CubeTexture {
+public:
+    void setPXUri(std::string uri) {
+        pXUri_ = uri;
+    }
+    std::string getPXUri() {
+        return pXUri_;
+    }
+
+    void setNXUri(std::string uri) {
+        nXUri_ = uri;
+    }
+    std::string getNXUri() {
+        return nXUri_;
+    }
+
+    void setPYUri(std::string uri) {
+        pYUri_ = uri;
+    }
+    std::string getPYUri() {
+        return pYUri_;
+    }
+
+    void setNYUri(std::string uri) {
+        nYUri_ = uri;
+    }
+    std::string getNYUri() {
+        return nYUri_;
+    }
+
+    void setPZUri(std::string uri) {
+        pXUri_ = uri;
+    }
+    std::string getPZUri() {
+        return pXUri_;
+    }
+
+    void setNZUri(std::string uri) {
+        pXUri_ = uri;
+    }
+    std::string getNZUri() {
+        return pXUri_;
+    }
+private:
+    std::string pXUri_;
+    std::string nXUri_;
+    std::string pYUri_;
+    std::string nYUri_;
+    std::string pZUri_;
+    std::string nZUri_;
+};
+
+class CubeMapData {
+public:
+    void setObjectName(std::string objectName) {
+        objectName_ = objectName;
+    }
+
+    std::string getObjectName() {
+        return objectName_;
+    }
+
+    void setUWrapMode(WrapMode uMode) {
+        uMode_ = uMode;
+    }
+
+    WrapMode getUWrapMode() {
+        return uMode_;
+    }
+
+    void setVWrapMode(WrapMode vMode) {
+        vMode_ = vMode;
+    }
+
+    WrapMode getVWrapMode() {
+        return vMode_;
+    }
+
+    void setMinSamplingMethod(Filter method) {
+        minSamplingMethod_ = method;
+    }
+
+    Filter getMinSamplingMethond() {
+        return minSamplingMethod_;
+    }
+
+    void setMagSamplingMethod(Filter method) {
+        magSamplingMethod_ = method;
+    }
+
+    Filter getMagSamplingMethond() {
+        return magSamplingMethod_;
+    }
+
+    void setAnisotropyLevel(int level) {
+        anisotropyLevel_ = level;
+    }
+
+    int getAnisotropyLevel() {
+        return anisotropyLevel_;
+    }
+
+    void setFormat(FORMAT format) {
+        format_ = format;
+    }
+
+    FORMAT getFormat() {
+        return format_;
+    }
+
+    void setAutoGenerateMipmaps(bool mipmaps) {
+        autoGenMipmaps_ = mipmaps;
+    }
+
+    bool getAutoGenerateMipmaps() {
+        return autoGenMipmaps_;
+    }
+
+    void setMipMapLevel(int level) {
+        mipMapLevel_ = level;
+    }
+
+    int getMipMapLevel() {
+        return mipMapLevel_;
+    }
+
+    void addCubeTexture(CubeTexture cube) {
+        cubeTextrues_.push_back(cube);
+    }
+
+    std::vector<CubeTexture> getCubTextures() {
+        return cubeTextrues_;
+    }
+
+    void clear() {
+        cubeTextrues_.clear();
+    }
+private:
+    std::string objectName_;
+    WrapMode uMode_;
+    WrapMode vMode_;
+    Filter minSamplingMethod_;
+    Filter magSamplingMethod_;
+    int anisotropyLevel_{1};
+    FORMAT format_{RGBA8};
+    bool autoGenMipmaps_{true};
+    int mipMapLevel_{1};
+    std::vector<CubeTexture> cubeTextrues_;
+};
 
 class MaterialData {
 public:

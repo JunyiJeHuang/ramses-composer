@@ -114,6 +114,9 @@ public:
 
     bool exportAssetScenegraph(raco::core::MeshScenegraph &scenegraph);
 
+    // animation editor data convert to animation scene graph
+    void convert2AnimationScenegraph();
+
 	void insertBMWAssetScenegraph(raco::guiData::NodeData* nodeData, SEditorObject const& parent);
 	/**
 	 * Creates a serialized representation of all given [EditorObject]'s and their appropriate dependencies.

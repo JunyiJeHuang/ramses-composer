@@ -116,6 +116,8 @@ public:
     double calculateLinerValue(Point* firstPoint, Point* secondPoint, double curFrame);
     //
     bool modifyPointKeyFrame(const int& keyFrame, const int& modifyKeyFrame);
+    //
+    void clear();
 
 private:
     std::string curveName_;

@@ -23,15 +23,18 @@
 #define ROTATION_Z          2
 #define ROTATION_W          3
 
+using namespace raco::guiData;
+
 class ConvertEditorAnimation : public QObject {
     Q_OBJECT
 public:
     explicit ConvertEditorAnimation(raco::core::CommandInterface* commandInterface, QObject *parent = nullptr);
     void commandInterface(raco::core::CommandInterface* commandInterface);
 public Q_SLOTS:
-    void slotUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString name);
+    void slotUpdateGltfAnimation(const std::set<raco::core::ValueHandle> &handles, QString name, bool filter);
 private:
-    void updateGltfAnimation(std::string animation);
+    void updateGltfAnimation(std::string animation, bool filter);
+    void preOrderReverse(NodeData *pNode, const std::string &animation, std::list<Curve *> curveList);
     void updateOneGltfCurve(raco::guiData::NodeData *nodeData, std::vector<float> keyFrames, std::vector<std::vector<float>> propertyData, raco::core::MeshAnimationInterpolation interpolation, std::string property, std::string node);
     bool insertCurve(int keyFrame, float data, std::string curve, raco::core::MeshAnimationInterpolation interpolation);
 private:

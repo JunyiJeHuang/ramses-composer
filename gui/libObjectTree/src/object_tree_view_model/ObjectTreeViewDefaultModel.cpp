@@ -650,7 +650,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraphFromBMWAssets(raco::guiData
 	commandInterface_->insertBMWAssetScenegraph(node, selectedObject);
 }
 
-void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex, bool &keyAnimation) {
+void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, const QModelIndex& selectedIndex, bool &keyAnimation, bool &filterData) {
 	auto absPath = filePath.toStdString();
 	auto selectedObject = indexToSEditorObject(selectedIndex);
 
@@ -661,6 +661,7 @@ void ObjectTreeViewDefaultModel::importMeshScenegraph(const QString& filePath, c
         auto importDialog = new raco::common_widgets::MeshAssetImportDialog(sceneGraph, project()->featureLevel(), nullptr);
 		auto importStatus = importDialog->exec();
         keyAnimation = importDialog->animationEditorButton_->isChecked();
+        filterData = importDialog->filterModeCheck_->isChecked();
 		if (importStatus == QDialog::Accepted && selectedObject != nullptr) {
 			bool projectZup = project()->settings()->axes_.asBool();
 			ValueHandle translation_y{selectedObject, &user_types::Node::translation_, &core::Vec3f::y};

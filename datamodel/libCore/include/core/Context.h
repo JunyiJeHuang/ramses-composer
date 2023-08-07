@@ -158,6 +158,9 @@ public:
 	// If parent is invalid, the mesh scenegraph root node will be the project's scenegraph root node.
 	void insertBMWAssetScenegraph(raco::guiData::NodeData* node, SEditorObject const& parent);
 
+    // animation editor data convert to animation scene graph
+    void convert2AnimationScenegraph();
+
 	// Link operations
 	SLink addLink(const ValueHandle& start, const ValueHandle& end, bool isWeak = false);
 	void removeLink(const PropertyDescriptor& end);

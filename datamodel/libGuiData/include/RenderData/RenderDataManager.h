@@ -12,22 +12,6 @@
 
 namespace raco::guiData {
 
-enum FORMAT {
-    RGBA4,
-    R8,
-    RG8,
-    RGB8,
-    RGBA8,
-    R16F,
-    R32F,
-    RG16F,
-    RG32F,
-    RGA16F,
-    RGA32F,
-    Depth24,
-    Depth24_Stencil8
-};
-
 class RenderBuffer {
 public:
     RenderBuffer() {}
@@ -326,6 +310,16 @@ public:
         }
         renderPass = it->second;
         return true;
+    }
+
+    bool getRenderPassByName(std::string name, RenderPass &renderPass) {
+        for (const auto &it : renderPasses_) {
+            if (it.first.compare(name) == 0) {
+                renderPass = it.second;
+                return true;
+            }
+        }
+        return false;
     }
 
     void addRenderBuffer(std::string name, RenderBuffer renderBuffer) {

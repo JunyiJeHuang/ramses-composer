@@ -20,7 +20,7 @@
      <x>0</x>
      <y>0</y>
      <width>400</width>
-     <height>17</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="contextMenuPolicy">
@@ -47,6 +47,7 @@
     <addaction name="actionExportGltf"/>
     <addaction name="actionExportBMWAssets"/>
     <addaction name="actionConvertLuaAnim"/>
+    <addaction name="actionConvertRacoAnim"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -303,6 +304,14 @@
    </property>
    <property name="toolTip">
     <string>Convert to Lua animation</string>
+   </property>
+  </action>
+  <action name="actionConvertRacoAnim">
+   <property name="text">
+    <string>Convert to Raco animation</string>
+   </property>
+   <property name="toolTip">
+    <string>Convert to Raco animation</string>
    </property>
   </action>
  </widget>

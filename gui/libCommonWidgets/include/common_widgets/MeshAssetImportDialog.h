@@ -41,6 +41,8 @@ public:
     QRadioButton* animationNodeButton_;
     QRadioButton* animationEditorButton_;
     QHBoxLayout* animationModeButtonLayout_;
+    QHBoxLayout* filterModeButtonLayout_;
+    QCheckBox* filterModeCheck_;
     QVBoxLayout* selButtonLayout_;
 
 private:

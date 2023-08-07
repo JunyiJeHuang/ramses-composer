@@ -392,4 +392,8 @@ bool Curve::modifyPointKeyFrame(const int &keyFrame, const int &modifyKeyFrame) 
     }
     return false;
 }
+
+void Curve::clear() {
+    pointList_.clear();
+}
 }

@@ -519,6 +519,8 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		// QObject::connect(ui->actionImportBMWAssets, &QAction::triggered, this, &MainWindow::importBMWAssets);
         ui->actionConvertLuaAnim->setShortcutContext(Qt::ApplicationShortcut);
         QObject::connect(ui->actionConvertLuaAnim, &QAction::triggered, this, &MainWindow::convert2LuaAnimation);
+        ui->actionConvertRacoAnim->setShortcutContext(Qt::ApplicationShortcut);
+        QObject::connect(ui->actionConvertRacoAnim, &QAction::triggered, this, &MainWindow::convert2RacoAnimation);
 	}
 
 	QObject::connect(ui->actionOpen, &QAction::triggered, [this]() {
@@ -1192,6 +1194,10 @@ void MainWindow::convert2LuaAnimation() {
     }
 }
 
+void MainWindow::convert2RacoAnimation() {
+    racoApplication_->activeRaCoProject().commandInterface()->convert2AnimationScenegraph();
+}
+
 void MainWindow::directoryChanged(const QString &path) {
     auto toSet = [=](QStringList list)->QSet<QString> {
         QSet<QString> set;
@@ -1245,20 +1251,24 @@ void MainWindow::focusToObject(const QString& objectID) {
 void MainWindow::setMaterialResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
     if (materialLogic_) {
 		materialLogic_->setMaterialResourcesHandleReMap(mMap);
-        materialLogic_->Analyzing();
+        materialLogic_->analyzing();
     }
 }
 
 void MainWindow::setTextureResHandles(const std::map<std::string, raco::core::ValueHandle>& mMap) {
 	if (materialLogic_) {
 		materialLogic_->setTextureResourcesHandleReMap(mMap);
-		materialLogic_->AnalyzingTexture();
+		materialLogic_->analyzingTexture();
     }
 }
 
 void MainWindow::setResourceHandles(const std::map<std::string, raco::core::ValueHandle> &mMap) {
     if (nodeLogic_) {
         nodeLogic_->analyzeRenderHandles(mMap);
+    }
+    if (materialLogic_) {
+        materialLogic_->setCubeMapResourcesHandleReMap(mMap);
+        materialLogic_->analyzingCubeMap();
     }
 }
 

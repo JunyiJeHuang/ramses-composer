@@ -226,7 +226,7 @@ void TimeAxisMainWindow::slotStartTimeFinished() {
 void TimeAxisMainWindow::slotEndTimeFinished() {
     raco::core::UndoState undoState;
     undoState.saveCurrentUndoState();
-//    commandInterface_->undoStack().push(fmt::format(("change endTime To '{}'"), lineEnd_->value()), undoState);
+    //    commandInterface_->undoStack().push(fmt::format(("change endTime To '{}'"), lineEnd_->value()), undoState);
 }
 
 void TimeAxisMainWindow::slotUpdateAnimation() {

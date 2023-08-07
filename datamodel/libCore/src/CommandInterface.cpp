@@ -146,16 +146,16 @@ void CommandInterface::deleteUsedResource(const ValueHandle &handle) {
     };
 
     std::string openProjectPath = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string();
-    if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::Material::typeDescription.typeName) == 0) {
-        if (handle.hasProperty("uriVertex")) {
-            std::string uri = openProjectPath + "/" + handle.get("uriVertex").asString();
-            QFile::remove(QString::fromStdString(uri));
-        }
-        if (handle.hasProperty("uriFragment")) {
-            std::string uri = openProjectPath + "/" + handle.get("uriFragment").asString();
-            QFile::remove(QString::fromStdString(uri));
-        }
-    }
+//    if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::Material::typeDescription.typeName) == 0) {
+//        if (handle.hasProperty("uriVertex")) {
+//            std::string uri = openProjectPath + "/" + handle.get("uriVertex").asString();
+//            QFile::remove(QString::fromStdString(uri));
+//        }
+//        if (handle.hasProperty("uriFragment")) {
+//            std::string uri = openProjectPath + "/" + handle.get("uriFragment").asString();
+//            QFile::remove(QString::fromStdString(uri));
+//        }
+//    }
     if (handle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::Texture::typeDescription.typeName) == 0) {
         for (int i = 1; i <= 4; i++) {
             levelUri(handle, "uri", i);
@@ -532,7 +532,7 @@ void CommandInterface::insertAssetScenegraph(const raco::core::MeshScenegraph& s
 	if (parent && !project()->isInstance(parent)) {
 		throw std::runtime_error(fmt::format("insertAssetScenegraph: parent object '{}' not in project", parent->objectName()));
 	}
-	// 导入结点的地方
+    //
 	context_->insertAssetScenegraph(scenegraph, absPath, parent);
 	PrefabOperations::globalPrefabUpdate(*context_);
 	undoStack_->push(fmt::format("Inserted assets from {}", absPath));
@@ -541,6 +541,10 @@ void CommandInterface::insertAssetScenegraph(const raco::core::MeshScenegraph& s
 
 bool CommandInterface::exportAssetScenegraph(MeshScenegraph &scenegraph) {
     return context_->exportAssetScenegraph(scenegraph);
+}
+
+void CommandInterface::convert2AnimationScenegraph() {
+    context_->convert2AnimationScenegraph();
 }
 
 std::string CommandInterface::copyObjects(const std::vector<SEditorObject>& objects, bool deepCopy) {

@@ -2,6 +2,8 @@
 #include "MaterialData/materialManager.h"
 #include "user_types/Material.h"
 #include "PropertyData/PropertyType.h"
+#include "core/PathManager.h"
+#include "user_types/CubeMap.h"
 
 namespace raco::material_logic { 
 MateralLogic::MateralLogic(QObject *parent)
@@ -32,7 +34,7 @@ void setIsDefaultMaterial(std::string id, MaterialData& materialData) {
 	materialData.setDefaultID(id);
 }
 
-void MateralLogic::AnalyzingTexture() {
+void MateralLogic::analyzingTexture() {
 	for (const auto &it : textureResourcesHandleReMap_) {
 		MaterialData materialData;
         TextureData textureData;
@@ -56,7 +58,7 @@ bool getDefaultMaterialData(raco::core::ValueHandle &valueHandle) {
 	return false;
 }
 // Analyzing default Material
-void MateralLogic::AnalyzingMaterialData() {
+void MateralLogic::analyzingMaterialData() {
 	for (const auto &it : materialResourcesHandleReMap_) {
 		MaterialData materialData;
 		Shader shader;
@@ -82,13 +84,13 @@ void MateralLogic::AnalyzingMaterialData() {
 	MaterialManager::GetInstance().traverseMaterialData();
 }
 
-void MateralLogic::Analyzing() {
+void MateralLogic::analyzing() {
 	// clear cache data
 	MaterialManager::GetInstance().clearData();
 	// analyzing default Material
-	AnalyzingMaterialData();
+    analyzingMaterialData();
 	// analyzing node Material
-	AnalyzingNodeMaterial();
+    analyzingNodeMaterial();
 }
 
 void MateralLogic::initNodeMaterialProperty(core::ValueHandle valueHandle, NodeMaterial &nodeMaterial) {
@@ -139,7 +141,7 @@ void MateralLogic::initNodeMaterialProperty(core::ValueHandle valueHandle, NodeM
 }
 
 
-void MateralLogic::AnalyzingNodeMaterial() {
+void MateralLogic::analyzingNodeMaterial() {
 	for (const auto &it : materialResourcesHandleReMap_) {
 		core::ValueHandle valueHandle = it.second;
 		NodeMaterial nodeMaterial;
@@ -525,5 +527,97 @@ void MateralLogic::setUniformsMultiElementProperty(core::ValueHandle valueHandle
 		tempUniform.setValue(uniformValue);
 		materialData.addUniform(tempUniform);
     }
+}
+
+void MateralLogic::analyzingCubeMap() {
+    for (const auto &it : cubeMapResourcesHandleReMap_) {
+        CubeMapData cubemap;
+        core::ValueHandle valueHandle = it.second;
+        if (setCubeMapData(valueHandle, cubemap)) {
+            MaterialManager::GetInstance().addCubeMap(it.first, cubemap);
+        }
+    }
+}
+
+bool MateralLogic::setCubeMapData(core::ValueHandle valueHandle, CubeMapData &cubemap) {
+    auto levelUri = [=](raco::core::ValueHandle valueHandle, std::string uri, int level)->std::string {
+        std::string strLevel;
+        switch (level) {
+        case 1: {
+            strLevel = "";
+            break;
+        }
+        case 2:{
+            strLevel = "level2";
+            break;
+        }
+        case 3:{
+            strLevel = "level3";
+            break;
+        }
+        case 4:{
+            strLevel = "level4";
+            break;
+        }
+        }
+        uri += strLevel;
+        std::string openProjectPath = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string();
+        if (valueHandle.hasProperty(uri)) {
+            std::string refUri = openProjectPath + "/" + valueHandle.get(uri).asString();
+            return refUri;
+        }
+        return std::string();
+    };
+
+    if (valueHandle && valueHandle.rootObject().get()->getTypeDescription().typeName.compare(raco::user_types::CubeMap::typeDescription.typeName) == 0) {
+        for (int i{0}; i < valueHandle.size(); i++) {
+            raco::core::ValueHandle tempHandle = valueHandle[i];
+            if (tempHandle) {
+                QString property = QString::fromStdString(tempHandle.getPropName());
+                if (property.compare("objectName") == 0) {
+                    std::string name = tempHandle.asString();
+                    cubemap.setObjectName(name);
+                } else if (property.compare("wrapUMode") == 0) {
+                    int mode = tempHandle.asInt();
+                    cubemap.setUWrapMode(WrapMode(mode));
+                } else if (property.compare("wrapVMode") == 0) {
+                    int mode = tempHandle.asInt();
+                    cubemap.setVWrapMode(WrapMode(mode));
+                } else if (property.compare("minSamplingMethod") == 0) {
+                    int method = tempHandle.asInt();
+                    cubemap.setMinSamplingMethod(Filter(method));
+                } else if (property.compare("magSamplingMethod") == 0) {
+                    int method = tempHandle.asInt();
+                    cubemap.setMagSamplingMethod(Filter(method));
+                } else if (property.compare("anisotropy") == 0) {
+                    int level = tempHandle.asInt();
+                    cubemap.setMipMapLevel(level);
+                } else if (property.compare("textureFormat") == 0) {
+                    int format = tempHandle.asInt();
+                    cubemap.setFormat((FORMAT)format);
+                } else if (property.compare("generateMipmaps") == 0) {
+                    bool generateMipmaps = tempHandle.asBool();
+                    cubemap.setAutoGenerateMipmaps(generateMipmaps);
+                } else if (property.compare("mipmapLevel") == 0) {
+                    int level = tempHandle.asInt();
+                    cubemap.setMipMapLevel(level);
+                }
+            }
+        }
+        for (int i = 1; i <= 4; i++) {
+            CubeTexture cubeTextrue;
+            cubeTextrue.setPXUri(levelUri(valueHandle, "uriRight", i));
+            cubeTextrue.setNXUri(levelUri(valueHandle, "uriLeft", i));
+            cubeTextrue.setPYUri(levelUri(valueHandle, "uriTop", i));
+            cubeTextrue.setNYUri(levelUri(valueHandle, "uriBottom", i));
+            cubeTextrue.setPZUri(levelUri(valueHandle, "uriFront", i));
+            cubeTextrue.setNZUri(levelUri(valueHandle, "uriBack", i));
+            if (cubeTextrue.getNXUri() != "") {
+                cubemap.addCubeTexture(cubeTextrue);
+            }
+        }
+        return true;
+    }
+    return false;
 }
 }

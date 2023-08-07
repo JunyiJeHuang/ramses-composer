@@ -51,6 +51,7 @@ public:
     void setRelativePath(QString path);
 	void setOpenedProjectPath(QString path);
     void initFolderData();
+    void cubeMap2DdsFormat(const QString &filePath, const std::string &id);
 
 Q_SIGNALS:
     void selectObject(const QString &objectId);

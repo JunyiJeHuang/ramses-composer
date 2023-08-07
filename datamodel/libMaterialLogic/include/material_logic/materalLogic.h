@@ -21,27 +21,35 @@ public:
 	void setTextureResourcesHandleReMap(std::map<std::string, core::ValueHandle> map) {
 		textureResourcesHandleReMap_ = map;
 	}
+
+    void setCubeMapResourcesHandleReMap(std::map<std::string, core::ValueHandle> map) {
+        cubeMapResourcesHandleReMap_ = map;
+    }
 	
 	std::map<std::string, core::ValueHandle>& getResourcesHandleReMap() {
 		return materialResourcesHandleReMap_;
 	}
 	void setPtxName(Shader &shader);
-    void Analyzing();
-	void AnalyzingMaterialData();
+    void analyzing();
+    void analyzingMaterialData();
 	void initNodeMaterialProperty(core::ValueHandle valueHandle, NodeMaterial &nodeMaterial);
-	void AnalyzingNodeMaterial();
+    void analyzingNodeMaterial();
 	void setOneTexture(core::ValueHandle valueHandle, TextureData &textureData);
 
-	void AnalyzingTexture();
+    void analyzingTexture();
     void initMaterialProperty(core::ValueHandle valueHandle, MaterialData &materialData, Shader &shader);
     void setOptionsProperty(core::ValueHandle valueHandle, MaterialData &materialData);
     void setUniformsProperty(core::ValueHandle valueHandle, MaterialData &materialData);
     void setTexturePorperty(core::ValueHandle valueHandle, MaterialData &materialData, TextureData &textureData);
     void setUniformsMultiElementProperty(core::ValueHandle valueHandle, MaterialData &materialData, UniformType type);
 
+    void analyzingCubeMap();
+    bool setCubeMapData(core::ValueHandle valueHandle, CubeMapData &cubemap);
+
 private:
 	std::map<std::string, core::ValueHandle> materialResourcesHandleReMap_;
 	std::map<std::string, core::ValueHandle> textureResourcesHandleReMap_;
+    std::map<std::string, core::ValueHandle> cubeMapResourcesHandleReMap_;
 };
 
 }

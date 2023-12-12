@@ -627,8 +627,10 @@ bool ObjectTreeViewDefaultModel::pasteObjectAtIndex(const QModelIndex& index, bo
 }
 
 std::vector<SEditorObject> ObjectTreeViewDefaultModel::duplicateObjectsAtIndices(const QModelIndexList& indices) {
-	auto objects = indicesToSEditorObjects(indices);
-	return commandInterface_->duplicateObjects(objects);
+    auto objects = indicesToSEditorObjects(indices);
+    std::vector<SEditorObject> vector = commandInterface_->duplicateObjects(objects);
+    Q_EMIT editNodeOpreations();
+    return vector;
 }
 
 void ObjectTreeViewDefaultModel::cutObjectsAtIndices(const QModelIndexList& indices, bool deepCut) {

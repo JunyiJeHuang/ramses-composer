@@ -72,7 +72,7 @@ public Q_SLOTS:
 
     void slotSetStartFrame(int keyframe);
     void slotSetFinishFrame(int keyframe);
-    void slotUpdateSlider(int pix);    //拖动时间线的处理函数
+    void slotUpdateSlider(int pix);
     void slotUpdateSliderPos(int keyFrame);
     void slotSetCurFrameToBegin();
     void slotSetCurFrameToEnd();

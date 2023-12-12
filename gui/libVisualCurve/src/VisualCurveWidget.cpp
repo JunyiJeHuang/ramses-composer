@@ -735,7 +735,9 @@ void VisualCurveWidget::slotSetStartFrame(int keyframe) {
     startFrame_ = keyframe;
     if (keyframe >= finishFrame_) {
         startFrame_ = keyframe - 1;
-        editor->setValue(startFrame_);
+        if (editor) {
+            editor->setValue(startFrame_);
+        }
         return;
     }
     calculateMoveStep();
@@ -749,7 +751,9 @@ void VisualCurveWidget::slotSetFinishFrame(int keyframe) {
     finishFrame_ = keyframe;
     if (keyframe <= startFrame_) {
         finishFrame_ = keyframe + 1;
-        editor->setValue(finishFrame_);
+        if (editor) {
+            editor->setValue(finishFrame_);
+        }
         return;
     }
     calculateMoveStep();

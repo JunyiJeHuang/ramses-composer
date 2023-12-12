@@ -2671,11 +2671,9 @@
             "visible": "Bool::DisplayNameAnnotation::LinkEndAnnotation"
         },
         "ProjectSettings": {
-            "axes": "Bool::DisplayNameAnnotation",
             "backgroundColor": "Vec4f::DisplayNameAnnotation",
             "children": "Table::ArraySemanticAnnotation::HiddenProperty",
             "defaultResourceFolders": "DefaultResourceDirectories::DisplayNameAnnotation",
-            "displayGrid": "Bool::DisplayNameAnnotation",
             "enableTimerFlag": "Bool::HiddenProperty",
             "objectID": "String::HiddenProperty",
             "objectName": "String::DisplayNameAnnotation",

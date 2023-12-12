@@ -216,7 +216,7 @@ void TimeAxisWidget::timerEvent(QTimerEvent *event) {
 
     if (curFrame_ > finishFrame_) {
         curLoop_++;
-        curFrame_ = 0;
+        curFrame_ = finishFrame_;
         button_->setText(curFrame_);
         button_->move((double)intervalLength_ / (double)numTextInterval_ * (double)curFrame_ - viewportOffset_.x() - button_->width()/2, 0);
         update();
@@ -365,7 +365,9 @@ void TimeAxisWidget::slotSetStartFrame(int keyframe) {
     startFrame_ = keyframe;
     if (keyframe >= finishFrame_) {
         startFrame_ = keyframe - 1;
-        editor->setValue(startFrame_);
+        if (editor) {
+            editor->setValue(startFrame_);
+        }
         return;
     }
     animationDataManager::GetInstance().getActiveAnimationData().SetStartTime(startFrame_);
@@ -380,7 +382,9 @@ void TimeAxisWidget::slotSetFinishFrame(int keyframe) {
     finishFrame_ = keyframe;
     if (keyframe <= startFrame_) {
         finishFrame_ = keyframe + 1;
-        editor->setValue(finishFrame_);
+        if (editor) {
+            editor->setValue(finishFrame_);
+        }
         return;
     }
     animationDataManager::GetInstance().getActiveAnimationData().SetEndTime(finishFrame_);

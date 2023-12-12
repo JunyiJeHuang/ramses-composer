@@ -66,6 +66,7 @@ signals:
 
 private:
     QMutex handleMapMutex_;
+    QMutex tagMutex_;
 	std::map<std::string, core::ValueHandle> nodeObjectIDHandleReMap_;
 	raco::core::CommandInterface *commandInterface_;
     QString curAnimation_;

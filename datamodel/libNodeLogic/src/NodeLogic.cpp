@@ -489,8 +489,10 @@ void NodeLogic::slotUpdateNodeProperty(const std::string &objectID, const core::
     handleMapMutex_.lock();
     if (objectID != "" && objectID != "objectID") {
         NodeData *pNode = NodeDataManager::GetInstance().searchNodeByID(objectID);
-        pNode->clearTags();
-        initBasicProperty(handle, pNode);
+        if (pNode) {
+            pNode->clearTags();
+            initBasicProperty(handle, pNode);
+        }
     }
     handleMapMutex_.unlock();
 }

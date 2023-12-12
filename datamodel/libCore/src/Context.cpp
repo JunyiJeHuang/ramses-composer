@@ -1151,7 +1151,6 @@ void BaseContext::insertAssetScenegraph(const raco::core::MeshScenegraph& sceneg
 	}
 	LOG_INFO(log_system::CONTEXT, "Scenegraph structure restored.");
 
-
 	LOG_INFO(log_system::CONTEXT, "Importing animation samplers...");
 	std::map<int, std::vector<SEditorObject>> sceneChannels;
 	for (auto animIndex = 0; animIndex < scenegraph.animationSamplers.size();  ++animIndex) {
@@ -1175,7 +1174,6 @@ void BaseContext::insertAssetScenegraph(const raco::core::MeshScenegraph& sceneg
 				LOG_DEBUG(log_system::CONTEXT, "Found existing local AnimationChannel '{}' with same properties as asset animation sampler, using this AnimationChannel...", *meshAnimSampler);
 				sceneChannels[animIndex].emplace_back(samplerWithSameProperties->second);
 			}
-
 		}
 	}
 	LOG_INFO(log_system::CONTEXT, "Animation samplers imported.");

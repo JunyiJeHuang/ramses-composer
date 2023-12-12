@@ -103,8 +103,8 @@ public:
 		properties_.emplace_back("backgroundColor", &backgroundColor_);
 		properties_.emplace_back("defaultResourceFolders", &defaultResourceDirectories_);
 		properties_.emplace_back("saveAsZip", &saveAsZip_);
-		properties_.emplace_back("axes", &axes_);
-		properties_.emplace_back("displayGrid", &displayGrid_);
+        //properties_.emplace_back("axes", &axes_);
+        //properties_.emplace_back("displayGrid", &displayGrid_);
 	}
 
 	Property<int, DisplayNameAnnotation, RangeAnnotation<int>> sceneId_{123u, DisplayNameAnnotation("Scene Id"), {1, 1024}};

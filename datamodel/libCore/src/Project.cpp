@@ -43,6 +43,9 @@ bool Project::removeInstances(SEditorObjectSet const& objects, bool gcExternalPr
 }
 
 void Project::addInstance(SEditorObject object) {
+    if (!object) {
+        return;
+    }
 	if (instanceMap_.find(object->objectID()) != instanceMap_.end()) {
 		throw std::runtime_error(fmt::format("duplicate object {} with id {}", object->objectName(), object->objectID()));
 	}

@@ -523,7 +523,10 @@ void convertPropertyAnnotationsIRToUser(const ValueBase& dynProp, ValueBase& use
 }
 
 void convertValueBaseIRToUser(const ValueBase& dynProp, ValueBase& userProp, translateRefFunc translateRef, raco::core::UserObjectFactoryInterface& factory, bool dynamicallyTyped = false) {
-	if (userProp.type() == PrimitiveType::Table) {
+    if (dynamic_cast<const ValueBase*>(&userProp) == nullptr) {
+        return;
+    }
+    if (userProp.type() == PrimitiveType::Table) {
 		convertTablePropertiesIRToUser(dynProp.asTable(), userProp.asTable(), translateRef, factory);
 	} else if (hasTypeSubstructure(userProp.type())) {
 		convertObjectPropertiesIRToUser(dynProp.getSubstructure(), userProp.getSubstructure(), translateRef, factory);

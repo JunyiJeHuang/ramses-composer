@@ -393,17 +393,19 @@ void ObjectTreeView::getOneMeshModelMatrix(QModelIndex index, QMatrix4x4 matrix)
         }
     } else {
         core::ValueHandle tempHandle = indexToSEditorObject(index);
-        computeWorldMatrix(tempHandle, matrix);
-        std::string str = tempHandle[1].asString();
+        if (tempHandle) {
+            computeWorldMatrix(tempHandle, matrix);
+            std::string str = tempHandle[1].asString();
 
-        std::string objectID = tempHandle[0].asString();
-        if (MeshDataManager::GetInstance().hasMeshData(objectID)) {
-            MeshDataManager::GetInstance().setMeshModelMatrix(objectID, matrix);
-        }
+            std::string objectID = tempHandle[0].asString();
+            if (MeshDataManager::GetInstance().hasMeshData(objectID)) {
+                MeshDataManager::GetInstance().setMeshModelMatrix(objectID, matrix);
+            }
 
-        for (int i{0}; i < model()->rowCount(index); i++) {
-            QModelIndex tempIndex = model()->index(i, 0, index);
-            getOneMeshModelMatrix(tempIndex, matrix);
+            for (int i{0}; i < model()->rowCount(index); i++) {
+                QModelIndex tempIndex = model()->index(i, 0, index);
+                getOneMeshModelMatrix(tempIndex, matrix);
+            }
         }
     }
 }
@@ -1495,6 +1497,7 @@ void ObjectTreeView::requestExamples(SEditorObject object, std::string mesh, std
                 raco::core::ValueHandle materialsHandle = valueHandle.get("materials");
                 raco::core::ValueHandle materialHandle = materialsHandle.get("material").get("material");
                 commandInterface_->set(materialHandle, meterialObject);
+                globalOpreations();
             }
         }
     }

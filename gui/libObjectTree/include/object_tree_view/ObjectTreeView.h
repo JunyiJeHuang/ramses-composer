@@ -17,7 +17,6 @@
 #include <QTreeView>
 #include <unordered_set>
 
-
 namespace raco::object_tree::model {
 class ObjectTreeViewDefaultSortFilterProxyModel;
 class ObjectTreeViewDefaultModel;
@@ -33,8 +32,11 @@ class ObjectTreeView : public QTreeView {
 	using SEditorObject = core::SEditorObject;
 
 public:
-	ObjectTreeView(const QString &viewTitle, raco::object_tree::model::ObjectTreeViewDefaultModel *viewModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel = nullptr, raco::core::CommandInterface* commandInterface = nullptr, QWidget *parent = nullptr);
-	std::set<ValueHandle> getSelectedHandles() const;
+    ObjectTreeView(const QString &viewTitle, raco::object_tree::model::ObjectTreeViewDefaultModel *viewModel, raco::object_tree::model::ObjectTreeViewDefaultSortFilterProxyModel *sortFilterProxyModel = nullptr, raco::core::CommandInterface* commandInterface = nullptr, QWidget *parent = nullptr);
+
+	core::SEditorObjectSet getSelectedObjects() const;
+    std::set<core::ValueHandle> getSelectedHandles() const;
+
 	std::vector<SEditorObject> getSortedSelectedEditorObjects() const;
 	QString getViewTitle() const;
 
@@ -78,12 +80,14 @@ public:
 Q_SIGNALS:
 	void dockSelectionFocusRequested(ObjectTreeView *focusTree);
 	void newNodeRequested(EditorObject::TypeDescriptor nodeType, const std::string &nodeName, const QModelIndex &parent);
-	void newObjectTreeItemsSelected(const std::set<ValueHandle> &handles);
+
+    //void newObjectTreeItemsSelected(const std::set<ValueHandle> &handles);
     void externalObjectSelected();
     void setMaterialResHandles(const std::map<std::string, core::ValueHandle>& map);
 	void setTextureResHandles(const std::map<std::string, core::ValueHandle> &map);
     void setResourceHandles(const std::map<std::string, core::ValueHandle> &map);
     void updateNodeHandles(const QString &title, const std::map<std::string, core::ValueHandle> &map);
+    void newObjectTreeItemsSelected(const core::SEditorObjectSet &objects);
 
 public Q_SLOTS:
 	void resetSelection();
@@ -120,7 +124,7 @@ protected:
     std::unordered_set<std::string> selectedItemIDs_;
 
 	virtual QMenu* createCustomContextMenu(const QPoint &p);
-
+	
 	void dragMoveEvent(QDragMoveEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
 

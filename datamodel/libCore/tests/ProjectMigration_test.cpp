@@ -27,6 +27,7 @@
 #include "ramses_base/BaseEngineBackend.h"
 
 #include "user_types/Animation.h"
+#include "user_types/CubeMap.h"
 #include "user_types/Enumerations.h"
 #include "user_types/Material.h"
 #include "user_types/MeshNode.h"
@@ -829,6 +830,109 @@ TEST_F(MigrationTest, migrate_from_V50) {
 		});
 }
 
+TEST_F(MigrationTest, migrate_from_V51_vec_struct_link_validity_update) {
+	// This is technically not a migration test, but it seems to be the best way to check
+	// that the validity of links which could be created before (but not anymore) is correctly
+	// updated during load.
+	using namespace raco;
+
+	auto racoproject = loadAndCheckJson(QString::fromStdString((test_path() / "migrationTestData" / "V51_link_vec_struct.rca").string()));
+
+	auto start = raco::core::Queries::findByName(racoproject->project()->instances(), "start")->as<raco::user_types::LuaInterface>();
+	auto end = raco::core::Queries::findByName(racoproject->project()->instances(), "end")->as<raco::user_types::LuaInterface>();
+
+	checkLinks(*racoproject->project(),
+		{{{start, {"inputs", "v3f"}}, {end, {"inputs", "s3f"}}, false, false},
+			{{start, {"inputs", "v3i"}}, {end, {"inputs", "s3i"}}, false, false}});
+}
+
+TEST_F(MigrationTest, migrate_from_V51) {
+	using namespace raco;
+	auto racoproject = loadAndCheckJson(QString::fromStdString((test_path() / "migrationTestData" / "V51.rca").string()));
+
+	auto meshnode = core::Queries::findByName(racoproject->project()->instances(), "MeshNode")->as<user_types::MeshNode>();
+
+	EXPECT_EQ(*meshnode->instanceCount_, 4);
+	EXPECT_TRUE(core::Queries::isValidLinkEnd(*racoproject->project(), {meshnode, &user_types::MeshNode::instanceCount_}));
+}
+
+TEST_F(MigrationTest, migrate_from_V52) {
+	using namespace raco;
+	auto racoproject = loadAndCheckJson(QString::fromStdString((test_path() / "migrationTestData" / "V52.rca").string()));
+
+	auto cubeMap = core::Queries::findByName(racoproject->project()->instances(), "CubeMap")->as<user_types::CubeMap>();
+	EXPECT_EQ(cubeMap->uriFront_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->uriBack_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->uriLeft_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->uriRight_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->uriTop_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->uriBottom_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+
+	EXPECT_EQ(cubeMap->level2uriFront_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level2uriBack_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level2uriLeft_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level2uriRight_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level2uriTop_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level2uriBottom_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+
+	EXPECT_EQ(cubeMap->level3uriFront_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level3uriBack_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level3uriLeft_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level3uriRight_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level3uriTop_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level3uriBottom_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+
+	EXPECT_EQ(cubeMap->level4uriFront_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level4uriBack_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level4uriLeft_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level4uriRight_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level4uriTop_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(cubeMap->level4uriBottom_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+
+
+	auto texture = core::Queries::findByName(racoproject->project()->instances(), "Texture")->as<user_types::Texture>();
+	EXPECT_EQ(texture->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(texture->level2uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(texture->level3uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+	EXPECT_EQ(texture->level4uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Image);
+
+
+	auto mesh = core::Queries::findByName(racoproject->project()->instances(), "Mesh")->as<user_types::Mesh>();
+	EXPECT_EQ(mesh->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Mesh);
+
+	auto animationChannel = core::Queries::findByName(racoproject->project()->instances(), "AnimationChannel")->as<user_types::AnimationChannel >();
+	EXPECT_EQ(animationChannel ->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Mesh);
+
+	auto skin = core::Queries::findByName(racoproject->project()->instances(), "Skin")->as<user_types::Skin>();
+	EXPECT_EQ(skin->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Mesh);
+
+
+	auto luascript = core::Queries::findByName(racoproject->project()->instances(), "LuaScript")->as<user_types::LuaScript>();
+	EXPECT_EQ(luascript->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Script);
+
+	auto luamodule = core::Queries::findByName(racoproject->project()->instances(), "LuaScriptModule")->as<user_types::LuaScriptModule>();
+	EXPECT_EQ(luamodule->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Script);
+
+
+	auto luainterface = core::Queries::findByName(racoproject->project()->instances(), "LuaInterface")->as<user_types::LuaInterface>();
+	EXPECT_EQ(luainterface->uri_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Interface);
+
+
+	auto material = core::Queries::findByName(racoproject->project()->instances(), "Material")->as<user_types::Material>();
+	EXPECT_EQ(material->uriVertex_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Shader);
+	EXPECT_EQ(material->uriGeometry_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Shader);
+	EXPECT_EQ(material->uriFragment_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Shader);
+	EXPECT_EQ(material->uriDefines_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Shader);
+
+
+	auto settings = core::Queries::findByName(racoproject->project()->instances(), "V52")->as<user_types::ProjectSettings>();
+	EXPECT_EQ(settings->defaultResourceDirectories_->imageSubdirectory_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Project);
+	EXPECT_EQ(settings->defaultResourceDirectories_->meshSubdirectory_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Project);
+	EXPECT_EQ(settings->defaultResourceDirectories_->scriptSubdirectory_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Project);
+	EXPECT_EQ(settings->defaultResourceDirectories_->interfaceSubdirectory_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Project);
+	EXPECT_EQ(settings->defaultResourceDirectories_->shaderSubdirectory_.query<core::URIAnnotation>()->getFolderTypeKey(), core::PathManager::FolderTypeKeys::Project);
+}
+
 TEST_F(MigrationTest, migrate_from_current) {
 	// Check for changes in serialized JSON in newest version.
 	// Should detect changes in data model with missing migration code.
@@ -967,5 +1071,62 @@ TEST_F(MigrationTest, check_user_factory_can_create_all_static_properties) {
 			ASSERT_TRUE(userProperty != nullptr) << fmt::format("property type name: '{}'", propTypeName);
 			ASSERT_EQ(userProperty->typeName(), propTypeName) << fmt::format("property type name: '{}'", propTypeName);
 		}
+	}
+}
+
+void change_property(ValueBase* value) {
+	switch (value->type()) {
+		case PrimitiveType::Bool:
+			*value = !value->asBool();
+			break;
+		case PrimitiveType::Int:
+			*value = value->asInt() + 1;
+			break;
+		case PrimitiveType::Int64:
+			*value = value->asInt64() + 1;
+			break;
+		case PrimitiveType::Double:
+			*value = value->asDouble() + 1;
+			break;
+		case PrimitiveType::String:
+			*value = value->asString() + "postfix";
+			break;
+		case PrimitiveType::Ref:
+			// We can't just change the pointer here but would need to create another valid object as pointer target.
+			// Ignore for now since we don't have Ref properties inside structs yet.
+			break;
+		case PrimitiveType::Table:
+		case PrimitiveType::Struct: {
+			auto& container = value->getSubstructure();
+			for (size_t index = 0; index < container.size(); index++) {
+				change_property(container.get(index));
+			}
+		} break;
+	}
+}
+
+TEST_F(MigrationTest, check_struct_copy_operators) {
+	// Check that the copy constructor and operator= work for all struct types.
+	// If this fails fix the implementation of the failing struct member function.
+
+	auto& userFactory{UserObjectFactory::getInstance()};
+
+	for (auto& item : userFactory.getStructTypes()) {
+		auto name = item.first;
+		auto property = userFactory.createValue(name);
+		ASSERT_TRUE(property->type() != PrimitiveType::Ref) << fmt::format("Struct name {}", name);
+
+		change_property(property);
+
+		// clone uses the copy constructor
+		auto prop_clone = property->clone(nullptr);
+		ASSERT_TRUE(*property == *prop_clone) << fmt::format("Struct name {}", name);
+
+		// check operator=
+		auto property_2 = userFactory.createValue(name);
+		ASSERT_FALSE(*property_2 == *property);
+
+		*property_2 = *property;
+		ASSERT_TRUE(*property_2 == *property) << fmt::format("Struct name {}", name);
 	}
 }

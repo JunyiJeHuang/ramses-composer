@@ -11,14 +11,20 @@ If a copy of the MPL was not distributed with this file, You can obtain one at h
 # Adding the unit test with gtest using our macro from dsathe top level CMakeLists.txt file
 
 set(TEST_SOURCES
-    PropertyBrowserItemTestHelper.h
     PropertyBrowserItem_test.cpp
 
-    EditorTestFixture.h
+    BoolEditor_test.cpp
+	DoubleEditor_test.cpp
+	EditorTestFixture.h
     EnumerationEditor_test.cpp
+    IntEditor_test.cpp
+	LinkEditor_test.cpp
     PrimitiveEditorsDataChange_test.cpp
+    RefEditor_test.cpp
     SpinBox_test.cpp
     URIEditor_test.cpp
+	VecNTEditor_test.cpp
+    TagContainerEditor_test.cpp
 )
 set(TEST_LIBRARIES
     raco::PropertyBrowser
@@ -38,4 +44,6 @@ raco_package_add_gui_test(
 raco_package_add_test_resources(
     libPropertyBrowser_test "${CMAKE_SOURCE_DIR}/resources"
     meshes/Duck.glb
+	scripts/types-scalar.lua
+    scripts/interface-scalar-types.lua
 )

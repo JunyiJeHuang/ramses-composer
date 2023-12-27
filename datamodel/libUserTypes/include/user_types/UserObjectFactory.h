@@ -64,10 +64,13 @@ class Prefab;
 using SPrefab = std::shared_ptr<Prefab>;
 
 class AnchorPointOutputs;
+class ColorWriteMask;
 class BlendOptions;
 class CameraViewport;
 class LuaStandardModuleSelection;
 class OrthographicFrustum;
+class ScissorOptions;
+class StencilOptions;
 class TimerInput;
 class TimerOutput;
 
@@ -273,7 +276,13 @@ public:
 		Property<SNode, DisplayNameAnnotation>,
 		Property<AnchorPointOutputs, DisplayNameAnnotation>,
 		Property<double, DisplayNameAnnotation, LinkStartAnnotation>,
-		Property<Vec2f, DisplayNameAnnotation, LinkStartAnnotation>
+		Property<Vec2f, DisplayNameAnnotation, LinkStartAnnotation>,
+
+		// BlendOptions
+		Property<ColorWriteMask, DisplayNameAnnotation>,
+		Property<CameraViewport, DisplayNameAnnotation>,
+		Property<ScissorOptions, DisplayNameAnnotation>,
+		Property<StencilOptions, DisplayNameAnnotation>
 	>;
 
 	using StructCreationFunction = std::function<std::shared_ptr<ClassWithReflectedMembers>()>;
@@ -281,6 +290,7 @@ public:
 	struct StructDescriptor {
 		ReflectionInterface::TypeDescriptor description;
 		StructCreationFunction createFunc;
+		ValueCreationFunction createValueFunc;
 	};
 
 
@@ -332,6 +342,8 @@ private:
 	static std::shared_ptr<AnnotationBase> createAnnotationInternal();
 	template <class T>
 	static std::shared_ptr<ClassWithReflectedMembers> createStructInternal();
+	template <class T>
+	static data_storage::ValueBase* createStructValueInternal();
 	template <class T>
 	static data_storage::ValueBase* createValueInternal() {
 		return new Value<std::shared_ptr<T>>();

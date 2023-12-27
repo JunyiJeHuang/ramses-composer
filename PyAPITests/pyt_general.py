@@ -28,6 +28,9 @@ class GeneralTests(unittest.TestCase):
             if object.typeName() == type:
                 return object
 
+    def instance_names(self):
+        return [obj.objectName.value() for obj in raco.instances()]
+
     def test_reset(self):
         raco.reset()
         self.assertEqual(len(raco.instances()), 1)
@@ -440,6 +443,67 @@ class GeneralTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             node.visibility = True
 
+    def test_vec_prop_set(self):
+        lua = raco.create("LuaScript", "lua")
+        lua.uri = self.cwd() + R"/../resources/scripts/types-scalar.lua"
+
+        # Vector assignment from list
+        lua.inputs.vector2i = [1, 2]
+        self.assertEqual(lua.inputs.vector2i.i1.value(), 1)
+
+        lua.inputs.vector2f = [1.5, 2]
+        lua.inputs.vector3i = [1, 2, 3]
+        lua.inputs.vector3f = [1.5, 2, 3]
+        lua.inputs.vector4i = [1, 2, 3, 4]
+        lua.inputs.vector4f = [1.5, 2, 3, 4]
+        self.assertEqual(lua.inputs.vector4f.w.value(), 4)
+
+        # Vector assignment from tuple
+        lua.inputs.vector2f = (3.5, 4)
+        self.assertEqual(lua.inputs.vector2f.x.value(), 3.5)
+
+        # Vector dimension must match list length
+        with self.assertRaises(RuntimeError):
+            lua.inputs.vector2f = (1, 2, 3)
+
+    def test_array_prop_set_from_list_fail(self):
+        lua = raco.create("LuaScript", "lua")
+        lua.uri = self.cwd() + R"/../resources/scripts/array.lua"
+
+        # Array of size 5 exists
+        self.assertEqual(len(lua.inputs.float_array.keys()), 5)
+
+        # Array assignment is not supported
+        with self.assertRaises(RuntimeError):
+            lua.inputs.float_array = [1, 2, 3, 4, 5]
+
+    def test_struct_prop_set_from_list_fail(self):
+        lua = raco.create("LuaScript", "lua")
+        lua.uri = self.cwd() + R"/../resources/scripts/struct.lua"
+
+        # Struct with 2 elements exists
+        self.assertEqual(len(lua.inputs.struct.keys()), 2)
+
+        # Struct assignment is not supported
+        with self.assertRaises(RuntimeError):
+            lua.inputs.struct = [1, 2]
+
+    def test_vec_prop_set_from_non_iterable_fail(self):
+        lua = raco.create("LuaScript", "lua")
+        lua.uri = self.cwd() + R"/../resources/scripts/types-scalar.lua"
+
+        # Assigning non-iterable results in error
+        with self.assertRaises(TypeError):
+            lua.inputs.vector2i = 1
+
+    def test_vec_prop_set_from_wrong_type_fail(self):
+        lua = raco.create("LuaScript", "lua")
+        lua.uri = self.cwd() + R"/../resources/scripts/types-scalar.lua"
+
+        # Assigning non-iterable results in error
+        with self.assertRaises(RuntimeError):
+            lua.inputs.vector2i = [1, "abc"]
+
     def test_set_int_enum_fail(self):
         material = raco.create("Material", "my_mat")
 
@@ -568,10 +632,34 @@ class GeneralTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             raco.moveScenegraph(child, parent, 1)
         
-        with self.assertRaises(RuntimeError):
-            raco.moveScenegraph(child, None, 0)
+        raco.moveScenegraph(child, None, 0)
 
-        
+    def test_move_scenegraph_toplevel(self):
+        node1 = raco.create("Node", "node1")
+        node2 = raco.create("Node", "node2")
+        self.assertEqual(self.instance_names(), ["", "node1", "node2"])
+
+        raco.moveScenegraph(node2, node1, 0)
+        self.assertEqual(self.instance_names(), ["", "node1", "node2"])
+
+        raco.moveScenegraph(node2, None, 0)
+        self.assertEqual(self.instance_names(), [ "node2", "", "node1"])
+
+        raco.moveScenegraph(node2, node1, 0)
+        self.assertEqual(self.instance_names(), [ "node2", "", "node1"])
+
+        raco.moveScenegraph(node2, None, 3)
+        self.assertEqual(self.instance_names(), ["", "node1", "node2"])
+
+        raco.moveScenegraph(node1, None, -1)
+        self.assertEqual(self.instance_names(), ["", "node2", "node1"])
+
+        with self.assertRaises(RuntimeError):
+            raco.moveScenegraph(node2, None, 4)
+
+        with self.assertRaises(RuntimeError):
+            raco.moveScenegraph(node2, None, -2)
+
     def test_link_create_remove(self):
         node = raco.create("Node", "node")
         lua = raco.create("LuaScript", "lua")
@@ -1200,3 +1288,22 @@ class GeneralTests(unittest.TestCase):
         # Ramses Logic rejects ByteCodeOnly
         with self.assertRaises(RuntimeError):
             self.export("lua_ByteCodeOnly_FL1", raco.ELuaSavingMode.ByteCodeOnly)
+            
+    def test_resolveUriPropertyToAbsolutePath (self):
+        # load scene to obtain known current project folder:
+        raco.load(self.cwd() + "/../resources/example_scene.rca")
+        self.assertEqual(os.path.normpath(raco.projectPath()), os.path.normpath(self.cwd() + "/../resources/example_scene.rca"))
+
+        lua = raco.create("LuaScript", "lua")
+
+        # check absolute path
+        lua.uri = self.cwd() + R"/../resources/scripts/types-scalar.lua"
+        self.assertEqual(raco.resolveUriPropertyToAbsolutePath(lua.uri), lua.uri.value())
+
+        # check relative path
+        lua.uri = R"../scripts/types-scalar.lua"
+        abs_path = raco.resolveUriPropertyToAbsolutePath(lua.uri)
+        self.assertEqual(os.path.normpath(abs_path), os.path.normpath(self.cwd() + "/../scripts/types-scalar.lua"))
+
+        with self.assertRaises(RuntimeError):
+            raco.resolveUriPropertyToAbsolutePath(lua.objectName)

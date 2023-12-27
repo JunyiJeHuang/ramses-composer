@@ -9,15 +9,14 @@
  */
 #include "property_browser/editors/DoubleEditor.h"
 
-
-#include "core/Queries.h"
 #include "core/BasicAnnotations.h"
+#include "core/Queries.h"
 
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserLayouts.h"
 #include "property_browser/controls/ScalarSlider.h"
 #include "property_browser/controls/SpinBox.h"
-#include "NodeData/nodeManager.h"
+#include "NodeData/NodeManager.h"
 
 #include <QStackedWidget>
 
@@ -143,21 +142,19 @@ DoubleEditor::DoubleEditor(
 	auto* layout = new PropertyBrowserGridLayout{this};
 	stack_ = new QStackedWidget{this};
 
-	DoubleSpinBox* spinBox = new DoubleSpinBox{stack_};
-	using raco::property_browser::DoubleSlider;
-	auto* slider = new DoubleSlider{stack_};
+	slider_ = new DoubleSlider{stack_};
+	spinBox_ = new DoubleSpinBox{stack_};
 
-	slider->setValue(item->valueHandle().as<double>());
-	spinBox->setValue(item->valueHandle().as<double>());
+	setValueToControls(slider_, spinBox_);
 
-	if (auto rangeAnnotation = item->query<core::RangeAnnotation<double>>()) {
-        spinBox->setSoftRange(*rangeAnnotation->min_, *rangeAnnotation->max_);
-        slider->setSoftRange(*rangeAnnotation->min_, *rangeAnnotation->max_);
+    if (auto rangeAnnotation = item->query<core::RangeAnnotation<double>>()) {
+        spinBox_->setSoftRange(*rangeAnnotation->min_, *rangeAnnotation->max_);
+        slider_->setSoftRange(*rangeAnnotation->min_, *rangeAnnotation->max_);
 	}
 
 	// connect everything to our item values
 	{
-		QObject::connect(spinBox, &DoubleSpinBox::valueEdited, item, [item](double value) {
+        QObject::connect(spinBox_, &DoubleSpinBox::valueEdited, item, [item](double value) {
 			item->set(value);
 			std::string propName = item->valueHandle().getPropName();
 			// sync data into NodeData
@@ -174,7 +171,7 @@ DoubleEditor::DoubleEditor(
 			}
 
 		});
-		QObject::connect(slider, &DoubleSlider::valueEdited, item, [item](double value) {
+        QObject::connect(slider_, &DoubleSlider::valueEdited, item, [item](double value) {
 			item->set(value);
 			std::string propName = item->valueHandle().getPropName();
 			if (propName == "x" || propName == "y" || propName == "z" || propName == "w") {
@@ -188,31 +185,66 @@ DoubleEditor::DoubleEditor(
 			} else {
 				nodeDataSync(propName, value);
 			}
-		});
-		QObject::connect(item, &PropertyBrowserItem::valueChanged, this, [slider, spinBox](core::ValueHandle& handle) {
-			slider->setValue(handle.as<double>());
-			spinBox->setValue(handle.as<double>());
-		});
-	}
+        });
+    }
+
+	// connect everything to our item values
+	QObject::connect(spinBox_, &DoubleSpinBox::valueEdited, item, [item](double value) {
+		item->set(value);
+	});
+	QObject::connect(slider_, &DoubleSlider::valueEdited, item, [item](double value) {
+		item->set(value);
+	});
+	QObject::connect(item, &PropertyBrowserItem::valueChanged, this, [this, item]() {
+		setValueToControls(slider_, spinBox_);
+	});
+
+	QObject::connect(spinBox_, &DoubleSpinBox::saveFocusInValue, item, [this]() {
+		focusInValues_.clear();
+		for (const auto& handle : item_->valueHandles()) {
+			focusInValues_[handle] = handle.asDouble();
+		}
+	});
+	QObject::connect(spinBox_, &DoubleSpinBox::restoreFocusInValue, item, [this]() {
+		std::string desc = fmt::format("Restore value of property '{}'", item_->getPropertyPath());
+		item_->commandInterface()->executeCompositeCommand(
+			[this]() {
+				for (const auto& handle : item_->valueHandles()) {
+					item_->commandInterface()->set(handle, focusInValues_[handle]);
+				}
+			},
+			desc);
+		setValueToControls(slider_, spinBox_);
+    });
 
 	// State change: Show spinbox or slider
-	QObject::connect(slider, &DoubleSlider::singleClicked, this, [this, spinBox]() { stack_->setCurrentWidget(spinBox); });
-	QObject::connect(spinBox, &DoubleSpinBox::editingFinished, this, [this, slider]() {
-		stack_->setCurrentWidget(slider);
-		slider->clearFocus();
+	QObject::connect(slider_, &DoubleSlider::singleClicked, this, [this]() { stack_->setCurrentWidget(spinBox_); });
+	QObject::connect(spinBox_, &DoubleSpinBox::editingFinished, this, [this]() {
+		stack_->setCurrentWidget(slider_);
+		slider_->clearFocus();
 	});
-	QObject::connect(spinBox, &DoubleSpinBox::focusNextRequested, this, [this, item]() { item->requestNextSiblingFocus(); });
-	QObject::connect(item, &PropertyBrowserItem::widgetRequestFocus, this, [this, spinBox]() { 
-		stack_->setCurrentWidget(spinBox);
-		spinBox->setFocus();
+	QObject::connect(spinBox_, &DoubleSpinBox::focusNextRequested, this, [this, item]() { item->requestNextSiblingFocus(); });
+	QObject::connect(item, &PropertyBrowserItem::widgetRequestFocus, this, [this]() {
+		stack_->setCurrentWidget(spinBox_);
+		spinBox_->setFocus();
 	});
 
+	stack_->addWidget(slider_);
+	stack_->addWidget(spinBox_);
 
-	stack_->addWidget(slider);
-	stack_->addWidget(spinBox);
-
-	stack_->setCurrentWidget(slider);
+	stack_->setCurrentWidget(slider_);
 	layout->addWidget(stack_);
+}
+
+void DoubleEditor::setValueToControls(DoubleSlider* slider, DoubleSpinBox* spinBox) const {
+	auto value = item_->as<double>();
+	if (value.has_value()) {
+		slider->setValue(value.value());
+		spinBox->setValue(value.value());
+	} else {
+		slider->setMultipleValues();
+		spinBox->setMultipleValues();
+	}
 }
 
 }  // namespace raco::property_browser

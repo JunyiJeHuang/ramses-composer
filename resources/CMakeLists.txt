@@ -121,13 +121,15 @@ foreach(relpath ${RESOURCE_FILES})
 endforeach(relpath)
 
 set(RACO_PYTHON_EXAMPLE_SCRIPTS
-        python/demo.py
-        python/print_objects.py
-        python/print_scenegraph.py
-        python/purge_links.py
-        python/use_pip_to_install_module.py
-        python/use_pip_to_uninstall_module.py
-        python/migrate_recursive.py
+	python/demo.py
+	python/print_objects.py
+	python/print_scenegraph.py
+	python/purge_links.py
+	python/use_pip_to_install_module.py
+	python/use_pip_to_uninstall_module.py
+	python/migrate_recursive.py
+	python/migrate_recursive_from_v1.0.1.py
+        python/upgrade_fl_recursive.py
 )
 
 foreach(relpath ${RACO_PYTHON_EXAMPLE_SCRIPTS})

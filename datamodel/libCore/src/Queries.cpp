@@ -358,10 +358,6 @@ bool Queries::isNotResource(const SEditorObject& object) {
 	return !object->getTypeDescription().isResource && !isProjectSettings(object);
 }
 
-bool Queries::isChildHandle(const ValueHandle& handle) {
-	return handle.type() == PrimitiveType::Ref && handle.depth() == 2 && handle.parent().getPropName() == "children";
-}
-
 bool Queries::isChildObject(const SEditorObject& child, const SEditorObject& parent) {
 	for (auto current = child->getParent(); current; current = current->getParent()) {
 		if (current == parent) {
@@ -370,6 +366,37 @@ bool Queries::isChildObject(const SEditorObject& child, const SEditorObject& par
 	}
 
 	return false;
+}
+
+bool Queries::typeHasStartingLinks(core::SEditorObject obj) {
+	return obj->isType<user_types::LuaScript>() 
+		|| obj->isType<user_types::LuaInterface>()
+		|| obj->isType<user_types::AnchorPoint>()
+		|| obj->isType<user_types::Timer>()
+		|| obj->isType<user_types::Animation>();
+}
+
+bool Queries::isChildHandle(const ValueHandle& handle) {
+	return handle.type() == PrimitiveType::Ref && handle.depth() == 2 && handle.parent().getPropName() == "children";
+}
+
+TagType Queries::getHandleTagType(const ValueHandle& handle) {
+	if (handle.isRefToProp(&EditorObject::userTags_)) {
+		return TagType::UserTags;
+	}
+	if (handle.rootObject()->isType<user_types::Material>()) {
+		return TagType::MaterialTags;
+	}
+	if (handle.rootObject()->isType<user_types::RenderLayer>()) {
+		if (handle.isRefToProp(&user_types::RenderLayer::materialFilterTags_)) {
+			return TagType::MaterialTags;
+		}
+		if (handle.isRefToProp(&user_types::RenderLayer::renderableTags_)) {
+			return TagType::NodeTags_Referencing;
+		}
+		return TagType::NodeTags_Referenced;
+	}
+	return TagType::NodeTags_Referenced;
 }
 
 std::string Queries::getFullObjectHierarchyPath(SEditorObject obj) {
@@ -733,7 +760,50 @@ std::string Queries::getBrokenLinksErrorMessage(const Project& project, SEditorO
 	return {};
 }
 
-bool sameStructure(const ReflectionInterface* left, const ReflectionInterface* right) {
+
+bool Queries::isEnginePrimitive(const core::ValueHandle& prop) {
+	auto type = prop.type();
+	return type != core::PrimitiveType::Table &&
+		   (type != core::PrimitiveType::Struct ||
+			   prop.isVec2f() || prop.isVec3f() || prop.isVec4f() || prop.isVec2i() || prop.isVec3i() || prop.isVec4i());
+}
+
+bool isSameEnginePrimitiveType(const ValueBase* left, const ValueBase* right) {
+	auto leftType = left->type();
+	auto rightType = right->type();
+	
+	if (leftType != rightType) {
+		return false;
+	}
+
+	if (leftType == PrimitiveType::Struct) {
+		auto leftTypeDesc = &left->asStruct().getTypeDescription();
+		auto rightTypeDesc = &right->asStruct().getTypeDescription();
+
+		if (leftTypeDesc == &Vec2f::typeDescription) {
+			return rightTypeDesc == &Vec2f::typeDescription;
+		}
+		if (leftTypeDesc == &Vec3f::typeDescription) {
+			return rightTypeDesc == &Vec3f::typeDescription;
+		}
+		if (leftTypeDesc == &Vec4f::typeDescription) {
+			return rightTypeDesc == &Vec4f::typeDescription;
+		}
+
+		if (leftTypeDesc == &Vec2i::typeDescription) {
+			return rightTypeDesc == &Vec2i::typeDescription;
+		}
+		if (leftTypeDesc == &Vec3i::typeDescription) {
+			return rightTypeDesc == &Vec3i::typeDescription;
+		}
+		if (leftTypeDesc == &Vec4i::typeDescription) {
+			return rightTypeDesc == &Vec4i::typeDescription;
+		}
+	}
+	return true;
+}
+
+bool isStructureLinkCompatible(const ReflectionInterface* left, const ReflectionInterface* right) {
 	if (left->size() != right->size()) {
 		return false;
 	}
@@ -756,10 +826,12 @@ bool sameStructure(const ReflectionInterface* left, const ReflectionInterface* r
 		if (!rval) {
 			return false;
 		}
-		if (lval->type() != rval->type()) {
+		
+		if (!isSameEnginePrimitiveType(lval, rval)) {
 			return false;
 		}
-		if (lval->type() == PrimitiveType::Table && !sameStructure(&lval->asTable(), &rval->asTable())) {
+
+		if (lval->type() == PrimitiveType::Table && !isStructureLinkCompatible(&lval->asTable(), &rval->asTable())) {
 			return false;
 		}
 	}
@@ -773,14 +845,10 @@ bool checkLinkCompatibleTypes(const ValueHandle& start, const ValueHandle& end) 
 		return true;
 	}
 
-	auto startType = start.type();
-	auto endType = end.type();
-	if ((startType == PrimitiveType::Table || startType == PrimitiveType::Struct) &&
-		(endType == PrimitiveType::Table || endType == PrimitiveType::Struct)) {
-		return sameStructure(&start.constValueRef()->getSubstructure(), &end.constValueRef()->getSubstructure());
+	if (!Queries::isEnginePrimitive(start) && !Queries::isEnginePrimitive(end)) {
+		return isStructureLinkCompatible(&start.constValueRef()->getSubstructure(), &end.constValueRef()->getSubstructure());
 	}
-
-	return startType == endType;
+	return isSameEnginePrimitiveType(start.constValueRef(), end.constValueRef());
 }
 
 bool Queries::linkSatisfiesConstraints(const PropertyDescriptor& start, const PropertyDescriptor& end) {
@@ -991,6 +1059,22 @@ std::vector<SEditorObject> Queries::filterForDeleteableObjects(Project const& pr
 	return deletableObjects;
 }
 
+std::vector<std::string> Queries::validTypesForChildrenOf(SEditorObject object) {
+	if (isResource(object) || object->as<user_types::LuaScript>() || object->as<user_types::LuaInterface>() || object->as<user_types::Animation>() || object->as<user_types::Skin>()) {
+		return {};
+	}
+	return {
+		user_types::Animation::typeDescription.typeName,
+		user_types::LuaInterface::typeDescription.typeName,
+		user_types::LuaScript::typeDescription.typeName,
+		user_types::MeshNode::typeDescription.typeName,
+		user_types::Node::typeDescription.typeName,
+		user_types::OrthographicCamera::typeDescription.typeName,
+		user_types::PerspectiveCamera::typeDescription.typeName,
+		user_types::PrefabInstance::typeDescription.typeName,
+		user_types::Skin::typeDescription.typeName};
+}
+
 std::vector<SEditorObject> Queries::filterForMoveableScenegraphChildren(Project const& project, const std::vector<SEditorObject>& objects, SEditorObject const& newParent) {	
 	
 	if (newParent && !canPasteIntoObject(project, newParent)) {
@@ -1035,6 +1119,20 @@ std::vector<SEditorObject> Queries::filterForMoveableScenegraphChildren(Project 
 		});
 
 	return result;
+}
+
+std::string Queries::getPropertyPath(const std::set<ValueHandle>& handles) {
+	if (handles.size() > 1) {
+		auto propNames = handles.begin()->getPropertyNamesVector();
+		if (std::all_of(++handles.begin(), handles.end(), [&propNames](auto handle) {
+				return propNames == handle.getPropertyNamesVector();
+			})) {
+			return fmt::format("({} objects).{}", handles.size(), fmt::join(propNames, "."));
+		} else {
+			return fmt::format("({} properties)", handles.size());
+		}
+	}
+	return handles.begin()->getPropertyPath();
 }
 
 }  // namespace raco::core

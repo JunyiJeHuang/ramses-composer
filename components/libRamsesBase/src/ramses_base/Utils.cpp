@@ -11,6 +11,7 @@
 
 #include "data_storage/Table.h"
 #include "lodepng.h"
+#include "ramses_adaptor/SceneBackend.h"
 #include "ramses_base/LogicEngine.h"
 #include "ramses_base/RamsesHandles.h"
 #include "ramses_base/EnumerationTranslations.h"
@@ -31,6 +32,8 @@
 #include <string>
 
 namespace {
+
+using ramses::ETextureChannelColor;
 
 LodePNGColorType ramsesTextureFormatToPngFormat(ramses::ETextureFormat textureFormat) {
 	std::map<ramses::ETextureFormat, LodePNGColorType> formats = {
@@ -498,7 +501,12 @@ void installRamsesLogHandler(bool enableTrace) {
 
 void installLogicLogHandler() {
 	rlogic::Logger::SetDefaultLogging(false);
-	rlogic::Logger::SetLogHandler([](rlogic::ELogMessageType level, std::string_view message) { SPDLOG_LOGGER_CALL(raco::log_system::get(raco::log_system::RAMSES_LOGIC), toSpdLogLevel(level), message); });
+	rlogic::Logger::SetLogHandler(
+		[](rlogic::ELogMessageType level, std::string_view message) {
+			if (!ramses_adaptor::SceneBackend::discardLogicEngineMessage(message)) {
+				SPDLOG_LOGGER_CALL(raco::log_system::get(raco::log_system::RAMSES_LOGIC), toSpdLogLevel(level), message);
+			}
+		});
 }
 
 void setRamsesLogLevel(spdlog::level::level_enum level) {
@@ -529,9 +537,9 @@ std::string pngColorTypeToString(int colorType) {
 PngCompatibilityInfo validateTextureColorTypeAndBitDepth(ramses::ETextureFormat selectedTextureFormat, int colorType, int bitdepth) {
 	if (colorType != LCT_PALETTE && bitdepth != 8 && bitdepth != 16) {
 		return {"Invalid bit depth (only 8 or 16 bits allowed).", raco::core::ErrorLevel::ERROR, false};
-	} else if (bitdepth == 8 && (selectedTextureFormat == ramses::ETextureFormat::RGB16F || selectedTextureFormat == ramses::ETextureFormat::RGBA16F)) {
+	} else if (bitdepth == 8 && (selectedTextureFormat == ramses::ETextureFormat::R16F || selectedTextureFormat == ramses::ETextureFormat::RG16F || selectedTextureFormat == ramses::ETextureFormat::RGB16F || selectedTextureFormat == ramses::ETextureFormat::RGBA16F)) {
 		return {"Invalid texture format for bit depth (only 8-bit-based formats allowed).", raco::core::ErrorLevel::ERROR, false};
-	} else if (bitdepth == 16 && (selectedTextureFormat != ramses::ETextureFormat::RGB16F && selectedTextureFormat != ramses::ETextureFormat::RGBA16F)) {
+	} else if (bitdepth == 16 && (selectedTextureFormat != ramses::ETextureFormat::R16F && selectedTextureFormat != ramses::ETextureFormat::RG16F && selectedTextureFormat != ramses::ETextureFormat::RGB16F && selectedTextureFormat != ramses::ETextureFormat::RGBA16F)) {
 		return {"Invalid texture format for bit depth (only 16-bit-based formats allowed).", raco::core::ErrorLevel::ERROR, false};
 	}
 
@@ -620,15 +628,11 @@ std::vector<unsigned char> generateColorDataWithoutBlueChannel(const std::vector
 	return dataWithoutBlue;
 }
 
-std::vector<unsigned char> decodeMipMapData(core::Errors *errors, core::Project &project, core::SEditorObject obj, const std::string &uriPropName, int level, PngDecodingInfo &decodingInfo) {
+std::vector<unsigned char> decodeMipMapData(core::Errors *errors, core::Project &project, core::SEditorObject obj, const std::string &uriPropName, int level, PngDecodingInfo &decodingInfo, bool swizzle) {
 	std::string uri = obj->get(uriPropName)->asString();
 	if (uri.empty()) {
 		return {};
 	}
-
-	auto format = static_cast<user_types::ETextureFormat>(obj->get("textureFormat")->asInt());
-	auto ramsesFormat = ramses_base::enumerationTranslationTextureFormat.at(format);
-	decodingInfo.convertedPngFormat = ramsesFormat;
 
 	std::vector<unsigned char> data;
 	unsigned int curWidth;
@@ -642,15 +646,30 @@ std::vector<unsigned char> decodeMipMapData(core::Errors *errors, core::Project 
 
 	auto &lodePngColorInfo = pngImportState.info_png.color;
 	auto pngColorType = lodePngColorInfo.colortype;
+
 	decodingInfo.originalPngFormat = pngColorType;
 	decodingInfo.originalBitdepth = lodePngColorInfo.bitdepth;
 	decodingInfo.pngColorChannels = pngColorTypeToColorInfo(decodingInfo.originalPngFormat);
-	decodingInfo.ramsesColorChannels = ramsesTextureFormatToRamsesColorInfo(decodingInfo.originalPngFormat, decodingInfo.convertedPngFormat);
-	decodingInfo.shaderColorChannels = ramsesColorInfoToShaderColorInfo(decodingInfo.ramsesColorChannels);
-	auto textureFormatCompatInfo = raco::ramses_base::validateTextureColorTypeAndBitDepth(ramsesFormat, pngColorType, (pngColorType == LCT_PALETTE) ? 8 : lodePngColorInfo.bitdepth);
+
+	auto format = static_cast<user_types::ETextureFormat>(obj->get("textureFormat")->asInt());
+	auto userFormat = ramses_base::enumerationTranslationTextureFormat.at(format);
+
+	// If swizzling is enabled, swizzledFormat becomes the actual texture format used by ramses.
+	if (swizzle) {
+		const auto &[swizzleColorChannels, swizzleFormat, textureSwizzle] = ramsesTextureFormatToSwizzleInfo(pngColorType, userFormat);
+		decodingInfo.convertedPngFormat = swizzleFormat;
+		decodingInfo.ramsesColorChannels = swizzleColorChannels;
+	} else {
+		decodingInfo.convertedPngFormat = userFormat;
+		decodingInfo.ramsesColorChannels = ramsesTextureFormatToRamsesColorInfo(decodingInfo.originalPngFormat, decodingInfo.convertedPngFormat);
+	}
+	auto userColorChannels = ramsesTextureFormatToRamsesColorInfo(decodingInfo.originalPngFormat, userFormat);
+	decodingInfo.shaderColorChannels = ramsesColorInfoToShaderColorInfo(userColorChannels);
+
+	auto textureFormatCompatInfo = validateTextureColorTypeAndBitDepth(decodingInfo.convertedPngFormat, pngColorType, (pngColorType == LCT_PALETTE) ? 8 : lodePngColorInfo.bitdepth);
 
 	auto ret = textureFormatCompatInfo.conversionNeeded
-				   ? lodepng::decode(data, curWidth, curHeight, rawBinaryData, ramsesTextureFormatToPngFormat(ramsesFormat), (pngColorType == LCT_PALETTE) ? 8 : lodePngColorInfo.bitdepth)
+				   ? lodepng::decode(data, curWidth, curHeight, rawBinaryData, ramsesTextureFormatToPngFormat(decodingInfo.convertedPngFormat), (pngColorType == LCT_PALETTE) ? 8 : lodePngColorInfo.bitdepth)
 				   : lodepng::decode(data, curWidth, curHeight, pngImportState, rawBinaryData);
 
 	if (ret != 0) {
@@ -708,7 +727,7 @@ std::vector<unsigned char> decodeMipMapData(core::Errors *errors, core::Project 
 
 		if (decodingInfo.bitdepth == 16) {
 			raco::ramses_base::normalize16BitColorData(data);
-		} else if (pngColorType != LCT_GREY_ALPHA && ramsesFormat == ramses::ETextureFormat::RG8) {
+		} else if (pngColorType != LCT_GREY_ALPHA && decodingInfo.convertedPngFormat == ramses::ETextureFormat::RG8) {
 			data = raco::ramses_base::generateColorDataWithoutBlueChannel(data);
 		}
 	}
@@ -750,6 +769,72 @@ ramses::ERenderBufferType ramsesRenderBufferTypeFromFormat(ramses::ERenderBuffer
 		{ERenderBufferFormat_Depth24_Stencil8, ERenderBufferType_DepthStencil}};
 
 	return bufferTypeFromFormat.at(format);
+}
+
+std::tuple<std::string, ramses::ETextureFormat, ramses::TextureSwizzle> ramsesTextureFormatToSwizzleInfo(int colorType, ramses::ETextureFormat textureFormat) {
+	struct SwizzleInfo {
+		std::string colorInfo_;					// Format textual description
+		ramses::ETextureFormat ramsesFormat_;	// Format to store optimized data for swizzling
+		ramses::TextureSwizzle swizzle_;		// Swizzle to apply
+	};
+
+	static std::unordered_map<int, std::unordered_map<ramses::ETextureFormat, SwizzleInfo>> colorInfos = {
+		{LCT_GREY,
+			{{ramses::ETextureFormat::R8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RG8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8_ALPHA8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB16F, {"R", ramses::ETextureFormat::R16F, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA16F, {"R", ramses::ETextureFormat::R16F, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}}}},
+		{LCT_GREY_ALPHA,
+			{{ramses::ETextureFormat::R8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RG8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Green}}},
+				{ramses::ETextureFormat::SRGB8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8_ALPHA8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Green}}},
+				{ramses::ETextureFormat::RGB16F, {"R", ramses::ETextureFormat::R16F, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA16F, {"RG", ramses::ETextureFormat::RG16F, {ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Red, ETextureChannelColor::Green}}}}},
+		{LCT_PALETTE,
+			{{ramses::ETextureFormat::R8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RG8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8_ALPHA8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB16F, {"RGB", ramses::ETextureFormat::RGB16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA16F, {"RGB", ramses::ETextureFormat::RGB16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}}}},
+		{LCT_RGB,
+			{{ramses::ETextureFormat::R8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RG8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8_ALPHA8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB16F, {"RGB", ramses::ETextureFormat::RGB16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA16F, {"RGB", ramses::ETextureFormat::RGB16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}}}},
+		{LCT_RGBA,
+			{{ramses::ETextureFormat::R8, {"R", ramses::ETextureFormat::R8, {ETextureChannelColor::Red, ETextureChannelColor::Zero, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RG8, {"RG", ramses::ETextureFormat::RG8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Zero, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA8, {"RGBA", ramses::ETextureFormat::RGBA8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::Alpha}}},
+				{ramses::ETextureFormat::SRGB8, {"RGB", ramses::ETextureFormat::RGB8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::SRGB8_ALPHA8, {"RGBA", ramses::ETextureFormat::RGBA8, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::Alpha}}},
+				{ramses::ETextureFormat::RGB16F, {"RGB", ramses::ETextureFormat::RGB16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::One}}},
+				{ramses::ETextureFormat::RGBA16F, {"RGBA", ramses::ETextureFormat::RGBA16F, {ETextureChannelColor::Red, ETextureChannelColor::Green, ETextureChannelColor::Blue, ETextureChannelColor::Alpha}}}}}};
+
+
+	if (const auto itColorType = colorInfos.find(colorType); itColorType != colorInfos.end()) {
+		if (const auto itFormat = itColorType->second.find(textureFormat); itFormat != itColorType->second.end()) {
+			return {itFormat->second.colorInfo_, itFormat->second.ramsesFormat_, itFormat->second.swizzle_};
+		}
+	}
+
+	// All data must exist in the map.
+	assert(0);
+	return {};
 }
 
 }  // namespace raco::ramses_base

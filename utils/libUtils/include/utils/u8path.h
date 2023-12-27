@@ -40,6 +40,11 @@ public:
 
 	friend bool operator==(const u8path& lhs, const u8path& rhs);
 	friend bool operator!=(const u8path& lhs, const u8path& rhs);
+	friend bool operator<(const u8path& lhs, const u8path& rhs);
+
+	// Check if the path argument denoting a file is contained in the current directory path either directly
+	// or indirectly via nesting.
+	bool contains(const u8path& path);
 
 	// Allow implicit casting to to the internal std::filesystem::path, in order to conveniently pass this as parameter to IO functions.
 	// On Linux, ifstream and ofstream struggle to use this implicit cast correctly for some reason. 
@@ -55,7 +60,7 @@ public:
 
 	// Convenience methods to extend std::filesystem::path functionality
 
-	bool exists() const;
+	bool exists(bool caseSensitive = false) const;
 	bool existsDirectory() const;
 	bool existsFile() const;
 	bool userHasReadAccess() const;

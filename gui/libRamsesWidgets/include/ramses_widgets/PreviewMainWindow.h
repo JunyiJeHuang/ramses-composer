@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include "PreviewContentWidget.h"
 #include "components/DataChangeDispatcher.h"
 #include "components/DebugInstanceCounter.h"
 #include "ramses_widgets/RendererBackend.h"
@@ -18,7 +19,6 @@
 #include "style/Icons.h"
 #include <QLabel>
 #include <QMainWindow>
-#include <QToolButton>
 #include <memory>
 #include <QEvent>
 #include <QVector3D>
@@ -79,6 +79,7 @@ public:
 	void setAxesIconLabel(QLabel * axesIcon);
     void setAxesIcon(const bool& z_up);
 	void sceneScaleUpdate(bool zup, float scaleValue, bool scaleUp);
+    void saveScreenshot(const std::string& fullPath);
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;
@@ -87,7 +88,7 @@ protected:
 
 public Q_SLOTS:
 	void setViewport(const QSize& sceneSize);
-	void commit(bool forceUpdate);
+    void commit(bool forceUpdate);
 	void setAxes(const bool& z_up);
 	void updateAxesIconLabel();
 	void setEnableDisplayGrid(bool enable);
@@ -104,9 +105,11 @@ private:
     void rotationMovement(QPoint position);
     void scalingMovement(QPoint position);
     QVector3D calculateModelTranslation(QPoint position);
+	void saveScreenshot();
+
 
 private:
-	std::unique_ptr<Ui::PreviewMainWindow> ui_;
+    std::unique_ptr<Ui::PreviewMainWindow> ui_;
 	PreviewContentWidget* previewWidget_;
 	PreviewScrollAreaWidget* scrollAreaWidget_;
 	QLabel* sceneIdLabel_;

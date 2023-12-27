@@ -16,9 +16,9 @@ TimeAxisMainWindow::TimeAxisMainWindow(raco::components::SDataChangeDispatcher d
     commandInterface_(commandInterface) {
 
     keyFrameMgr_ = new KeyFrameManager();
-    hTitleLayout = new QHBoxLayout(this);
+    hTitleLayout_ = new QHBoxLayout(this);
     vBoxLayout_ = new QVBoxLayout(this);
-    hBoxLayout = new QHBoxLayout(this);
+    hBoxLayout_ = new QHBoxLayout(this);
 
     stackedWidget_ = new QStackedWidget(this);
     timeAxisScrollArea_ = new TimeAxisScrollArea(this);
@@ -51,19 +51,19 @@ TimeAxisMainWindow::TimeAxisMainWindow(raco::components::SDataChangeDispatcher d
     initTitle(this);
     initTree(this);
     initAnimationMenu();
-    hBoxLayout->addWidget(editorView_);
-    hBoxLayout->addWidget(visualCurveNodeTreeView_);
-    hBoxLayout->addWidget(stackedWidget_);
-    hBoxLayout->addWidget(visualCurveInfoWidget_);
-    hBoxLayout->setStretchFactor(editorView_, 2);
-    hBoxLayout->setStretchFactor(visualCurveNodeTreeView_, 2);
-    hBoxLayout->setStretchFactor(stackedWidget_, 10);
-    hBoxLayout->setStretchFactor(visualCurveInfoWidget_, 1);
+    hBoxLayout_->addWidget(editorView_);
+    hBoxLayout_->addWidget(visualCurveNodeTreeView_);
+    hBoxLayout_->addWidget(stackedWidget_);
+    hBoxLayout_->addWidget(visualCurveInfoWidget_);
+    hBoxLayout_->setStretchFactor(editorView_, 2);
+    hBoxLayout_->setStretchFactor(visualCurveNodeTreeView_, 2);
+    hBoxLayout_->setStretchFactor(stackedWidget_, 10);
+    hBoxLayout_->setStretchFactor(visualCurveInfoWidget_, 1);
 
     vBoxLayout_->addWidget(titleWidget_);
-    vBoxLayout_->addLayout(hBoxLayout);
+    vBoxLayout_->addLayout(hBoxLayout_);
     vBoxLayout_->setStretchFactor(titleWidget_, 1);
-    vBoxLayout_->setStretchFactor(hBoxLayout, 7);
+    vBoxLayout_->setStretchFactor(hBoxLayout_, 7);
     this->setLayout(vBoxLayout_);
 
     slotSwitchCurveWidget();
@@ -440,17 +440,17 @@ bool TimeAxisMainWindow::initTitle(QWidget* parent) {
     connect(lineBegin_, &Int64Editor::sigEditingFinished, this, &TimeAxisMainWindow::slotStartTimeFinished);
     connect(lineEnd_, &Int64Editor::sigEditingFinished, this, &TimeAxisMainWindow::slotEndTimeFinished);
 
-    hTitleLayout->addWidget(spacerLeft);
-    hTitleLayout->addWidget(previousBtn_);
-    hTitleLayout->addWidget(startBtn_);
-    hTitleLayout->addWidget(nextBtn_);
+    hTitleLayout_->addWidget(spacerLeft);
+    hTitleLayout_->addWidget(previousBtn_);
+    hTitleLayout_->addWidget(startBtn_);
+    hTitleLayout_->addWidget(nextBtn_);
 
-    hTitleLayout->addWidget(spacerRight);
-    hTitleLayout->addWidget(lineBegin_);
-    hTitleLayout->addWidget(lineEnd_);
-    hTitleLayout->setSizeConstraint(QLayout::SetMaximumSize);
-    hTitleLayout->setSpacing(0);
-    titleWidget_->setLayout(hTitleLayout);
+    hTitleLayout_->addWidget(spacerRight);
+    hTitleLayout_->addWidget(lineBegin_);
+    hTitleLayout_->addWidget(lineEnd_);
+    hTitleLayout_->setSizeConstraint(QLayout::SetMaximumSize);
+    hTitleLayout_->setSpacing(0);
+    titleWidget_->setLayout(hTitleLayout_);
     return true;
 }
 

@@ -12,8 +12,10 @@
 #include "common_widgets/QtGuiFormatter.h"
 #include "core/CoreFormatter.h"
 #include "core/Project.h"
+#include "core/ProjectSettings.h"
 #include "core/SceneBackendInterface.h"
 #include "log_system/log.h"
+#include "object_tree_view/ObjectTreeDockManager.h"
 #include "property_browser/PropertyBrowserItem.h"
 #include "property_browser/PropertyBrowserLayouts.h"
 #include "property_browser/PropertyBrowserModel.h"
@@ -38,7 +40,7 @@ using namespace raco::style;
 using namespace raco::guiData;
 using namespace raco::node_logic;
 
-using SDataChangeDispatcher = raco::components::SDataChangeDispatcher;
+using SDataChangeDispatcher = components::SDataChangeDispatcher;
 
 template <int Edge>
 constexpr bool playEdgeAnimationForPosition(const QPoint& modificationPosition) {
@@ -89,10 +91,15 @@ bool getObjId(raco::core::ValueHandle valueHandle, std::string& objId, std::stri
     return false;
 }
 
+std::string PropertyBrowserView::getCurrentObjectID() const {
+    return currentObjectID_;
+}
+
 PropertyBrowserView::PropertyBrowserView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserItem* item, PropertyBrowserModel* model, QWidget* parent)
 	: currentObjectID_(item->valueHandle().rootObject()->objectID()), sceneBackend_{sceneBackend}, QWidget{parent} {
 	NodeData* pNode  =	raco::guiData::NodeDataManager::GetInstance().searchNodeByID(currentObjectID_);
 	raco::guiData::NodeDataManager::GetInstance().setActiveNode(pNode);
+
 	item->setParent(this);
 	auto* layout = new PropertyBrowserGridLayout{this};
 	auto* content = new QWidget{this};
@@ -144,19 +151,17 @@ PropertyBrowserView::PropertyBrowserView(raco::core::SceneBackendInterface* scen
 	contentLayout->addWidget(new PropertySubtreeView{sceneBackend_, model, item, this});
 }
 
-std::string PropertyBrowserView::getCurrentObjectID() const {
-	return currentObjectID_;
-}
-
 PropertyBrowserWidget::PropertyBrowserWidget(
 	SDataChangeDispatcher dispatcher,
-	raco::core::CommandInterface* commandInterface,
-	raco::core::SceneBackendInterface* sceneBackend,
+	core::CommandInterface* commandInterface,
+	core::SceneBackendInterface* sceneBackend,
+	object_tree::view::ObjectTreeDockManager* treeDockManager,
 	QWidget* parent)
 	: QWidget{parent},
 	  dispatcher_{dispatcher},
 	  commandInterface_{commandInterface},
 	  sceneBackend_{sceneBackend},
+	  treeDockManager_(treeDockManager),
 	  layout_{this},
 	  emptyLabel_{new QLabel{"Empty", this}},
 	  locked_{false},
@@ -172,7 +177,7 @@ PropertyBrowserWidget::PropertyBrowserWidget(
 	layout_.addWidget(lockButton_, 0, 0, Qt::AlignLeft);
 	layout_.addWidget(emptyLabel_, 1, 0, Qt::AlignCenter);
 	layout_.setColumnStretch(0, 1);
-	layout_.setRowStretch(1, 1);
+    layout_.setRowStretch(1, 1);
     initPropertyBrowserWidget();
 
     connect(&signalProxy::GetInstance(), &signalProxy::sigUpdateActiveAnimation_From_AnimationLogic, this, &PropertyBrowserWidget::slotRefreshPropertyBrowser);
@@ -180,6 +185,17 @@ PropertyBrowserWidget::PropertyBrowserWidget(
     connect(&signalProxy::GetInstance(), &signalProxy::sigResetAllData_From_MainWindow, this, &PropertyBrowserWidget::slotRefreshPropertyBrowser);
     connect(&signalProxy::GetInstance(), &signalProxy::sigInitPropertyBrowserView, this, &PropertyBrowserWidget::slotInitPropertyBrowser);
     connect(&signalProxy::GetInstance(), &signalProxy::sigRepaintPropertyBrowserAfterUndo, this, &PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo);
+
+	subscription_ = dispatcher_->registerOnObjectsLifeCycle([](auto) {}, [this](core::SEditorObject obj) {
+		if (propertyBrowser_) {
+			if (currentObjects_.find(obj) != currentObjects_.end()) {
+				if (locked_) {
+					setLocked(false);
+				}
+				clear();
+			}
+		} 
+    });
 }
 
 void PropertyBrowserWidget::setLockable(bool lockable) {
@@ -259,7 +275,9 @@ void PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo(raco::core::Valu
                 clearValueHandle(true);
             }
         });
-        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, sceneBackend_, model_}, model_, this});
+        std::set<core::ValueHandle> valueHandles;
+        valueHandles.emplace(valueHandle);
+        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
         layout_.addWidget(propertyBrowser_.get(), 1, 0);
     }
 }
@@ -286,33 +304,47 @@ void PropertyBrowserWidget::switchNode(std::string objectID) {
 }
 
 void PropertyBrowserWidget::clear() {
-	clearValueHandle(false);
-}
-
-void PropertyBrowserWidget::setLocked(bool locked) {
-	locked_ = locked;
-	lockButton_->setIcon(locked_ ? Icons::instance().locked : Icons::instance().unlocked);
-}
-
-void PropertyBrowserWidget::clearValueHandle(bool restorable) {
 	if (!locked_) {
-		if (restorable && propertyBrowser_) {
-			subscription_ = dispatcher_->registerOnObjectsLifeCycle([this](core::SEditorObject obj) { 
-				if (restorableObjectId_ == obj->objectID()) {
-					setValueHandle({ obj });
-				}}, [](auto) {});
-
-		} else {
-			restorableObjectId_ = "";
-			subscription_ = raco::components::Subscription{};
-		}
 		propertyBrowser_.reset();
+		currentObjects_.clear();
 		emptyLabel_->setVisible(true);
 	}
 }
 
-void PropertyBrowserWidget::setValueHandleFromObjectId(const QString& objectID) {
-	setValueHandle(commandInterface_->project()->getInstanceByID(objectID.toStdString()));
+void PropertyBrowserWidget::setLocked(bool locked) {
+	bool isLockChanged = locked_ != locked;
+	locked_ = locked;
+	lockButton_->setIcon(locked_ ? Icons::instance().locked : Icons::instance().unlocked);
+	if (!locked_ && treeDockManager_) {
+		auto selection = treeDockManager_->getSelection();
+		if (!selection.empty()) {
+			setObjectsImpl(core::SEditorObjectSet(selection.begin(), selection.end()), isLockChanged);
+		} else {
+			clear();
+			rootItem_ = nullptr;
+		}
+	}
+
+	if (rootItem_) {
+		rootItem_->setLocked(locked_);
+	}
+}
+
+void PropertyBrowserWidget::clearValueHandle(bool restorable) {
+    if (!locked_) {
+        if (restorable && propertyBrowser_) {
+            subscription_ = dispatcher_->registerOnObjectsLifeCycle([this](core::SEditorObject obj) {
+                if (restorableObjectId_ == obj->objectID()) {
+                    setValueHandle({ obj });
+                }}, [](auto) {});
+
+        } else {
+            restorableObjectId_ = "";
+            subscription_ = raco::components::Subscription{};
+        }
+        propertyBrowser_.reset();
+        emptyLabel_->setVisible(true);
+    }
 }
 
 void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
@@ -334,7 +366,9 @@ void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
 			}
 		});
 
-		propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandle, dispatcher_, commandInterface_, sceneBackend_, model_}, model_, this});
+        std::set<core::ValueHandle> valueHandles;
+        valueHandles.emplace(valueHandle);
+        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
 		layout_.addWidget(propertyBrowser_.get(), 1, 0);
 
         std::string objectID;
@@ -345,6 +379,11 @@ void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
 	} else {
 		LOG_DEBUG(log_system::PROPERTY_BROWSER, "locked! ignore value handle set {}", valueHandle);
 	}
+}
+
+void PropertyBrowserWidget::setObjectFromObjectId(const QString& objectID) {
+	const auto handle = core::ValueHandle{commandInterface_->project()->getInstanceByID(objectID.toStdString())};
+    setObjects({handle.rootObject()});
 }
 
 PropertyBrowserModel* PropertyBrowserWidget::model() const {
@@ -386,5 +425,34 @@ void PropertyBrowserWidget::setValueHandles(const std::set<raco::core::ValueHand
         Q_EMIT signalProxy::GetInstance().sigSwitchCurrentNode(handle);
     }
 }
+
+void PropertyBrowserWidget::setObjectsImpl(const core::SEditorObjectSet& objects, bool forceExpandStateUpdate) {
+	if (propertyBrowser_ && currentObjects_ == objects) {
+		// No need to update if we still are referencing to the same objects.
+		// This happens for example when the display name changes, thus the tree view will update and then restore the selected items in the property browser.
+
+		if (forceExpandStateUpdate && !locked_) {
+			rootItem_->restoreDefaultExpandedRecursively();
+		}
+
+		return;
+	}
+
+	if (!locked_) {
+		emptyLabel_->setVisible(false);
+
+		std::set<core::ValueHandle> valueHandles(objects.begin(), objects.end());
+		rootItem_ = new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_};
+		propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, rootItem_, model_, this});
+		currentObjects_ = objects;
+		layout_.addWidget(propertyBrowser_.get(), 1, 0);
+    }
+}
+
+void PropertyBrowserWidget::setObjects(const core::SEditorObjectSet& objects) {
+	setObjectsImpl(objects, false);
+}
+
+
 
 }  // namespace raco::property_browser

@@ -23,7 +23,6 @@
 #include "user_types/RenderBuffer.h"
 #include "user_types/RenderBufferMS.h"
 #include "utils/FileUtils.h"
-#include "ramses_base/Utils.h"
 
 #include "user_types/EngineTypeAnnotation.h"
 
@@ -70,15 +69,15 @@ bool MaterialAdaptor::sync(core::Errors* errors) {
 		return uniformsHandle.contains(handle);
 	});
 
-	bool status = TypedObjectAdaptor<user_types::Material, ramses::Effect>::sync(errors);
+	TypedObjectAdaptor::sync(errors);
 
 	appearanceBinding_.reset();
 	appearance_.reset();
 
 	if (editorObject()->isShaderValid()) {
-		std::string const vertexShader = utils::file::read(raco::core::PathQueries::resolveUriPropertyToAbsolutePath(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriVertex_}));
-		std::string const fragmentShader = utils::file::read(raco::core::PathQueries::resolveUriPropertyToAbsolutePath(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriFragment_}));
-		std::string const geometryShader = utils::file::read(raco::core::PathQueries::resolveUriPropertyToAbsolutePath(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriGeometry_}));
+		std::string const vertexShader{user_types::Material::loadShader(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriVertex_})};
+		std::string const fragmentShader{user_types::Material::loadShader(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriFragment_})};
+		std::string const geometryShader{user_types::Material::loadShader(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriGeometry_})};
 		std::string const shaderDefines = utils::file::read(raco::core::PathQueries::resolveUriPropertyToAbsolutePath(sceneAdaptor_->project(), {editorObject(), &user_types::Material::uriDefines_}));
 		auto const effectDescription = raco::ramses_base::createEffectDescription(vertexShader, geometryShader, fragmentShader, shaderDefines);
 		reset(raco::ramses_base::ramsesEffect(sceneAdaptor_->scene(), *effectDescription));
@@ -420,6 +419,31 @@ void updateAppearance(core::Errors* errors, SceneAdaptor* sceneAdaptor, raco::ra
 	setBlendMode(appearance->get(), optionsHandle);
 	setBlendColor(appearance->get(), optionsHandle.get("blendColor"));
 	setCullMode(appearance->get(), optionsHandle.get("cullmode"));
+
+	auto stencilOptionsHandle = optionsHandle.get("stencilOptions");
+	(*appearance)->setStencilFunction(
+		static_cast<ramses::EStencilFunc>(stencilOptionsHandle.get("stencilFunc").asInt()),
+		std::clamp(stencilOptionsHandle.get("stencilRef").asInt(), 0, 255),
+		std::clamp(stencilOptionsHandle.get("stencilMask").asInt(), 0, 255));
+
+	(*appearance)->setStencilOperation(
+		static_cast<ramses::EStencilOperation>(stencilOptionsHandle.get("stencilOpStencilFail").asInt()), 
+		static_cast<ramses::EStencilOperation>(stencilOptionsHandle.get("stencilOpDepthFail").asInt()), 
+		static_cast<ramses::EStencilOperation>(stencilOptionsHandle.get("stencilOpDepthSucc").asInt()));
+
+	auto scissorOptionsHandle = optionsHandle.get("scissorOptions");
+	(*appearance)->setScissorTest(
+		(scissorOptionsHandle.get("scissorEnable").asBool() ? ramses::EScissorTest_Enabled : ramses::EScissorTest_Disabled),
+		scissorOptionsHandle.get("scissorRegion").get("offsetX").asInt(), 
+		scissorOptionsHandle.get("scissorRegion").get("offsetY").asInt(), 
+		scissorOptionsHandle.get("scissorRegion").get("width").asInt(), 
+		scissorOptionsHandle.get("scissorRegion").get("height").asInt());
+
+	(*appearance)->setColorWriteMask(
+		optionsHandle.get("colorWriteMask").get("red").asBool(),
+		optionsHandle.get("colorWriteMask").get("green").asBool(),
+		optionsHandle.get("colorWriteMask").get("blue").asBool(),
+		optionsHandle.get("colorWriteMask").get("alpha").asBool());
 
 	std::vector<raco::ramses_base::RamsesTextureSampler> newSamplers;
 	std::vector<raco::ramses_base::RamsesTextureSamplerMS> newSamplersMS;

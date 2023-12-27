@@ -19,16 +19,23 @@ using SEditorObject = std::shared_ptr<EditorObject>;
 
 class FileChangeCallback {
 public:
-	using Callback = std::function<void()>;
+	FileChangeCallback(BaseContext* context, SEditorObject object) : context_(context), object_(object) {}
 
-	FileChangeCallback(BaseContext* context, SEditorObject object, Callback callback) : context_(context), object_(object), callback_(callback) {}
+	BaseContext* context() const {
+		return context_;
+	}
 
-	void operator()() const;
+	SEditorObject object() const {
+		return object_;
+	}
+
+	bool operator==(const FileChangeCallback& other) const {
+		return context_ == other.context_ && object_ == other.object_;
+	}
 
 private:
 	BaseContext* context_;
 	SEditorObject object_{nullptr};
-	Callback callback_;
 };
 
 }  // namespace raco::core

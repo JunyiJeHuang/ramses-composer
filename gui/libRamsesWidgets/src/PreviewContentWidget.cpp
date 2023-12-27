@@ -97,7 +97,7 @@ void PreviewContentWidget::setViewportRect(
 		move(viewportPosition);
 		ramsesPreview_->nextState().viewportOffset = viewportOffset * devicePixelScaleFactor;
 		ramsesPreview_->nextState().viewportSize = viewportSize * devicePixelScaleFactor;
-		ramsesPreview_->nextState().virtualSize = virtualSize * devicePixelScaleFactor;
+		ramsesPreview_->nextState().virtualSize = virtualSize;
 		ramsesPreview_->nextState().targetSize = targetSize;
 	} else {
 		// resize to entire area
@@ -106,7 +106,7 @@ void PreviewContentWidget::setViewportRect(
 		setMask({viewportPosition.x(), viewportPosition.y(), viewportSize.width(), viewportSize.height()});
 		ramsesPreview_->nextState().viewportOffset = ((-1 * viewportPosition) + viewportOffset) * devicePixelScaleFactor;
 		ramsesPreview_->nextState().viewportSize = areaSize * devicePixelScaleFactor;
-		ramsesPreview_->nextState().virtualSize = virtualSize * devicePixelScaleFactor;
+		ramsesPreview_->nextState().virtualSize = virtualSize;
 		ramsesPreview_->nextState().targetSize = targetSize;
 	}
 	update();
@@ -127,6 +127,10 @@ void PreviewContentWidget::commit(bool forceUpdate) {
 	if (forceUpdate || nextState != currentState && nextState.sceneId == currentState.sceneId) {
 		ramsesPreview_->commit(forceUpdate);
 	}
+}
+
+bool PreviewContentWidget::saveScreenshot(const std::string& fullPath) {
+	return ramsesPreview_->saveScreenshot(fullPath);
 }
 
 void PreviewContentWidget::mouseMoveEvent(QMouseEvent* event) {

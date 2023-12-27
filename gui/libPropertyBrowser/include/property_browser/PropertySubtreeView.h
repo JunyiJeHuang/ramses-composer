@@ -62,9 +62,9 @@ public Q_SLOTS:
 	void updateUniformCombox();
 	void delUniformButtonClicked();
 	void slotUniformNameChanged(QString s);
-	void updateMaterial(raco::core::ValueHandle& v);
-    void updateMesh(raco::core::ValueHandle& v);
-    void updateNode(raco::core::ValueHandle& v);
+    void updateMaterial();
+    void updateMesh();
+    void updateNode();
 
 protected:
 	void paintEvent(QPaintEvent* event) override;
@@ -72,13 +72,15 @@ protected:
 	Q_SLOT void updateError();
 
 private:
+	void updateObjectNameDisplay();
 	void recalculateLabelWidth();
 	void collectTabWidgets(QObject* item, QWidgetList& tabWidgets);
 	void recalculateTabOrder();
-	void registerCopyPasteContextMenu(QWidget* widget);
+    void registerCopyPasteContextMenu(QWidget* widget);
+    QStringList objectNames() const;
 	raco::core::SceneBackendInterface* sceneBackend_;
     bool isValidValueHandle(QStringList list, raco::core::ValueHandle handle);
-	void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);
+    void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);
 
 	PropertyBrowserItem* item_{nullptr};
 	PropertyBrowserModel* model_ {nullptr};
@@ -90,8 +92,7 @@ private:
     QAction* insertKeyFrameAction_{nullptr};
 
 	int labelWidth_{0};
-	float highlight_{0};
-
+    float highlight_{0};
 	// remove uniform attribute
 	QPushButton* uniformDelButton_{nullptr};
 	// Insert uniform attribute
@@ -99,7 +100,9 @@ private:
 	bool isUniform_{false};
 	bool isChecked_{false};
 	QPalette palette_;
-	QWidget* labelContainer_;
+    QWidget* labelContainer_;
+
+    std::vector<components::Subscription> objectNameChangeSubscriptions_;
 };
 
 }  // namespace raco::property_browser

@@ -83,8 +83,8 @@ private:
     VisualCurveScrollArea *visualCurveScrollArea_;
     QStackedWidget *stackedWidget_;
     QVBoxLayout *vBoxLayout_;
-    QHBoxLayout *hBoxLayout;
-    QHBoxLayout *hTitleLayout;
+    QHBoxLayout *hBoxLayout_;
+    QHBoxLayout *hTitleLayout_;
     raco::core::CommandInterface *commandInterface_;
 
     QWidget *titleWidget_;

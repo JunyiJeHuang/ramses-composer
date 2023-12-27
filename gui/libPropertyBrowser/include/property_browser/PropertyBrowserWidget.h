@@ -25,6 +25,10 @@
 
 class QPushButton;
 
+namespace raco::object_tree::view {
+class ObjectTreeDockManager;
+}
+
 namespace raco::property_browser {
 class PropertyBrowserItem;
 class PropertyBrowserModel;
@@ -32,15 +36,13 @@ class PropertyBrowserModel;
 class PropertyBrowserView final : public QWidget {
     Q_OBJECT
 public:
-	explicit PropertyBrowserView(raco::core::SceneBackendInterface* sceneBackend, PropertyBrowserItem* item, PropertyBrowserModel* model, QWidget* parent = nullptr);
+	explicit PropertyBrowserView(core::SceneBackendInterface* sceneBackend, PropertyBrowserItem* item, PropertyBrowserModel* model, QWidget* parent = nullptr);
 
-	std::string getCurrentObjectID() const;
-
+    std::string getCurrentObjectID() const;
 private:
 	QPoint verticalPivot_{0, 0};
-	QWidget* verticalPivotWidget_{nullptr};
+    QWidget* verticalPivotWidget_{nullptr};
 	std::string currentObjectID_;
-
 	raco::core::SceneBackendInterface* sceneBackend_;
     PropertySubtreeView* propertySubTreeView_{nullptr};
 };
@@ -49,18 +51,20 @@ class PropertyBrowserWidget final : public QWidget {
     Q_OBJECT
 public:
 	explicit PropertyBrowserWidget(
-		raco::components::SDataChangeDispatcher dispatcher,
-		raco::core::CommandInterface* commandInterface,
+		components::SDataChangeDispatcher dispatcher,
+		core::CommandInterface* commandInterface,
 		core::SceneBackendInterface* sceneBackend,
+		object_tree::view::ObjectTreeDockManager* treeDockManager,
 		QWidget* parent = nullptr);
 
 	PropertyBrowserModel* model() const;
     void initPropertyBrowserWidget();
 
 public Q_SLOTS:
-	void setValueHandleFromObjectId(const QString& objectID);
-	void setValueHandle(raco::core::ValueHandle valueHandle);
-	void setValueHandles(const std::set<raco::core::ValueHandle>& valueHandles);
+    void setValueHandle(raco::core::ValueHandle valueHandle);
+    void setValueHandles(const std::set<raco::core::ValueHandle>& valueHandles);
+	void setObjectFromObjectId(const QString& objectID);
+	void setObjects(const core::SEditorObjectSet& objects);
 	void clear();
     void setLockable(bool lockable);
 
@@ -72,18 +76,22 @@ public Q_SLOTS:
 	void slotRefreshCurveBindingWidget();
 
 private:
-	void setLocked(bool locked);
+    void setLocked(bool locked);
 	void clearValueHandle(bool restorable);
     void switchNode(std::string objectID);
-
-	raco::components::SDataChangeDispatcher dispatcher_;
-	raco::core::CommandInterface* commandInterface_;
-	raco::core::SceneBackendInterface* sceneBackend_;
+	void setObjectsImpl(const core::SEditorObjectSet& objects, bool forceExpandStateUpdate);
+	
+	components::SDataChangeDispatcher dispatcher_;
+	core::CommandInterface* commandInterface_;
+	core::SceneBackendInterface* sceneBackend_;
+    object_tree::view::ObjectTreeDockManager* treeDockManager_;
 	PropertyBrowserGridLayout layout_;
 	std::unique_ptr<PropertyBrowserView> propertyBrowser_{};
-	raco::components::Subscription subscription_;
-	std::string restorableObjectId_;
+	PropertyBrowserItem* rootItem_ = nullptr;
+	core::SEditorObjectSet currentObjects_;
+	components::Subscription subscription_;
 	QWidget* emptyLabel_;
+    std::string restorableObjectId_;
 	bool locked_;
 	PropertyBrowserModel* model_;
 	QPushButton* lockButton_;

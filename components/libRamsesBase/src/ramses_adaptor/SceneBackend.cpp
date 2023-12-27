@@ -79,18 +79,28 @@ void SceneBackend::readDataFromEngine(core::DataChangeRecorder& recorder) {
 	}
 }
 
+bool SceneBackend::discardLogicEngineMessage(std::string_view message) {
+	if (message.find("has unlinked output") != std::string::npos) {
+		return true;
+	}
+	if (message.find("has no ingoing links! Node should be deleted or properly linked!") != std::string::npos) {
+		return true;
+	}
+	if (message.find("has no outgoing links! Node should be deleted or properly linked!") != std::string::npos) {
+		return true;
+	}
+	return false;
+}
+
+
 std::vector<rlogic::WarningData> SceneBackend::logicEngineFilteredValidation() const {
 	std::vector<rlogic::WarningData> filteredWarnings;
 	std::vector<rlogic::WarningData> warnings = logicEngine()->validate();
 
 	for (auto& warning : warnings) {
-		if (warning.message.find("has no ingoing links! Node should be deleted or properly linked!") != std::string::npos) {
-			continue;
+		if (!SceneBackend::discardLogicEngineMessage(warning.message)) {
+			filteredWarnings.emplace_back(warning);
 		}
-		if (warning.message.find("has no outgoing links! Node should be deleted or properly linked!") != std::string::npos) {
-			continue;
-		}
-		filteredWarnings.emplace_back(warning);
 	}
 	return filteredWarnings;
 }
@@ -242,6 +252,11 @@ std::vector<SceneBackend::SceneItemDesc> SceneBackend::getSceneItemDescriptions(
 	for (const auto* binding : logicEngine()->getCollection<rlogic::RamsesNodeBinding>()) {
 		auto parentIdx = parents[&binding->getRamsesNode()];
 		sceneItems.emplace_back("NodeBinding", binding->getName().data(), parentIdx);
+	}
+
+	for (const auto* binding : logicEngine()->getCollection<rlogic::RamsesMeshNodeBinding>()) {
+		auto parentIdx = parents[&binding->getRamsesMeshNode()];
+		sceneItems.emplace_back("MeshNodeBinding", binding->getName().data(), parentIdx);
 	}
 
 	for (const auto* binding : logicEngine()->getCollection<rlogic::RamsesCameraBinding>()) {

@@ -42,6 +42,7 @@ target_link_libraries(libRamsesWidgets
         raco::RamsesBase
         raco::LogSystem
         raco::UserTypes
+        raco::Style
         Qt5::Widgets
         raco::Core
         raco::UserTypes

@@ -79,8 +79,8 @@ void ObjectTreeDock::setTreeView(ObjectTreeView *treeView) {
 
     connect(this, &ObjectTreeDock::selectObject, treeView, &ObjectTreeView::selectObject);
 
-	connect(treeView, &ObjectTreeView::newObjectTreeItemsSelected, [this](const auto &handles) {
-		Q_EMIT newObjectTreeItemsSelected(handles, this);
+	connect(treeView, &ObjectTreeView::newObjectTreeItemsSelected, [this](const auto &objects) {
+        Q_EMIT newObjectTreeItemsSelected(objects, this);
 	});
 	connect(treeView, &ObjectTreeView::externalObjectSelected, [this]() {
 		Q_EMIT externalObjectSelected(this);

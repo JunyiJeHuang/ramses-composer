@@ -22,9 +22,14 @@ namespace raco::serialization {
 struct ObjectsDeserialization;
 }  // namespace raco::serialization
 
+
 namespace raco::guiData {
 class NodeData;
 }  // namespace raco::guiData
+
+namespace raco::components {
+class MeshCacheImpl;
+}
 
 namespace raco::core {
 struct MeshDescriptor;
@@ -37,7 +42,6 @@ class UndoStack;
 class Errors;
 class UserObjectFactoryInterface;
 class EngineInterface;
-
 
 class FileChangeCallback;
 
@@ -69,6 +73,9 @@ public:
 
 	UserObjectFactoryInterface* objectFactory();
 	EngineInterface& engineInterface();
+
+	void setUriValidationCaseSensitive(bool value);
+	bool isUriValidationCaseSensitive() const;
 	
 	// Basic property changes
 	void set(ValueHandle const& handle, bool const& value);
@@ -192,7 +199,7 @@ public:
 private:
 	friend class UndoStack;
 	friend class UndoHelpers;
-	friend class FileChangeCallback;
+	friend class components::MeshCacheImpl;
 	friend class PrefabOperations;
 	friend class ExtrefOperations;
 
@@ -232,6 +239,8 @@ private:
 
 	MultiplexedDataChangeRecorder changeMultiplexer_;
 	DataChangeRecorder modelChanges_;
+
+	bool isUriValidationCaseSensitive_ = false;
 };
 
 }

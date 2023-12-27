@@ -274,6 +274,8 @@ void UndoStack::updateProjectState(const Project *src, Project *dest, const Data
 			srcObj.get(), destObj, translateRef, [](const std::string &) { return false; }, factory, nullptr, false);
 	}
 
+	// We don't need to update the instance order since that would be a non-mergeable operation
+	
 	// Update external project name map
 	dest->externalProjectsMap_ = src->externalProjectsMap_;
 }
@@ -306,15 +308,24 @@ void UndoStack::restoreProjectState(Project *src, Project *dest, BaseContext &co
 	context.deleteWithVolatileSideEffects(dest, toRemove, context.errors());
 
 	// Create src object not present in dest
+	std::vector<SEditorObject> orderedDestInstances;
 	for (const auto &srcObj : src->instances()) {
-		if (!dest->getInstanceByID(srcObj->objectID())) {
-			auto destObj = factory.createObject(srcObj->getTypeDescription().typeName, srcObj->objectName(), srcObj->objectID());
+		auto destObj = dest->getInstanceByID(srcObj->objectID());
+		if (!destObj) {
+			destObj = factory.createObject(srcObj->getTypeDescription().typeName, srcObj->objectName(), srcObj->objectID());
 			dest->addInstance(destObj);
 			changes.recordCreateObject(destObj);
 			extrefDirty = extrefDirty || srcObj->query<ExternalReferenceAnnotation>();
 		}
+		orderedDestInstances.emplace_back(destObj);
 	}
-
+	
+	// Update instance order in dest if necessary
+	if (dest->instances_ != orderedDestInstances) {
+		dest->instances_ = orderedDestInstances;
+		changes.recordRootOrderChanged();
+	}
+		
 	auto translateRef = [dest](SEditorObject srcObj) -> SEditorObject {
 		if (srcObj) {
 			return dest->getInstanceByID(srcObj->objectID());
@@ -436,7 +447,9 @@ UndoStack::UndoStack(BaseContext* context, const Callback& onChange) : context_(
 
 void UndoStack::reset() {
 	stack_.clear();
-    index_ = 0;
+
+	index_ = 0;
+    depth_ = 0;
 	auto initialState = &stack_.emplace_back(new Entry("Initial"))->state;
 	context_->modelChanges().reset();
 	saveProjectState(context_->project(), initialState, nullptr, context_->modelChanges(), *context_->objectFactory());
@@ -461,7 +474,7 @@ bool UndoStack::curIndexIsOpreatObject() {
 }
 
 bool UndoStack::canMerge(const DataChangeRecorder &changes) {
-	return changes.getCreatedObjects().empty() && changes.getDeletedObjects().empty() && changes.getAddedLinks().empty() && changes.getRemovedLinks().empty() && changes.getValidityChangedLinks().empty() && !changes.externalProjectMapChanged();
+	return changes.getCreatedObjects().empty() && changes.getDeletedObjects().empty() && changes.getAddedLinks().empty() && changes.getRemovedLinks().empty() && changes.getValidityChangedLinks().empty() && !changes.externalProjectMapChanged() && !changes.rootOrderChanged();
 }
 
 void UndoStack::push(const std::string &description, std::string mergeId) {
@@ -480,6 +493,22 @@ void UndoStack::push(const std::string &description, std::string mergeId) {
 	}
 
 	onChange_();
+    if (depth_ == 0) {
+        stack_.resize(index_ + 1);
+        if (!mergeId.empty() && mergeId == stack_.back()->mergeId && canMerge(context_->modelChanges())) {
+            // mergable -> In-place update of the last stack state
+            updateProjectState(context_->project(), &stack_.back()->state, context_->modelChanges(), *context_->objectFactory());
+            stack_.back()->description = description;
+        } else {
+            // not mergable -> create and fill new state
+            auto nextState = &stack_.emplace_back(new Entry(description, mergeId))->state;
+            ++index_;
+            saveProjectState(context_->project(), nextState, &stack_[index_ - 1]->state, context_->modelChanges(), *context_->objectFactory());
+        }
+
+        onChange_();
+        context_->modelChanges().reset();
+    }
     context_->modelChanges().reset();
 }
 
@@ -496,6 +525,23 @@ void UndoStack::push(const std::string &description, UndoState state) {
     onChange_();
 }
 
+void UndoStack::beginCompositeCommand() {
+	depth_++;
+}
+
+void UndoStack::endCompositeCommand(const std::string &description, bool abort) {
+	if (depth_ > 0) {
+		depth_--;
+		if (depth_ == 0) {
+			if (abort) {
+				setIndex(getIndex(), true);
+			} else {
+				push(description, {});
+			}
+		}
+    }
+}
+
 size_t UndoStack::size() const {
 	return stack_.size();
 }
@@ -505,6 +551,7 @@ size_t UndoStack::getIndex() const {
 }
 
 size_t UndoStack::setIndex(size_t newIndex, bool force) {
+	assert(depth_ == 0);
 	if (newIndex < size() && (newIndex != index_ || force)) {
         index_ = newIndex;
         restoreProjectState(&stack_[index_]->state, context_->project(), *context_, *context_->objectFactory());
@@ -515,12 +562,14 @@ size_t UndoStack::setIndex(size_t newIndex, bool force) {
 }
 
 void UndoStack::undo() {
+	assert(depth_ == 0);
 	if (index_ > 0) {
 		setIndex(index_ - 1);
 	}
 }
 
 void UndoStack::redo() {
+	assert(depth_ == 0);
 	if (index_ < size() - 1) {
 		setIndex(index_ + 1);
 	}

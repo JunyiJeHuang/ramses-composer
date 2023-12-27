@@ -37,7 +37,6 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QMessageBox>
-#include <QMimeData>
 #include <QProcess>
 #include <QShortcut>
 #include <QSortFilterProxyModel>
@@ -94,7 +93,7 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 			selectedItemIDs_.erase(deselObj->objectID());
 		}
 
-		Q_EMIT newObjectTreeItemsSelected(getSelectedHandles());
+        Q_EMIT newObjectTreeItemsSelected(getSelectedObjects());
 
         if (!selectedObjects.empty()) {
             core::SEditorObject object = *(selectedObjects.begin());
@@ -135,10 +134,15 @@ ObjectTreeView::ObjectTreeView(const QString &viewTitle, ObjectTreeViewDefaultMo
 	QObject::connect(&signalProxy::GetInstance(), &signalProxy::sigReLoadNodeData, this, &ObjectTreeView::globalOpreations);
 }
 
-std::set<core::ValueHandle> ObjectTreeView::getSelectedHandles() const {
+core::SEditorObjectSet ObjectTreeView::getSelectedObjects() const {
 	auto selectedObjects = indicesToSEditorObjects(selectionModel()->selectedIndexes());
+	return core::SEditorObjectSet(selectedObjects.begin(), selectedObjects.end());
+}
 
-	return std::set<ValueHandle>(selectedObjects.begin(), selectedObjects.end());
+std::set<core::ValueHandle> ObjectTreeView::getSelectedHandles() const {
+    auto selectedObjects = indicesToSEditorObjects(selectionModel()->selectedIndexes());
+
+    return std::set<ValueHandle>(selectedObjects.begin(), selectedObjects.end());
 }
 
 namespace {
@@ -1141,8 +1145,8 @@ QMenu* ObjectTreeView::createCustomContextMenu(const QPoint &p) {
 			auto sceneFolder = raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Mesh, treeModel_->project()->currentFolder());
 			auto file = QFileDialog::getOpenFileName(this, "Load Asset File", QString::fromStdString(sceneFolder.string()), "glTF files (*.gltf *.glb);; All files (*.*)");
 			if (!file.isEmpty()) {
-                bool keyAnimation;
-                bool filterData;
+                bool keyAnimation = false;
+                bool filterData = false;
                 treeModel_->importMeshScenegraph(file, insertionTargetIndex, keyAnimation, filterData);
                 if (keyAnimation) {
 					QString fileName = file.section("/",-1);
@@ -1418,15 +1422,17 @@ void ObjectTreeView::restoreItemExpansionStates() {
 }
 
 void ObjectTreeView::restoreItemSelectionStates() {
+	// This doesn't emit any signals:
 	selectionModel()->reset();
 	std::vector<QModelIndex> selectedObjects;
 
+	QItemSelection selectedItems;
 	auto selectionIt = selectedItemIDs_.begin();
 	while (selectionIt != selectedItemIDs_.end()) {
 		const auto &selectionID = *selectionIt;
 		auto selectedObjectIndex = indexFromTreeNodeID(selectionID);
 		if (selectedObjectIndex.isValid()) {
-			selectionModel()->select(selectedObjectIndex, SELECTION_MODE);
+			selectedItems.select(selectedObjectIndex, selectedObjectIndex);
 			selectedObjects.emplace_back(selectedObjectIndex);
 			expandAllParentsOfObject(selectedObjectIndex);
 			++selectionIt;
@@ -1436,6 +1442,9 @@ void ObjectTreeView::restoreItemSelectionStates() {
 	}
 
 	if (!selectedObjects.empty()) {
+		// This does emit a single selectionChanged() signal
+		// TODO is it correct not to send any signal if the selection is now empty?
+		selectionModel()->select(selectedItems, SELECTION_MODE);
 		scrollTo(selectedObjects.front());
 	}
 }

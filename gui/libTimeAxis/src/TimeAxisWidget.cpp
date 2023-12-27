@@ -322,6 +322,7 @@ void TimeAxisWidget::startAnimation() {
             loopCount_ = INT32_MAX;
         curLoop_ = 0;
         int timer = animationDataManager::GetInstance().getActiveAnimationData().GetUpdateInterval() * animationDataManager::GetInstance().getActiveAnimationData().GetPlaySpeed();
+
         timerId_ = startTimer(timer);
         return;
     }

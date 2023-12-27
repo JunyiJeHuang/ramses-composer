@@ -66,9 +66,10 @@ public:
 
 	const State& currentState();
 	State& nextState();
-	void commit(bool forceUpdate = false);
+    void commit(bool forceUpdate = false);
 	void setEnableDisplayGrid(bool enable);
-	void sceneUpdate(bool z_up, float scaleValue);
+    void sceneUpdate(bool z_up, float scaleValue);
+    bool saveScreenshot(const std::string& fullPath);
 
 private:
 	void* windowHandle_;

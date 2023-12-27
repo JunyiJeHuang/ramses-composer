@@ -30,13 +30,20 @@ public:
 	void setSceneId(ramses::sceneId_t id);
 	void setBackgroundColor(core::Vec4f backgroundColor);
 	void setMsaaSampleRate(PreviewMultiSampleRate sampleRate);
-	void commit(bool forceUpdate);
+    void commit(bool forceUpdate);
 	void setFilteringMode(PreviewFilteringMode mode);
 	void setEnableDisplayGrid(bool enable);
 	std::unique_ptr<RamsesPreviewWindow>& getRamsesPreview();
-	void sceneUpdate(bool z_up, float scaleValue);
+    void sceneUpdate(bool z_up, float scaleValue);
+    bool saveScreenshot(const std::string& fullPath);
 
 public Q_SLOTS:
+	/**
+	 * @brief setup viewport size and position including scaling
+	 * 
+	 * The areaSize, viewportPosition, viewportOffset, and viewportSize parameters are given in Qt virtual pixels units.
+	 * The virtualSize and targetSize parameters are given in device pixel units.
+	*/
 	void setViewportRect(
 		const QSize areaSize,
 		const QPoint viewportPosition,

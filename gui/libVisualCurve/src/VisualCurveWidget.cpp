@@ -323,21 +323,23 @@ void VisualCurveWidget::mousePressEvent(QMouseEvent *event) {
 
         for (const auto &curve : CurveManager::GetInstance().getCurveList()) {
             if (curve) {
-                if (!VisualCurvePosManager::GetInstance().hasHidenCurve(curve->getCurveName())) {
-                    QList<SKeyPoint> keyFrameList;
-                    VisualCurvePosManager::GetInstance().getKeyPointList(curve->getCurveName(), keyFrameList);
-                    for (int i{0}; i < keyFrameList.size(); i++) {
-                        QPointF keyPointF(keyFrameList[i].x, keyFrameList[i].y);
-                        if (abs(keyPointF.x() - xPos) <= 3 && abs(keyPointF.y() - yPos) <= 3) {
-                            if (VisualCurvePosManager::GetInstance().getKeyBoardType() == KEY_BOARD_TYPE::POINT_MOVE) {
-                                VisualCurvePosManager::GetInstance().setCurrentPointInfo(curve->getCurveName(), i);
-                                VisualCurvePosManager::GetInstance().setPressAction(MOUSE_PRESS_KEY);
-                                VisualCurvePosManager::GetInstance().clearMultiSelPoints();
-                                Q_EMIT sigPressKey();
-                                pushState2UndoStack(fmt::format("select point from '{}', {} point", curve->getCurveName(), i));
-                                update();
+                if (VisualCurvePosManager::GetInstance().isGroupCurve(curve->getCurveName())) {
+                    if (!VisualCurvePosManager::GetInstance().hasHidenCurve(curve->getCurveName())) {
+                        QList<SKeyPoint> keyFrameList;
+                        VisualCurvePosManager::GetInstance().getKeyPointList(curve->getCurveName(), keyFrameList);
+                        for (int i{0}; i < keyFrameList.size(); i++) {
+                            QPointF keyPointF(keyFrameList[i].x, keyFrameList[i].y);
+                            if (abs(keyPointF.x() - xPos) <= 3 && abs(keyPointF.y() - yPos) <= 3) {
+                                if (VisualCurvePosManager::GetInstance().getKeyBoardType() == KEY_BOARD_TYPE::POINT_MOVE) {
+                                    VisualCurvePosManager::GetInstance().setCurrentPointInfo(curve->getCurveName(), i);
+                                    VisualCurvePosManager::GetInstance().setPressAction(MOUSE_PRESS_KEY);
+                                    VisualCurvePosManager::GetInstance().clearMultiSelPoints();
+                                    Q_EMIT sigPressKey();
+                                    pushState2UndoStack(fmt::format("select point from '{}', {} point", curve->getCurveName(), i));
+                                    update();
+                                }
+                                return;
                             }
-                            return;
                         }
                     }
                 }
@@ -1042,7 +1044,9 @@ void VisualCurveWidget::drawKeyFrame(QPainter &painter) {
     int index = VisualCurvePosManager::GetInstance().getCurrentPointInfo().second;
     std::string animation = animationDataManager::GetInstance().getActiveAnimationName();
     std::map < std::string, std::map<std::string, std::string>> curveBindingMap;
-    curveBindingMap = NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().bindingMap();
+    if (NodeDataManager::GetInstance().getActiveNode() != nullptr) {
+        curveBindingMap = NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().bindingMap();
+    }
 
     auto getProperty = [=](std::string curve)->std::string {
         for (const auto &it : curveBindingMap) {
@@ -1076,7 +1080,7 @@ void VisualCurveWidget::drawKeyFrame(QPainter &painter) {
     painter.save();
 
     for (const auto &it : VisualCurvePosManager::GetInstance().getKeyPointMap().toStdMap()) {
-        if (VisualCurvePosManager::GetInstance().hasHidenCurve(it.first)) {
+        if (VisualCurvePosManager::GetInstance().hasHidenCurve(it.first) || !VisualCurvePosManager::GetInstance().isGroupCurve(it.first)) {
             continue;
         }
 

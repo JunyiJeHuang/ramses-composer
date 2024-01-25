@@ -40,6 +40,9 @@ bool CurveBinding::insertBindingDataItem(const std::string &sampleProp, const st
         bindingMap_.emplace(sampleProp, bindingDataMap);
 		return true;
     }
+    if (iter->second.find(property) == iter->second.end()) {
+        return false;
+    }
     iter->second.emplace(property, curve);
     return true;
 }

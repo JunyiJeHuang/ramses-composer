@@ -53,6 +53,9 @@ public:
     MOUSE_PRESS_ACTION getPressAction();
     void setPressAction(MOUSE_PRESS_ACTION action);
 
+    void setGroupCurve(std::string curve);
+    bool isGroupCurve(std::string curve);
+
     void insertHidenCurve(std::string curve);
     void deleteHidenCurve(std::string curve);
     bool hasHidenCurve(std::string curve);
@@ -103,6 +106,7 @@ private:
     QMap<std::string, QList<SKeyPoint>> keyPointMap_;
     QList<std::string> hidenCurveList_;
     QList<int> multiSelPoints_;
+    std::string groupCurve_;
 };
 }
 

@@ -110,6 +110,7 @@ protected Q_SLOTS:
 	bool upgradeActiveProject(int newFeatureLevel);
 	bool saveAsActiveProject(bool newID = false);
 	bool saveAsActiveProjectWithNewID();
+    bool projectIntergration();
     bool exportGltf();
 	bool exportBMWAssets();
 	void importScene();

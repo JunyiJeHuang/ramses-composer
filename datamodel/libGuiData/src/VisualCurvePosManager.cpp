@@ -138,6 +138,17 @@ void VisualCurvePosManager::setPressAction(MOUSE_PRESS_ACTION action) {
     pressAction_ = action;
 }
 
+void VisualCurvePosManager::setGroupCurve(std::string curve) {
+    groupCurve_ = curve;
+}
+
+bool VisualCurvePosManager::isGroupCurve(std::string curve) {
+    if (groupCurve_.empty()) {
+        return true;
+    }
+    return curve == groupCurve_ ? true : false;
+}
+
 void VisualCurvePosManager::insertHidenCurve(std::string curve) {
     hidenCurveList_.push_back(curve);
 }

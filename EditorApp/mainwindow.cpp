@@ -44,7 +44,7 @@
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertyBrowserWidget.h"
 #include "node_logic/NodeLogic.h"
-#include "material_logic/materalLogic.h"
+#include "material_logic/MateralLogic.h"
 #include "property/PropertyMainWindow.h"
 #include "animation/AnimationMainWindow.h"
 #include "time_axis/TimeAxisMainWindow.h"
@@ -513,6 +513,8 @@ MainWindow::MainWindow(raco::application::RaCoApplication* racoApplication, raco
 		ui->actionSaveAs->setShortcutContext(Qt::ApplicationShortcut);
 		QObject::connect(ui->actionSaveAs, &QAction::triggered, this, &MainWindow::saveAsActiveProject);
 		QObject::connect(ui->actionSaveAsWithNewID, &QAction::triggered, this, &MainWindow::saveAsActiveProjectWithNewID);
+
+        QObject::connect(ui->actionProjectIntegration, &QAction::triggered, this, &MainWindow::projectIntergration);
 
         ui->actionExportGltf->setShortcutContext(Qt::ApplicationShortcut);
         QObject::connect(ui->actionExportGltf, &QAction::triggered, this, &MainWindow::exportGltf);
@@ -1039,7 +1041,52 @@ bool MainWindow::saveAsActiveProject(bool newID) {
 }
 
 bool MainWindow::saveAsActiveProjectWithNewID() {
-	return saveAsActiveProject(true);
+    return saveAsActiveProject(true);
+}
+
+bool MainWindow::projectIntergration() {
+    if (!resolveDirtiness()) {
+        return false;
+    }
+
+    auto file = QFileDialog::getOpenFileName(this, "Open", QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()), "Ramses Composer Assembly (*.rca);; All files (*.*)");
+    if (file.size() < 0) {
+        return false;
+    }
+
+    auto activeFile = QString::fromStdString(racoApplication_->activeProjectPath());
+
+    QString saveFile;
+    if (!programManager_.projectIntergration(activeFile, file, saveFile)) {
+        QMessageBox::critical(this, "Project Intergration Error", fmt::format("Can not intergrate project, engineering mismatch").c_str(), QMessageBox::Ok);
+        return false;
+    }
+    QString newPath = saveFile;
+    if (saveFile.isEmpty()) {
+        return false;
+    }
+
+    QString openedProjectPath = QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string());
+    const bool setProjectName = racoApplication_->activeProjectPath().empty();
+
+    if (!newPath.endsWith(".rca")) newPath += ".rca";
+    std::string errorMsg;
+    if (racoApplication_->activeRaCoProject().saveAs(newPath, errorMsg, setProjectName)) {
+        updateActiveProjectConnection();
+        updateProjectSavedConnection();
+        updateUpgradeMenu();
+        programManager_.setOpenedProjectPath(openedProjectPath);
+        programManager_.setRelativePath(QString::fromStdString(raco::core::PathManager::getCachedPath(raco::core::PathManager::FolderTypeKeys::Project).string()));
+        programManager_.writeProgram2Json(newPath.mid(0, newPath.length() - 4));
+        return true;
+    } else {
+        updateApplicationTitle();
+        QMessageBox::critical(this, "Save Error", fmt::format("Can not save project: Writing the project file '{}' failed with error '{}'", racoApplication_->activeProjectPath(), errorMsg).c_str(), QMessageBox::Ok);
+    }
+
+    openProject(saveFile);
+
+    return true;
 }
 
 void MainWindow::updateSavedLayoutMenu() {

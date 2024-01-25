@@ -1109,13 +1109,13 @@ void readJsonFillCurveBinding(QJsonObject jsonObj, NodeData &node) {
 
 void readJsonFillAnimationData(QJsonObject jsonObj) {
     for (auto it : jsonObj.toVariantMap().toStdMap()) {
-		if (it.first.compare(JSON_ACTIVE_ANIMATION) != 0) {
-			QJsonObject aniNodeObj = it.second.toJsonObject();
-			animationDataManager::GetInstance().InsertAmimation(it.first.toStdString());
-			animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetStartTime(aniNodeObj.value(JSON_START_TIME).toInt());
-			animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetEndTime(aniNodeObj.value(JSON_END_TIME).toInt());
-			animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetLoopCount(aniNodeObj.value(JSON_LOOP_COUNT).toInt());
-			animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetUpdateInterval(aniNodeObj.value(JSON_UPDATE_INTERVAL).toInt());
+        if (it.first.compare(JSON_ACTIVE_ANIMATION) != 0) {
+            QJsonObject aniNodeObj = it.second.toJsonObject();
+            animationDataManager::GetInstance().InsertAmimation(it.first.toStdString());
+            animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetStartTime(aniNodeObj.value(JSON_START_TIME).toInt());
+            animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetEndTime(aniNodeObj.value(JSON_END_TIME).toInt());
+            animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetLoopCount(aniNodeObj.value(JSON_LOOP_COUNT).toInt());
+            animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetUpdateInterval(aniNodeObj.value(JSON_UPDATE_INTERVAL).toInt());
         }
     }
 }
@@ -1155,7 +1155,7 @@ void readJsonFilleNodeData(QJsonObject jsonObj, NodeData &node) {
             readJsonFilleNodeData(childAry[i].toObject(), childNode);
             childNodeMap.emplace(childNode.getName(), childNode);
         }
-		node.setChildList(childNodeMap);
+        node.setChildList(childNodeMap);
     }
 }
 
@@ -1171,7 +1171,7 @@ void readJsonFillCurveData(QJsonArray jsonAry) {
             Point* point = new Point;
             point->setDataValue(pointObj.value(JSON_DATA).toDouble());
             point->setInterPolationType(static_cast<EInterPolationType>(pointObj.value(JSON_INTERPOLATION_TYPE).toInt()));
-			point->setLeftTagent(pointObj.value(JSON_LEFT_TANGENT).toDouble());
+            point->setLeftTagent(pointObj.value(JSON_LEFT_TANGENT).toDouble());
             point->setRightTagent(pointObj.value(JSON_RIGHT_TANGENT).toDouble());
             point->setKeyFrame(pointObj.value(JSON_KEYFRAME).toInt());
             point->setLeftKeyFrame(pointObj.value(JSON_LEFT_KEYFRAME).toDouble());
@@ -1401,12 +1401,12 @@ void ProgramManager::setOpenedProjectPath(QString path) {
 }
 
 bool ProgramManager::writeProgram2Json(QString filePath) {
-	QFile file(filePath + ".json");
-	if (!file.open(QIODevice::ReadWrite)) {
-		return false;
-	}
-	file.resize(0);
-	QJsonObject jsonObj;
+    QFile file(filePath + ".json");
+    if (!file.open(QIODevice::ReadWrite)) {
+        return false;
+    }
+    file.resize(0);
+    QJsonObject jsonObj;
 
     QJsonObject NodeObj;
     InitNodeJson(NodeObj, raco::guiData::NodeDataManager::GetInstance().root());
@@ -1429,12 +1429,12 @@ bool ProgramManager::writeProgram2Json(QString filePath) {
     initShaderJson(jsonObj);
     initBitmapJson(jsonObj);
 
-	QJsonDocument document;
-	document.setObject(jsonObj);
-	QByteArray byteArray = document.toJson();
-	file.write(byteArray);
-	file.close();
-	return true;
+    QJsonDocument document;
+    document.setObject(jsonObj);
+    QByteArray byteArray = document.toJson();
+    file.write(byteArray);
+    file.close();
+    return true;
 }
 bool ProgramManager::readProgramFromJson(QString filePath) {
     QFile file(filePath + ".json");
@@ -1444,9 +1444,9 @@ bool ProgramManager::readProgramFromJson(QString filePath) {
     if (file.size() == 0) {
         return false;
     }
-	QJsonParseError jsonParserError;
-	QJsonDocument jsonDocument = QJsonDocument::fromJson(file.readAll(), &jsonParserError);
-	QJsonObject jsonObject;
+    QJsonParseError jsonParserError;
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(file.readAll(), &jsonParserError);
+    QJsonObject jsonObject;
 
 	if (!(!jsonDocument.isNull() && jsonParserError.error == QJsonParseError::NoError)) {
 		return false;
@@ -1461,8 +1461,8 @@ bool ProgramManager::readProgramFromJson(QString filePath) {
 	readJsonFillPropertyData(propertyObj);
 
 	// animation
-	QJsonObject animationObj = jsonObject.value(JSON_ANIMATION).toObject();
-	readJsonFillAnimationData(animationObj);
+    QJsonObject animationObj = jsonObject.value(JSON_ANIMATION).toObject();
+    readJsonFillAnimationData(animationObj);
 
 	// avtive animation
 	if (animationObj.contains(JSON_ACTIVE_ANIMATION)) {
@@ -1573,6 +1573,117 @@ void ProgramManager::cubeMap2DdsFormat(const QString &filePath, const std::strin
         QString path = savePath + QString::number(i) + ".dds";
         saveDDS(path, skybox);
     }
+}
+
+bool ProgramManager::projectIntergration(QString activeFile, QString intergFile, QString &saveFile) {
+    QFile file(intergFile.replace(".rca", ".json"));
+    if (!file.open(QIODevice::ReadWrite)) {
+        return false;
+    }
+    if (file.size() == 0) {
+        return false;
+    }
+    QJsonParseError jsonParserError;
+    QJsonDocument jsonDocument = QJsonDocument::fromJson(file.readAll(), &jsonParserError);
+    QJsonObject jsonObject;
+
+    if (!(!jsonDocument.isNull() && jsonParserError.error == QJsonParseError::NoError)) {
+        return false;
+    }
+    if (!jsonDocument.isObject()) {
+        return false;
+    }
+    jsonObject = jsonDocument.object();
+
+    QJsonObject nodeObj = jsonObject.value(JSON_NODE).toObject();
+    intergrateNodeData(nodeObj, NodeDataManager::GetInstance().root());
+
+    QJsonArray curveAry = jsonObject.value(JSON_CURVE).toArray();
+    intergrateCurveData(curveAry);
+
+    QJsonObject animationObj = jsonObject.value(JSON_ANIMATION).toObject();
+    intergrateAnimationData(animationObj);
+
+    saveFile = activeFile.replace(".rca", "_intergation.rca");
+
+    return true;
+}
+
+bool ProgramManager::intergrateNodeData(QJsonObject jsonObj, NodeData &node) {
+    if (jsonObj.contains(JSON_CURVEBINDING)) {
+        QJsonObject curveBindingObj = jsonObj.value(JSON_CURVEBINDING).toObject();
+        QMap<QString, QVariant> curveBindingMap = curveBindingObj.toVariantMap();
+        for (auto it : curveBindingMap.toStdMap()) {
+            QString key = it.first;
+            QJsonArray curveBindingAry = it.second.toJsonArray();
+            for (int i{0}; i < curveBindingAry.size(); ++i) {
+                QJsonObject curveBindingObj = curveBindingAry[i].toObject();
+                std::string curve = curveBindingObj.value(JSON_CURVE).toString().toStdString();
+                std::string property = curveBindingObj.value(JSON_PROPERTY).toString().toStdString();
+                // scale maping
+                if (QString::fromStdString(property).contains(JSON_SCALE_OLD)) {
+                    QString string = QString::fromStdString(property);
+                    string.replace(JSON_SCALE_OLD, JSON_SCALE);
+                    property = string.toStdString();
+                }
+                node.NodeExtendRef().curveBindingRef().insertBindingDataItem(key.toStdString(), property, curve);
+            }
+        }
+    }
+    if (jsonObj.contains(JSON_CHILD)) {
+        QJsonArray childAry = jsonObj.value(JSON_CHILD).toArray();
+        for (int i{0}; i < childAry.size(); ++i) {
+            auto objectID = childAry[i].toObject().value(JSON_OBJECTID).toString().toStdString();
+            NodeData *childNode = NodeDataManager::GetInstance().searchNodeByID(objectID);
+            intergrateNodeData(childAry[i].toObject(), *childNode);
+        }
+    }
+    return true;
+}
+
+bool ProgramManager::intergrateCurveData(QJsonArray jsonAry) {
+    for (int i{0}; i < jsonAry.size(); ++i) {
+        QJsonObject curveObj = jsonAry.at(i).toObject();
+        auto curveName = curveObj.value(JSON_NAME).toString().toStdString();
+        if (!CurveManager::GetInstance().hasCurve(curveName)) {
+            Curve* curve = new Curve();
+            curve->setCurveName(curveObj.value(JSON_NAME).toString().toStdString());
+            curve->setDataType(static_cast<EDataType>(curveObj.value(JSON_DATA_TYPE).toInt()));
+            QJsonArray pointAry = curveObj.value(JSON_POINT_LIST).toArray();
+            for (int j{0}; j < pointAry.size(); ++j) {
+                QJsonObject pointObj = pointAry.at(j).toObject();
+                Point* point = new Point;
+                point->setDataValue(pointObj.value(JSON_DATA).toDouble());
+                point->setInterPolationType(static_cast<EInterPolationType>(pointObj.value(JSON_INTERPOLATION_TYPE).toInt()));
+                point->setLeftTagent(pointObj.value(JSON_LEFT_TANGENT).toDouble());
+                point->setRightTagent(pointObj.value(JSON_RIGHT_TANGENT).toDouble());
+                point->setKeyFrame(pointObj.value(JSON_KEYFRAME).toInt());
+                point->setLeftKeyFrame(pointObj.value(JSON_LEFT_KEYFRAME).toDouble());
+                point->setLeftData(pointObj.value(JSON_LEFT_DATA).toDouble());
+                point->setRightKeyFrame(pointObj.value(JSON_RIGHT_KEYFRAME).toDouble());
+                point->setRightData(pointObj.value(JSON_RIGHT_DATA).toDouble());
+                curve->insertPoint(point);
+            }
+            CurveManager::GetInstance().addCurve(curve);
+        }
+    }
+    return true;
+}
+
+bool ProgramManager::intergrateAnimationData(QJsonObject jsonObj) {
+    for (auto it : jsonObj.toVariantMap().toStdMap()) {
+        if (it.first.compare(JSON_ACTIVE_ANIMATION) != 0) {
+            QJsonObject aniNodeObj = it.second.toJsonObject();
+            if (!animationDataManager::GetInstance().IsHaveAnimation(it.first.toStdString())) {
+                animationDataManager::GetInstance().InsertAmimation(it.first.toStdString());
+                animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetStartTime(aniNodeObj.value(JSON_START_TIME).toInt());
+                animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetEndTime(aniNodeObj.value(JSON_END_TIME).toInt());
+                animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetLoopCount(aniNodeObj.value(JSON_LOOP_COUNT).toInt());
+                animationDataManager::GetInstance().getAnimationData(it.first.toStdString()).SetUpdateInterval(aniNodeObj.value(JSON_UPDATE_INTERVAL).toInt());
+            }
+        }
+    }
+    return true;
 }
 
 }

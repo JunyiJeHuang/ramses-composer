@@ -40,6 +40,7 @@
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
     <addaction name="actionSaveAsWithNewID"/>
+    <addaction name="actionProjectIntegration"/>
     <addaction name="separator"/>
     <addaction name="menuUpgrade"/>
     <addaction name="separator"/>
@@ -312,6 +313,14 @@
    </property>
    <property name="toolTip">
     <string>Convert to Raco animation</string>
+   </property>
+  </action>
+  <action name="actionProjectIntegration">
+   <property name="text">
+    <string>Project Integration ...</string>
+   </property>
+   <property name="toolTip">
+    <string>Integration</string>
    </property>
   </action>
  </widget>

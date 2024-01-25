@@ -21,7 +21,7 @@
 #include "property_browser/PropertyBrowserModel.h"
 #include "property_browser/PropertySubtreeView.h"
 #include "core/ProjectSettings.h"
-#include "NodeData/nodeManager.h"
+#include "NodeData/NodeManager.h"
 #include "node_logic/NodeLogic.h"
 #include "style/Icons.h"
 #include <QApplication>
@@ -104,7 +104,7 @@ PropertyBrowserView::PropertyBrowserView(raco::core::SceneBackendInterface* scen
 	auto* layout = new PropertyBrowserGridLayout{this};
 	auto* content = new QWidget{this};
 	auto* contentLayout = new PropertyBrowserVBoxLayout{content};
-	contentLayout->setContentsMargins(0, 0, 5, 0);
+    contentLayout->setContentsMargins(0, 0, 5, 0);
 	content->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
 	layout->addWidget(content, 0, 0);
@@ -148,7 +148,7 @@ PropertyBrowserView::PropertyBrowserView(raco::core::SceneBackendInterface* scen
 		}
 	});
 
-	contentLayout->addWidget(new PropertySubtreeView{sceneBackend_, model, item, this});
+    contentLayout->addWidget(new PropertySubtreeView{sceneBackend_, model, item, this});
 }
 
 PropertyBrowserWidget::PropertyBrowserWidget(
@@ -277,8 +277,8 @@ void PropertyBrowserWidget::slotRefreshPropertyBrowserAfterUndo(raco::core::Valu
         });
         std::set<core::ValueHandle> valueHandles;
         valueHandles.emplace(valueHandle);
-        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
-        layout_.addWidget(propertyBrowser_.get(), 1, 0);
+        //propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
+        //layout_.addWidget(propertyBrowser_.get(), 1, 0);
     }
 }
 
@@ -368,8 +368,8 @@ void PropertyBrowserWidget::setValueHandle(core::ValueHandle valueHandle) {
 
         std::set<core::ValueHandle> valueHandles;
         valueHandles.emplace(valueHandle);
-        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
-		layout_.addWidget(propertyBrowser_.get(), 1, 0);
+        //propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_}, model_, this});
+        //layout_.addWidget(propertyBrowser_.get(), 1, 0);
 
         std::string objectID;
         std::string nodeName;
@@ -443,7 +443,7 @@ void PropertyBrowserWidget::setObjectsImpl(const core::SEditorObjectSet& objects
 
 		std::set<core::ValueHandle> valueHandles(objects.begin(), objects.end());
 		rootItem_ = new PropertyBrowserItem{valueHandles, dispatcher_, commandInterface_, model_};
-		propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, rootItem_, model_, this});
+        propertyBrowser_.reset(new PropertyBrowserView{sceneBackend_, rootItem_, model_, this});
 		currentObjects_ = objects;
 		layout_.addWidget(propertyBrowser_.get(), 1, 0);
     }

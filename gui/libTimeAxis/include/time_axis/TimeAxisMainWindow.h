@@ -70,6 +70,8 @@ private Q_SLOTS:
     void slotItemChanged(QStandardItem *item);
     void slotStartTimeFinished();
     void slotEndTimeFinished();
+    void slotCurAnimGroupChanged(QString text);
+    void slotCurCurveGroupChanged(QString text);
 private:
     bool initTitle(QWidget *parent);
     bool initTree(QWidget *parent);
@@ -85,6 +87,8 @@ private:
     QVBoxLayout *vBoxLayout_;
     QHBoxLayout *hBoxLayout_;
     QHBoxLayout *hTitleLayout_;
+    QComboBox *animGroup_;
+    QComboBox *curveGroup_;
     raco::core::CommandInterface *commandInterface_;
 
     QWidget *titleWidget_;

@@ -166,6 +166,9 @@ void TimeAxisMainWindow::slotDelete() {
         model_->removeRow(item->row());
         itemMap_.remove(curItemName_);
     }
+    if (int index = animGroup_->findText(curItemName_); index != -1) {
+        animGroup_->removeItem(index);
+    }
     animationDataManager::GetInstance().DeleteAnimation(curItemName_.toStdString());
 }
 
@@ -185,6 +188,7 @@ void TimeAxisMainWindow::slotCreateNew() {
         return;
     }
 
+    animGroup_->addItem(strDefault);
     QStandardItem* item = new QStandardItem(strDefault);
     itemMap_.insert(strDefault, item);
     model_->appendRow(item);
@@ -210,9 +214,14 @@ void TimeAxisMainWindow::slotItemChanged(QStandardItem* item) {
         itemMap_.insert(newKey, item);
 
         animationDataManager::GetInstance().ModifyAnimation(oldKey.toStdString(), newKey.toStdString());
-        if (animationDataManager::GetInstance().getActiveAnimationName().compare(oldKey.toStdString())) {
+        if (animationDataManager::GetInstance().getActiveAnimationName().compare(oldKey.toStdString()) == 0) {
             animationDataManager::GetInstance().SetActiveAnimation(newKey.toStdString());
         }
+
+        if (int index = animGroup_->findText(oldKey); index != -1) {
+            animGroup_->setItemText(index, newKey);
+        }
+
         Q_EMIT signalProxy::GetInstance().sigResetAnimationProperty_From_AnimationLogic();
     }
 }
@@ -227,6 +236,36 @@ void TimeAxisMainWindow::slotEndTimeFinished() {
     raco::core::UndoState undoState;
     undoState.saveCurrentUndoState();
     //    commandInterface_->undoStack().push(fmt::format(("change endTime To '{}'"), lineEnd_->value()), undoState);
+}
+
+void TimeAxisMainWindow::slotCurAnimGroupChanged(QString text) {
+    curveGroup_->blockSignals(true);
+    QString prefix = text + ".";
+    curveGroup_->clear();
+    if (text.compare("All Animations") == 0) {
+        curveGroup_->addItem("All Curves");
+        VisualCurvePosManager::GetInstance().setGroupCurve("");
+    } else {
+        for (auto curve : CurveManager::GetInstance().getCurveList()) {
+            QString curveName = QString::fromStdString(curve->getCurveName());
+            if (curveName.contains(prefix)) {
+                QString sectionCurveName = curveName.replace(prefix, "");
+                curveGroup_->addItem(sectionCurveName);
+            }
+        }
+        QString curve = prefix + curveGroup_->currentText();
+        VisualCurvePosManager::GetInstance().setGroupCurve(curve.toStdString());
+    }
+    curveGroup_->blockSignals(false);
+    visualCurveWidget_->repaint();
+}
+
+void TimeAxisMainWindow::slotCurCurveGroupChanged(QString text) {
+    if (text.compare("All Curves") != 0) {
+        QString curve = animGroup_->currentText() + "." + text;
+        VisualCurvePosManager::GetInstance().setGroupCurve(curve.toStdString());
+        visualCurveWidget_->repaint();
+    }
 }
 
 void TimeAxisMainWindow::slotUpdateAnimation() {
@@ -248,6 +287,12 @@ void TimeAxisMainWindow::slotUpdateAnimationKey(QString oldKey, QString newKey) 
 }
 
 void TimeAxisMainWindow::slotResetAnimation() {
+    animGroup_->clear();
+    animGroup_->addItem("All Animations");
+    curveGroup_->clear();
+    curveGroup_->addItem("All Curves");
+    VisualCurvePosManager::GetInstance().setGroupCurve("");
+
     animationDataManager::GetInstance().ClearAniamtion();
     CurveManager::GetInstance().clearCurve();
 
@@ -267,6 +312,9 @@ void TimeAxisMainWindow::slotSwitchCurveWidget() {
         nextBtn_->hide();
         previousBtn_->hide();
         curCurveType_ = VISUAL_CURVE;
+
+        animGroup_->setVisible(true);
+        curveGroup_->setVisible(true);
 
         // right switch
         visualCurveNodeTreeView_->show();
@@ -288,6 +336,9 @@ void TimeAxisMainWindow::slotSwitchCurveWidget() {
         curCurveType_ = TIME_AXIS;
         stackedWidget_->setCurrentWidget(timeAxisScrollArea_);
         timeAxisWidget_->setFocus(Qt::MouseFocusReason);
+
+        animGroup_->setVisible(false);
+        curveGroup_->setVisible(false);
 
         // right switch
         visualCurveNodeTreeView_->hide();
@@ -331,6 +382,7 @@ void TimeAxisMainWindow::slotInitAnimationMgr() {
                 QStandardItem* item = new QStandardItem(QString::fromStdString(it));
                 itemMap_.insert(QString::fromStdString(it), item);
                 model_->appendRow(item);
+                animGroup_->addItem(QString::fromStdString(it));
             }
         }
         curItemName_ = QString::fromStdString(animationDataManager::GetInstance().getActiveAnimationName());
@@ -439,6 +491,20 @@ bool TimeAxisMainWindow::initTitle(QWidget* parent) {
     connect(lineEnd_, &Int64Editor::sigValueChanged, visualCurveWidget_, &VisualCurveWidget::slotSetFinishFrame);
     connect(lineBegin_, &Int64Editor::sigEditingFinished, this, &TimeAxisMainWindow::slotStartTimeFinished);
     connect(lineEnd_, &Int64Editor::sigEditingFinished, this, &TimeAxisMainWindow::slotEndTimeFinished);
+
+    animGroup_ = new QComboBox(titleWidget_);
+    animGroup_->setFixedWidth(120);
+    animGroup_->setVisible(false);
+    curveGroup_ = new QComboBox(titleWidget_);
+    curveGroup_->setFixedWidth(160);
+    curveGroup_->setVisible(false);
+    animGroup_->addItem("All Animations");
+    curveGroup_->addItem("All Curves");
+    hTitleLayout_->addWidget(animGroup_);
+    hTitleLayout_->addItem(new QSpacerItem(20, 0, QSizePolicy::Fixed, QSizePolicy::Minimum));
+    hTitleLayout_->addWidget(curveGroup_);
+    connect(animGroup_, &QComboBox::currentTextChanged, this, &TimeAxisMainWindow::slotCurAnimGroupChanged);
+    connect(curveGroup_, &QComboBox::currentTextChanged, this, &TimeAxisMainWindow::slotCurCurveGroupChanged);
 
     hTitleLayout_->addWidget(spacerLeft);
     hTitleLayout_->addWidget(previousBtn_);

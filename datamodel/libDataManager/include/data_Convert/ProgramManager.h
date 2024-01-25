@@ -53,6 +53,10 @@ public:
     void initFolderData();
     void cubeMap2DdsFormat(const QString &filePath, const std::string &id);
 
+    bool projectIntergration(QString activeFile, QString intergFile, QString &saveFile);
+    bool intergrateNodeData(QJsonObject jsonObj, NodeData &node);
+    bool intergrateCurveData(QJsonArray jsonAry);
+    bool intergrateAnimationData(QJsonObject jsonObj);
 Q_SIGNALS:
     void selectObject(const QString &objectId);
 	void createNode(NodeData* node, const std::vector<MaterialData>& materials);

@@ -58,6 +58,8 @@ public Q_SLOTS:
 	QString setCurveName(QString name);
 	QString setPropertyName(QString name);
     void slotInsertKeyFrame();
+    void slotInsertGroupKeyFrames();
+    void slotInsertInitialKeyFrame();
     void slotCopyProperty();
 	void updateUniformCombox();
 	void delUniformButtonClicked();
@@ -80,6 +82,8 @@ private:
     QStringList objectNames() const;
 	raco::core::SceneBackendInterface* sceneBackend_;
     bool isValidValueHandle(QStringList list, raco::core::ValueHandle handle);
+    bool isValidPropertyValueHandle(QString string);
+    bool isValidUniformsValueHandle(QStringList list, core::ValueHandle handle);
     void generateItemTooltip(PropertyBrowserItem* item, bool connectWithChangeEvents);
 
 	PropertyBrowserItem* item_{nullptr};
@@ -90,6 +94,8 @@ private:
 	PropertyEditor* propertyControl_{nullptr};
 	PropertySubtreeChildrenContainer* childrenContainer_{nullptr};
     QAction* insertKeyFrameAction_{nullptr};
+    QAction* insertKeyFrameGroupAction_{nullptr};
+    QAction* insertInitialKeyFrameAction_{nullptr};
 
 	int labelWidth_{0};
     float highlight_{0};

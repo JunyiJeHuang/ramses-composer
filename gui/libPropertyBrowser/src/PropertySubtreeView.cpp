@@ -76,11 +76,19 @@ void PropertySubtreeView::registerCopyPasteContextMenu(QWidget* widget) {
         if (item_->valueHandle().isProperty()) {
             std::string property = item_->valueHandle().getPropertyPath();
             QStringList strList = QString::fromStdString(property).split(".");
-            // Determine whether it is a System/Custom Property and whether it is a Float type
-            if (!isValidValueHandle(strList, item_->valueHandle())) {
-                return;
+
+            if (isValidPropertyValueHandle(strList.last())) {
+                treeViewMenu->addAction(insertKeyFrameGroupAction_);
             }
-            treeViewMenu->addAction(insertKeyFrameAction_);
+
+            // Determine whether it is a System/Custom Property and whether it is a Float type
+            if (isValidValueHandle(strList, item_->valueHandle())) {
+                treeViewMenu->addAction(insertKeyFrameAction_);
+            }
+
+            if (isValidUniformsValueHandle(strList, item_->valueHandle())) {
+                treeViewMenu->addAction(insertInitialKeyFrameAction_);
+            }
         }
 
         treeViewMenu->exec(widget->mapToGlobal(p));
@@ -188,7 +196,11 @@ PropertySubtreeView::PropertySubtreeView(raco::core::SceneBackendInterface* scen
     }
 
     insertKeyFrameAction_ = new QAction("Insert KeyFrame", this);
+    insertKeyFrameGroupAction_ = new QAction("Insert Group KeyFrames");
+    insertInitialKeyFrameAction_ = new QAction("Insert Initial KeyFrame");
     connect(insertKeyFrameAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertKeyFrame);
+    connect(insertKeyFrameGroupAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertGroupKeyFrames);
+    connect(insertInitialKeyFrameAction_, &QAction::triggered, this, &PropertySubtreeView::slotInsertInitialKeyFrame);
 }
 
 
@@ -439,6 +451,7 @@ void PropertySubtreeView::slotInsertKeyFrame() {
                 property = QString::fromStdString(valueHandle.getPropertyPath());
                 property = property.section(".", 1);
             }
+            qDebug() << property;
             property = setPropertyName(property);
             if (property == "") {
                 return;
@@ -465,6 +478,103 @@ void PropertySubtreeView::slotInsertKeyFrame() {
                 return;
             }
             Q_EMIT item_->model()->sigCreateCurveAndBinding(property, curve, value);
+        }
+    }
+}
+
+void PropertySubtreeView::slotInsertGroupKeyFrames() {
+    raco::core::ValueHandle valueHandle = item_->valueHandle();
+    bool isResource = valueHandle.rootObject().get()->getTypeDescription().isResource;
+    if (isResource) {
+        return;
+    }
+    if (valueHandle.isProperty()) {
+        QString rootPropertyPath = QString::fromStdString(valueHandle.getPropertyPath());
+        QString rootProperty = QString::fromStdString(valueHandle.getPropName());
+
+        // is have active animation
+        std::string sampleProperty = animationDataManager::GetInstance().getActiveAnimationName();
+        if (sampleProperty == std::string()) {
+            return;
+        }
+        for (int i = 0; i < valueHandle.size(); i++) {
+            raco::core::ValueHandle childHandle = valueHandle[i];
+
+            QString property = rootProperty + "." + QString::fromStdString(childHandle.getPropName());
+            qDebug() << property;
+            property = setPropertyName(property);
+            if (property == "") {
+                return;
+            }
+
+            QString propertyPath = QString::fromStdString(childHandle.getPropertyPath());
+            propertyPath = setCurveName(propertyPath);
+            QString curve = QString::fromStdString(sampleProperty) + "." + propertyPath;
+
+            double value{0};
+            if (valueHandle.type() == raco::core::PrimitiveType::Double) {
+                value = valueHandle.asDouble();
+            }
+            std::map<std::string, std::string> bindingMap;
+            NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().getPropCurve(sampleProperty, bindingMap);
+
+            auto it = bindingMap.find(property.toStdString());
+            if (it != bindingMap.end()) {
+                Q_EMIT item_->model()->sigCreateCurve(property, QString::fromStdString(it->second), value);
+                return;
+            }
+            Q_EMIT signalProxy::GetInstance().sigInsertCurveBinding_From_NodeUI(property, curve);
+            Q_EMIT item_->model()->sigCreateCurve(property, curve, value);
+        }
+    }
+}
+
+void PropertySubtreeView::slotInsertInitialKeyFrame() {
+    raco::core::ValueHandle valueHandle = item_->valueHandle();
+    bool isResource = valueHandle.rootObject().get()->getTypeDescription().isResource;
+    if (isResource) {
+        return;
+    }
+    if (valueHandle.isProperty()) {
+        QString propertyPath = QString::fromStdString(valueHandle.getPropertyPath());
+        if (valueHandle.parent() != NULL) {
+            raco::core::ValueHandle parentHandle = valueHandle.parent();
+
+            QString property;
+            property = QString::fromStdString(parentHandle.getPropName()) + "." + QString::fromStdString(valueHandle.getPropName());
+            if (QString::fromStdString(valueHandle.getPropertyPath()).contains("material")) {
+                property = QString::fromStdString(valueHandle.getPropertyPath());
+                property = property.section(".", 1);
+            }
+            qDebug() << property;
+            property = setPropertyName(property);
+            if (property == "") {
+                return;
+            }
+
+            for (auto sampleProperty : animationDataManager::GetInstance().getAniamtionNameList()) {
+                if (sampleProperty == std::string()) {
+                    return;
+                }
+
+                propertyPath = setCurveName(propertyPath);
+                QString curve = QString::fromStdString(sampleProperty) + "." + propertyPath;
+
+                double value{0};
+                if (valueHandle.type() == raco::core::PrimitiveType::Double) {
+                    value = valueHandle.asDouble();
+                }
+                std::map<std::string, std::string> bindingMap;
+                NodeDataManager::GetInstance().getActiveNode()->NodeExtendRef().curveBindingRef().getPropCurve(sampleProperty, bindingMap);
+
+                auto it = bindingMap.find(property.toStdString());
+                if (it != bindingMap.end()) {
+                    Q_EMIT item_->model()->sigCreateCurve(property, QString::fromStdString(it->second), value);
+                    return;
+                }
+                Q_EMIT signalProxy::GetInstance().sigInsertCurveBinding_From_NodeUI(property, curve);
+                Q_EMIT item_->model()->sigCreateCurve(property, curve, value);
+            }
         }
     }
 }
@@ -682,6 +792,41 @@ bool PropertySubtreeView::isValidValueHandle(QStringList list, core::ValueHandle
             return true;
         }
     } else if (list.contains("uniforms")) {
+        if (list.contains("x") || list.contains("y") || list.contains("z")) {
+            return true;
+        } else {
+            if (func(list, handle)) {
+                if (!handle.hasProperty("x") && !handle.hasProperty("y") && !handle.hasProperty("z")) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool PropertySubtreeView::isValidPropertyValueHandle(QString string) {
+    if (string.compare("translation") == 0 || string.compare("rotation") == 0 || string.compare("scaling") == 0) {
+        return true;
+    }
+    return false;
+}
+
+bool PropertySubtreeView::isValidUniformsValueHandle(QStringList list, core::ValueHandle handle) {
+    auto func = [&](QStringList tempList, raco::core::ValueHandle tempHandle) -> bool {
+        if (tempHandle.isObject()) {
+            for (int i{1}; i < list.size(); i++) {
+                QString str = list[i];
+                tempHandle = tempHandle.get(str.toStdString());
+                if (!tempHandle.isProperty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    if (list.contains("uniforms")) {
         if (list.contains("x") || list.contains("y") || list.contains("z")) {
             return true;
         } else {

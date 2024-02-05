@@ -19,7 +19,7 @@
 #include "core/CommandInterface.h"
 #include "time_axis/KeyFrameManager.h"
 #include "node_logic/NodeLogic.h"
-#include "AnimationData/animationData.h"
+#include "AnimationData/AnimationData.h"
 
 namespace raco::time_axis {
 
